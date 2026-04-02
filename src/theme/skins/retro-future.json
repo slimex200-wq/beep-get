@@ -1,0 +1,37 @@
+{
+  "slug": "retro-future",
+  "name": "레트로 퓨처",
+  "colors": {
+    "background": "#D4C5A0",
+    "surface": "#C8B890",
+    "lcdBackground": "#8A9A6A",
+    "lcdText": "#2A3A1A",
+    "lcdSubtext": "#4A5A3A",
+    "primary": "#8B6914",
+    "secondary": "#6A7A5A",
+    "accent": "#C45030",
+    "textPrimary": "#3A2A1A",
+    "textSecondary": "#8A7A6A",
+    "border": "rgba(139,105,20,0.2)"
+  },
+  "shadows": {
+    "raised": {
+      "shadowColor": "#E8D8B8",
+      "shadowOffsetX": -3,
+      "shadowOffsetY": -3,
+      "shadowOpacity": 0.6,
+      "shadowRadius": 5,
+      "elevation": 3
+    },
+    "inset": {
+      "shadowColor": "#A09070",
+      "shadowOffsetX": 2,
+      "shadowOffsetY": 2,
+      "shadowOpacity": 0.5,
+      "shadowRadius": 4,
+      "elevation": 2
+    }
+  },
+  "borderRadius": { "sm": 6, "md": 10, "lg": 16, "round": 999 },
+  "fonts": { "lcd": "VT323", "pixel": "Silkscreen", "ui": "Inter", "mono": "SpaceMono" }
+}

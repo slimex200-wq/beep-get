@@ -57,3 +57,40 @@ export const neumorphism = {
 } as const;
 
 export type Theme = typeof neumorphism;
+
+export interface SkinTheme {
+  slug: string;
+  name: string;
+  colors: {
+    background: string;
+    surface: string;
+    lcdBackground: string;
+    lcdText: string;
+    lcdSubtext: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    textPrimary: string;
+    textSecondary: string;
+    border: string;
+  };
+  shadows: {
+    raised: {
+      shadowColor: string;
+      shadowOffset: { width: number; height: number };
+      shadowOpacity: number;
+      shadowRadius: number;
+      elevation: number;
+    };
+    inset: {
+      shadowColor: string;
+      shadowOffset: { width: number; height: number };
+      shadowOpacity: number;
+      shadowRadius: number;
+      elevation: number;
+    };
+  };
+  spacing: { xs: number; sm: number; md: number; lg: number; xl: number };
+  borderRadius: { sm: number; md: number; lg: number; round: number };
+  fonts: { lcd: string; pixel: string; ui: string; mono: string };
+}

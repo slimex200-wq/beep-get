@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, StyleSheet, ViewStyle } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 
 interface BeepButtonProps {
   title: string;
@@ -17,6 +17,8 @@ export function BeepButton({
   style,
   disabled,
 }: BeepButtonProps) {
+  const theme = useTheme();
+
   const variantColors = {
     primary: theme.colors.primary,
     secondary: theme.colors.secondary,
@@ -29,12 +31,18 @@ export function BeepButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        pressed ? styles.pressed : styles.raised,
+        { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.sm },
+        pressed ? theme.shadows.inset : theme.shadows.raised,
         { opacity: disabled ? 0.5 : 1 },
         style,
       ]}
     >
-      <Text style={[styles.text, { color: variantColors[variant] }]}>
+      <Text
+        style={[
+          styles.text,
+          { fontFamily: theme.fonts.pixel, color: variantColors[variant] },
+        ]}
+      >
         {title}
       </Text>
     </Pressable>
@@ -43,22 +51,10 @@ export function BeepButton({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    paddingVertical: theme.spacing.sm + 2,
-    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  raised: {
-    ...theme.shadows.raised,
-  },
-  pressed: {
-    ...theme.shadows.inset,
-  },
-  text: {
-    fontFamily: theme.fonts.pixel,
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  text: { fontSize: 12, fontWeight: "600" },
 });

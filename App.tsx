@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
 import { customFonts } from "@/theme/fonts";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -64,8 +65,10 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <NavigationContainer ref={navigationRef} linking={linking}>
-      <RootNavigator />
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer ref={navigationRef} linking={linking}>
+        <RootNavigator />
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 
 interface LcdDisplayProps {
   fromName: string;
@@ -10,62 +10,60 @@ interface LcdDisplayProps {
 }
 
 export function LcdDisplay({ fromName, code, time, isNew }: LcdDisplayProps) {
+  const theme = useTheme();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.lcd}>
+    <View
+      style={[
+        styles.container,
+        {
+          borderRadius: theme.borderRadius.md,
+          backgroundColor: theme.colors.surface,
+          ...theme.shadows.inset,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.lcd,
+          {
+            backgroundColor: theme.colors.lcdBackground,
+            borderRadius: theme.borderRadius.sm,
+          },
+        ]}
+      >
         <View style={styles.header}>
-          <Text style={styles.from}>FROM: {fromName}</Text>
-          {isNew && <Text style={styles.newBadge}>NEW</Text>}
+          <Text style={[styles.from, { fontFamily: theme.fonts.lcd, color: theme.colors.lcdSubtext }]}>
+            FROM: {fromName}
+          </Text>
+          {isNew && (
+            <Text style={[styles.newBadge, { fontFamily: theme.fonts.lcd, color: theme.colors.accent }]}>
+              NEW
+            </Text>
+          )}
         </View>
-        <Text style={styles.code}>{code}</Text>
-        <Text style={styles.time}>{time}</Text>
+        <Text style={[styles.code, { fontFamily: theme.fonts.lcd, color: theme.colors.lcdText }]}>
+          {code}
+        </Text>
+        <Text style={[styles.time, { fontFamily: theme.fonts.lcd, color: theme.colors.lcdSubtext }]}>
+          {time}
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: theme.borderRadius.md,
-    padding: 3,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.inset,
-  },
-  lcd: {
-    backgroundColor: theme.colors.lcdBackground,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.md,
-  },
+  container: { padding: 3 },
+  lcd: { padding: 16 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
-  from: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 14,
-    color: theme.colors.lcdSubtext,
-    opacity: 0.8,
-  },
-  newBadge: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 12,
-    color: theme.colors.accent,
-  },
-  code: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 40,
-    color: theme.colors.lcdText,
-    textAlign: "center",
-    letterSpacing: 4,
-    paddingVertical: theme.spacing.sm,
-  },
-  time: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 12,
-    color: theme.colors.lcdSubtext,
-    textAlign: "right",
-    opacity: 0.6,
-  },
+  from: { fontSize: 14, opacity: 0.8 },
+  newBadge: { fontSize: 12 },
+  code: { fontSize: 40, textAlign: "center", letterSpacing: 4, paddingVertical: 8 },
+  time: { fontSize: 12, textAlign: "right", opacity: 0.6 },
 });

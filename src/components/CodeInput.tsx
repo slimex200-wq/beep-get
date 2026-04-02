@@ -1,6 +1,6 @@
 import React from "react";
 import { TextInput, StyleSheet, View, Text } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 import { MAX_CODE_LENGTH } from "@/lib/constants";
 
 interface CodeInputProps {
@@ -18,6 +18,8 @@ export function CodeInput({
   maxLength = MAX_CODE_LENGTH,
   label,
 }: CodeInputProps) {
+  const theme = useTheme();
+
   const handleChange = (text: string) => {
     const numericOnly = text.replace(/[^0-9]/g, "");
     onChangeText(numericOnly);
@@ -25,10 +27,19 @@ export function CodeInput({
 
   return (
     <View>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.container}>
+      {label && (
+        <Text style={[styles.label, { fontFamily: theme.fonts.pixel, color: theme.colors.textSecondary }]}>
+          {label}
+        </Text>
+      )}
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.sm, ...theme.shadows.inset },
+        ]}
+      >
         <TextInput
-          style={styles.input}
+          style={[styles.input, { fontFamily: theme.fonts.lcd, color: theme.colors.lcdText }]}
           value={value}
           onChangeText={handleChange}
           placeholder={placeholder}
@@ -37,7 +48,7 @@ export function CodeInput({
           maxLength={maxLength}
         />
       </View>
-      <Text style={styles.counter}>
+      <Text style={[styles.counter, { fontFamily: theme.fonts.mono, color: theme.colors.textSecondary }]}>
         {value.length}/{maxLength}
       </Text>
     </View>
@@ -45,31 +56,8 @@ export function CodeInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    ...theme.shadows.inset,
-  },
-  label: {
-    fontFamily: theme.fonts.pixel,
-    fontSize: 11,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    letterSpacing: 1,
-  },
-  input: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 28,
-    color: theme.colors.lcdText,
-    textAlign: "center",
-    padding: theme.spacing.md,
-    letterSpacing: 4,
-  },
-  counter: {
-    fontFamily: theme.fonts.mono,
-    fontSize: 10,
-    color: theme.colors.textSecondary,
-    textAlign: "right",
-    marginTop: theme.spacing.xs,
-  },
+  container: {},
+  label: { fontSize: 11, marginBottom: 4, letterSpacing: 1 },
+  input: { fontSize: 28, textAlign: "center", padding: 16, letterSpacing: 4 },
+  counter: { fontSize: 10, textAlign: "right", marginTop: 4 },
 });
