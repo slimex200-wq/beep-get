@@ -1,17 +1,45 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import type { NavigationContainerRef } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import * as Linking from "expo-linking";
 import { RootNavigator } from "@/navigation/RootNavigator";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
+import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
 import { customFonts } from "@/theme/fonts";
 
 SplashScreen.preventAutoHideAsync();
 
+const linking = {
+  prefixes: [Linking.createURL("/"), "beepget://"],
+  config: {
+    screens: {
+      Main: { screens: { Home: "home" } },
+      Send: "message/reply/:friendId/:friendName",
+    },
+  },
+};
+
 export default function App() {
   const { setSession, fetchProfile } = useAuthStore();
+  const { read } = useMessageStore();
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [fontsLoaded] = useFonts(customFonts);
+
+  // Handle widget deeplink actions
+  useEffect(() => {
+    const handleUrl = ({ url }: { url: string }) => {
+      const confirmMatch = url.match(/beepget:\/\/message\/confirm\/(.+)/);
+      if (confirmMatch) {
+        read(confirmMatch[1]);
+      }
+    };
+    const sub = Linking.addEventListener("url", handleUrl);
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,7 +64,7 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <RootNavigator />
     </NavigationContainer>
   );

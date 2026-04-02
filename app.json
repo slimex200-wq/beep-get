@@ -6,7 +6,8 @@
     "scheme": "beepget",
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "./modules/beep-widget/plugin/build/index"
     ]
   }
 }

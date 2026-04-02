@@ -8,6 +8,8 @@ import {
   sendMessage,
 } from "@/services/messageService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { syncWidgetData } from "@/services/widgetService";
+import { useFriendStore } from "@/stores/friendStore";
 
 interface Message {
   id: string;
@@ -46,6 +48,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     set({ loading: true });
     const received = await getReceivedMessages(userId);
     set({ received, loading: false });
+    syncWidgetData(received, useFriendStore.getState().friends);
   },
 
   fetchSaved: async (userId) => {
