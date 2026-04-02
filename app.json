@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "beep-get",
+    "slug": "beep-get",
+    "version": "1.0.0",
+    "scheme": "beepget",
+    "plugins": [
+      "expo-secure-store",
+      "expo-font"
+    ]
+  }
+}
