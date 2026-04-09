@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1">
+<title>BEEP-GET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600;700&family=DotGothic16&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── 봄날 ── */
+:root{
+  --bg:#F2EDE6;--surface:#EAE2D8;
+  --scr:#C8D4B0;--px:#2A4020;--px2:#5C7048;
+  --pri:#D4624A;--sec:#6A9EAA;--acc:#D4A84A;
+  --txt:#3E2E22;--txtm:#A0907E;--bdr:#E8DDD0;
+  --glow:rgba(42,64,32,0.2);
+  --phone-wall:#2A2420;
+}
+.skin-night{
+  --bg:#1E1A2C;--surface:#28223A;
+  --scr:#0C1624;--px:#6AEAB8;--px2:#3EAA88;
+  --pri:#B088F0;--sec:#6A8AFF;--acc:#E0C060;
+  --txt:#E8DFF0;--txtm:#8A7A9A;--bdr:#382E4A;
+  --glow:rgba(106,234,184,0.25);
+  --phone-wall:#0A0A14;
+}
+.skin-cassette{
+  --bg:#1C2541;--surface:#243050;
+  --scr:#0B1320;--px:#5BC0BE;--px2:#3A8A88;
+  --pri:#F4F1DE;--sec:#5BC0BE;--acc:#FF6B6B;
+  --txt:#F4F1DE;--txtm:#6A8A9A;--bdr:#2A3A58;
+  --glow:rgba(91,192,190,0.25);
+  --phone-wall:#060A14;
+}
+.skin-pc98{
+  --bg:#C8B468;--surface:#B8A458;
+  --scr:#385828;--px:#C8D888;--px2:#88A860;
+  --pri:#786838;--sec:#587838;--acc:#E8C848;
+  --txt:#182810;--txtm:#607840;--bdr:#A09048;
+  --glow:rgba(200,216,136,0.2);
+  --phone-wall:#101008;
+}
+
+body{
+  font-family:'Inter',sans-serif;background:#110E0A;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;padding:40px 16px;gap:36px;
+}
+
+/* ── Type ── */
+.t-brand{font-family:'Pixelify Sans',sans-serif;font-weight:700}
+.t-code{font-family:'Silkscreen',monospace;font-weight:700}
+.t-label{font-family:'Pixelify Sans',sans-serif;font-weight:600}
+.t-meta{font-family:'DotGothic16',sans-serif}
+
+/* ── Toggle ── */
+.skins{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.sk{
+  padding:6px 12px;border:2px solid #2A2420;cursor:pointer;
+  font-family:'Pixelify Sans',sans-serif;font-size:12px;font-weight:600;
+  background:#1E1A16;color:#605848;transition:all .15s;border-radius:4px;
+}
+.sk:hover{border-color:#555;color:#aaa}
+.sk.on{border-color:var(--pri);color:var(--pri);background:#2A1E1A}
+
+/* ── Widget ── NO BORDER, shadow only ── */
+.wg{
+  background:var(--surface);
+  border-radius:22px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.04);
+  position:relative;image-rendering:pixelated;
+}
+.skin-night .wg,.skin-cassette .wg{box-shadow:0 2px 16px rgba(0,0,0,0.3),0 0 0 0.5px rgba(255,255,255,0.04)}
+.skin-pc98 .wg{box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+
+.wg-scr{
+  margin:6px;background:var(--scr);border-radius:16px;
+  position:relative;overflow:hidden;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,0.1);
+}
+/* Scanline */
+.wg-scr::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.025) 1px,rgba(0,0,0,0.025) 2px);
+}
+.skin-night .wg-scr::after,.skin-cassette .wg-scr::after{
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(255,255,255,0.015) 1px,rgba(255,255,255,0.015) 2px);
+}
+
+/* ── LCD text glow ── */
+.glow{text-shadow:0 0 8px var(--glow)}
+
+/* ── Mascot inline (20px) ── */
+.mascot{width:20px;height:24px;flex-shrink:0;display:inline-block;vertical-align:middle}
+.mascot svg{width:100%;height:100%}
+
+/* ── Widget: Small ── */
+.wg-s{width:170px;height:170px}
+.wg-s .wg-scr{
+  padding:16px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:12px;
+  height:calc(100% - 12px);
+}
+.wg-s .c{font-family:'Silkscreen',monospace;font-weight:700;font-size:32px;color:var(--px);letter-spacing:2px;line-height:1}
+.wg-s .f{font-family:'Pixelify Sans',sans-serif;font-size:13px;font-weight:600;color:var(--px2)}
+
+/* ── Widget: Medium ── */
+.wg-m{width:350px;height:170px}
+.wg-m .wg-scr{
+  padding:16px;display:flex;flex-direction:column;
+  justify-content:space-between;height:calc(100% - 12px);
+}
+.wg-m .top{display:flex;justify-content:space-between;align-items:center}
+.wg-m .f{font-family:'Pixelify Sans',sans-serif;font-size:13px;font-weight:600;color:var(--px2)}
+.wg-m .badge{font-family:'Pixelify Sans',sans-serif;font-size:11px;font-weight:700;color:var(--pri)}
+.wg-m .c{font-family:'Silkscreen',monospace;font-weight:700;font-size:44px;color:var(--px);letter-spacing:3px;line-height:1;text-align:center;padding:12px 0}
+.wg-m .t{font-family:'DotGothic16',sans-serif;font-size:11px;color:var(--px2);text-align:right;opacity:0.6}
+
+/* ── Widget: Large ── */
+.wg-l{width:350px;height:360px}
+.wg-l .wg-scr{
+  padding:16px;display:flex;flex-direction:column;
+  height:calc(100% - 12px);
+}
+.wg-l .top{display:flex;justify-content:space-between;align-items:center}
+.wg-l .f{font-family:'Pixelify Sans',sans-serif;font-size:13px;font-weight:600;color:var(--px2)}
+.wg-l .badge{font-family:'Pixelify Sans',sans-serif;font-size:11px;font-weight:700;color:var(--pri)}
+.wg-l .c{font-family:'Silkscreen',monospace;font-weight:700;font-size:48px;color:var(--px);letter-spacing:3px;line-height:1;text-align:center;padding:14px 0}
+.wg-l .t{font-family:'DotGothic16',sans-serif;font-size:11px;color:var(--px2);text-align:right;opacity:0.6}
+.wg-l .div{height:1px;background:var(--px2);opacity:0.1;margin:10px 0}
+.wg-l .list{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.wg-l .row{display:flex;align-items:center;gap:8px}
+.wg-l .row .rn{font-family:'Pixelify Sans',sans-serif;font-size:12px;font-weight:600;color:var(--px2);width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wg-l .row .rc{font-family:'Silkscreen',monospace;font-weight:700;font-size:20px;color:var(--px);flex:1;letter-spacing:2px}
+.wg-l .row .rt{font-family:'DotGothic16',sans-serif;font-size:10px;color:var(--px2);opacity:0.45}
+
+/* ── Phone ── */
+.ph{
+  width:390px;height:844px;background:var(--phone-wall);
+  border-radius:48px;position:relative;overflow:hidden;
+  box-shadow:0 0 0 2px #2A2420,0 24px 64px rgba(0,0,0,0.5);
+}
+.ph-n{position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#000;border-radius:0 0 20px 20px;z-index:10}
+.ph-sb{height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 6px;font:600 12px/1 'Inter',sans-serif;color:rgba(255,255,255,0.55);position:relative;z-index:5}
+.ph-hi{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;background:rgba(255,255,255,0.12);border-radius:3px}
+
+.hs{position:absolute;inset:0;display:flex;flex-direction:column;padding:60px 20px 40px}
+.hs-d{font:13px/1 'Inter',sans-serif;color:rgba(255,255,255,0.25);text-align:center;margin-bottom:28px}
+
+.hs-g{display:flex;justify-content:space-around;padding:0 16px}
+.hs-i{width:52px;height:52px;background:rgba(255,255,255,0.04);border-radius:12px}
+.hs-dk{display:flex;justify-content:space-around;background:rgba(255,255,255,0.03);border-radius:24px;padding:10px 20px;margin:0 4px}
+.hs-di{width:48px;height:48px;background:rgba(255,255,255,0.04);border-radius:12px}
+
+.ls{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:60px 24px 40px;background:linear-gradient(160deg,#1E1A16,#14100C)}
+.skin-night .ls{background:linear-gradient(160deg,#0C081A,#060410)}
+.skin-cassette .ls{background:linear-gradient(160deg,#0A0E1A,#040610)}
+.skin-pc98 .ls{background:linear-gradient(160deg,#141008,#080804)}
+.ls-t{font:200 72px/1 'Inter',sans-serif;color:rgba(255,255,255,0.8);letter-spacing:-2px;margin-top:44px}
+.ls-d{font:15px/1 'Inter',sans-serif;color:rgba(255,255,255,0.3);margin:6px 0 52px}
+.ls-nf{
+  width:100%;background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:16px;padding:14px 16px;display:flex;gap:14px;align-items:center;
+}
+.ls-ic{width:40px;height:40px;background:var(--surface);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ls-bd{flex:1;min-width:0}
+.ls-ti{font:600 14px/1 'Inter',sans-serif;color:rgba(255,255,255,0.9)}
+.ls-co{font-family:'Silkscreen',monospace;font-weight:700;font-size:20px;color:var(--px);letter-spacing:1px;margin-top:3px}
+.ls-me{font:11px/1 'Inter',sans-serif;color:rgba(255,255,255,0.28);margin-top:4px}
+
+/* ── Layout ── */
+.show{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.lb{font-family:'Pixelify Sans',sans-serif;font-size:11px;font-weight:600;color:#504840;letter-spacing:1px}
+.sec{font-family:'Pixelify Sans',sans-serif;font-size:13px;font-weight:700;color:#504840;letter-spacing:2px}
+.phs{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+@media(max-width:860px){.phs{flex-direction:column;align-items:center}}
+
+/* ── Mascot area ── */
+.ma{background:#1E1A16;border-radius:16px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:20px;max-width:560px;width:100%}
+.mr{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+.mi{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ml{font-family:'Pixelify Sans',sans-serif;font-size:11px;font-weight:600;color:#605848}
+</style>
+</head>
+<body>
+
+<div style="text-align:center">
+  <div class="t-brand" style="font-size:18px;color:var(--pri)">BEEP-GET</div>
+  <div style="font-family:'Pixelify Sans',sans-serif;font-size:13px;color:#605848;margin-top:4px">홈 화면에 삐삐 한 대를 놓다</div>
+</div>
+
+<div class="skins">
+  <button class="sk on" onclick="skin('')">봄날</button>
+  <button class="sk" onclick="skin('skin-night')">야밤</button>
+  <button class="sk" onclick="skin('skin-cassette')">카세트</button>
+  <button class="sk" onclick="skin('skin-pc98')">PC-98</button>
+</div>
+
+<!-- ═══ MASCOT ═══ -->
+<div class="sec">비프콘</div>
+<div class="ma" id="ma">
+  <div class="mr">
+    <div class="mi">
+      <svg width="56" height="72" viewBox="0 0 16 20" shape-rendering="crispEdges">
+        <rect x="7" y="0" width="2" height="3" fill="var(--txtm)"/>
+        <rect x="6" y="0" width="4" height="1" fill="var(--txtm)"/>
+        <rect x="1" y="3" width="14" height="14" fill="var(--acc)"/>
+        <rect x="2" y="2" width="12" height="1" fill="var(--acc)"/>
+        <rect x="2" y="17" width="12" height="1" fill="var(--acc)"/>
+        <rect x="0" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="15" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="2" y="4" width="12" height="9" fill="var(--scr)"/>
+        <rect x="4" y="6" width="2" height="3" fill="var(--px)"/>
+        <rect x="10" y="6" width="2" height="3" fill="var(--px)"/>
+        <rect x="4" y="6" width="1" height="1" fill="rgba(255,255,255,0.35)"/>
+        <rect x="10" y="6" width="1" height="1" fill="rgba(255,255,255,0.35)"/>
+        <rect x="6" y="10" width="4" height="1" fill="var(--px)"/>
+        <rect x="5" y="9" width="1" height="1" fill="var(--px)"/>
+        <rect x="10" y="9" width="1" height="1" fill="var(--px)"/>
+        <rect x="3" y="14" width="2" height="2" fill="var(--pri)"/>
+        <rect x="7" y="14" width="2" height="2" fill="var(--sec)"/>
+        <rect x="11" y="14" width="2" height="2" fill="var(--acc)"/>
+        <rect x="4" y="18" width="2" height="2" fill="var(--acc)"/>
+        <rect x="10" y="18" width="2" height="2" fill="var(--acc)"/>
+      </svg>
+      <span class="ml">기뻐!</span>
+    </div>
+    <div class="mi">
+      <svg width="56" height="72" viewBox="0 0 16 20" shape-rendering="crispEdges">
+        <rect x="7" y="0" width="2" height="3" fill="var(--txtm)"/>
+        <rect x="6" y="0" width="4" height="1" fill="var(--txtm)"/>
+        <rect x="1" y="3" width="14" height="14" fill="var(--acc)"/>
+        <rect x="2" y="2" width="12" height="1" fill="var(--acc)"/>
+        <rect x="2" y="17" width="12" height="1" fill="var(--acc)"/>
+        <rect x="0" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="15" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="2" y="4" width="12" height="9" fill="var(--scr)"/>
+        <rect x="4" y="7" width="2" height="2" fill="var(--px)"/>
+        <rect x="10" y="7" width="2" height="2" fill="var(--px)"/>
+        <rect x="4" y="7" width="1" height="1" fill="rgba(255,255,255,0.35)"/>
+        <rect x="10" y="7" width="1" height="1" fill="rgba(255,255,255,0.35)"/>
+        <rect x="6" y="10" width="4" height="1" fill="var(--px)"/>
+        <rect x="3" y="14" width="2" height="2" fill="var(--pri)" opacity="0.6"/>
+        <rect x="7" y="14" width="2" height="2" fill="var(--sec)" opacity="0.6"/>
+        <rect x="11" y="14" width="2" height="2" fill="var(--acc)" opacity="0.6"/>
+        <rect x="4" y="18" width="2" height="2" fill="var(--acc)"/>
+        <rect x="10" y="18" width="2" height="2" fill="var(--acc)"/>
+      </svg>
+      <span class="ml">대기중</span>
+    </div>
+    <div class="mi">
+      <svg width="56" height="72" viewBox="0 0 16 20" shape-rendering="crispEdges">
+        <rect x="7" y="0" width="2" height="3" fill="var(--txtm)"/>
+        <rect x="6" y="0" width="4" height="1" fill="var(--txtm)"/>
+        <rect x="1" y="3" width="14" height="14" fill="var(--acc)"/>
+        <rect x="2" y="2" width="12" height="1" fill="var(--acc)"/>
+        <rect x="2" y="17" width="12" height="1" fill="var(--acc)"/>
+        <rect x="0" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="15" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="2" y="4" width="12" height="9" fill="var(--scr)"/>
+        <rect x="4" y="8" width="3" height="1" fill="var(--px)"/>
+        <rect x="10" y="8" width="3" height="1" fill="var(--px)"/>
+        <rect x="13" y="3" width="3" height="1" fill="var(--txtm)"/>
+        <rect x="14" y="2" width="2" height="1" fill="var(--txtm)"/>
+        <rect x="14" y="4" width="1" height="1" fill="var(--txtm)"/>
+        <rect x="3" y="14" width="2" height="2" fill="var(--pri)" opacity="0.3"/>
+        <rect x="7" y="14" width="2" height="2" fill="var(--sec)" opacity="0.3"/>
+        <rect x="11" y="14" width="2" height="2" fill="var(--acc)" opacity="0.3"/>
+        <rect x="4" y="18" width="2" height="2" fill="var(--acc)"/>
+        <rect x="10" y="18" width="2" height="2" fill="var(--acc)"/>
+      </svg>
+      <span class="ml">꿀잠</span>
+    </div>
+    <div class="mi">
+      <svg width="56" height="72" viewBox="0 0 16 20" shape-rendering="crispEdges">
+        <rect x="7" y="0" width="2" height="2" fill="var(--txtm)"/>
+        <rect x="5" y="0" width="6" height="1" fill="var(--pri)"/>
+        <rect x="1" y="3" width="14" height="14" fill="var(--acc)"/>
+        <rect x="2" y="2" width="12" height="1" fill="var(--acc)"/>
+        <rect x="2" y="17" width="12" height="1" fill="var(--acc)"/>
+        <rect x="0" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="15" y="4" width="1" height="12" fill="var(--acc)"/>
+        <rect x="2" y="4" width="12" height="9" fill="var(--scr)"/>
+        <rect x="3" y="6" width="3" height="3" fill="var(--px)"/>
+        <rect x="10" y="6" width="3" height="3" fill="var(--px)"/>
+        <rect x="3" y="6" width="1" height="1" fill="rgba(255,255,255,0.45)"/>
+        <rect x="10" y="6" width="1" height="1" fill="rgba(255,255,255,0.45)"/>
+        <rect x="6" y="10" width="4" height="2" fill="var(--px)"/>
+        <rect x="7" y="10" width="2" height="2" fill="var(--scr)"/>
+        <rect x="0" y="3" width="1" height="3" fill="var(--pri)"/>
+        <rect x="0" y="7" width="1" height="1" fill="var(--pri)"/>
+        <rect x="3" y="14" width="2" height="2" fill="var(--pri)"/>
+        <rect x="7" y="14" width="2" height="2" fill="var(--sec)"/>
+        <rect x="11" y="14" width="2" height="2" fill="var(--acc)"/>
+        <rect x="3" y="18" width="2" height="2" fill="var(--acc)"/>
+        <rect x="11" y="18" width="2" height="2" fill="var(--acc)"/>
+      </svg>
+      <span class="ml">신남!</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WIDGETS ═══ -->
+<div class="sec">WIDGETS</div>
+<div class="show" id="ws">
+
+  <div class="col">
+    <div class="wg wg-s">
+      <div class="wg-scr">
+        <div class="c glow">012486</div>
+        <div class="f">민수</div>
+      </div>
+    </div>
+    <span class="lb">Small</span>
+  </div>
+
+  <div class="col">
+    <div class="wg wg-m">
+      <div class="wg-scr">
+        <div class="top">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="mascot"><svg viewBox="0 0 16 20" shape-rendering="crispEdges"><rect x="7" y="0" width="2" height="2" fill="var(--px2)"/><rect x="1" y="2" width="14" height="13" fill="var(--acc)"/><rect x="2" y="1" width="12" height="1" fill="var(--acc)"/><rect x="2" y="15" width="12" height="1" fill="var(--acc)"/><rect x="0" y="3" width="1" height="11" fill="var(--acc)"/><rect x="15" y="3" width="1" height="11" fill="var(--acc)"/><rect x="2" y="3" width="12" height="8" fill="var(--scr)"/><rect x="4" y="5" width="2" height="2" fill="var(--px)"/><rect x="10" y="5" width="2" height="2" fill="var(--px)"/><rect x="6" y="8" width="4" height="1" fill="var(--px)"/><rect x="5" y="7" width="1" height="1" fill="var(--px)"/><rect x="10" y="7" width="1" height="1" fill="var(--px)"/><rect x="4" y="16" width="2" height="2" fill="var(--acc)"/><rect x="10" y="16" width="2" height="2" fill="var(--acc)"/></svg></span>
+            <span class="f">민수</span>
+          </div>
+          <span class="badge">NEW</span>
+        </div>
+        <div class="c glow">012486</div>
+        <div class="t">PM 3:24</div>
+      </div>
+    </div>
+    <span class="lb">Medium</span>
+  </div>
+
+  <div class="col">
+    <div class="wg wg-l">
+      <div class="wg-scr">
+        <div class="top">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="mascot"><svg viewBox="0 0 16 20" shape-rendering="crispEdges"><rect x="7" y="0" width="2" height="2" fill="var(--px2)"/><rect x="1" y="2" width="14" height="13" fill="var(--acc)"/><rect x="2" y="1" width="12" height="1" fill="var(--acc)"/><rect x="2" y="15" width="12" height="1" fill="var(--acc)"/><rect x="0" y="3" width="1" height="11" fill="var(--acc)"/><rect x="15" y="3" width="1" height="11" fill="var(--acc)"/><rect x="2" y="3" width="12" height="8" fill="var(--scr)"/><rect x="4" y="5" width="2" height="2" fill="var(--px)"/><rect x="10" y="5" width="2" height="2" fill="var(--px)"/><rect x="6" y="8" width="4" height="1" fill="var(--px)"/><rect x="5" y="7" width="1" height="1" fill="var(--px)"/><rect x="10" y="7" width="1" height="1" fill="var(--px)"/><rect x="4" y="16" width="2" height="2" fill="var(--acc)"/><rect x="10" y="16" width="2" height="2" fill="var(--acc)"/></svg></span>
+            <span class="f">민수</span>
+          </div>
+          <span class="badge">NEW</span>
+        </div>
+        <div class="c glow">012486</div>
+        <div class="t">PM 3:24</div>
+        <div class="div"></div>
+        <div class="list">
+          <div class="row"><span class="rn">지은</span><span class="rc glow">143</span><span class="rt">PM 2:10</span></div>
+          <div class="row"><span class="rn">현우</span><span class="rc glow">486</span><span class="rt">AM 11:30</span></div>
+          <div class="row"><span class="rn">소영</span><span class="rc glow">1004</span><span class="rt">AM 9:15</span></div>
+        </div>
+      </div>
+    </div>
+    <span class="lb">Large</span>
+  </div>
+
+</div>
+
+<!-- ═══ ON DEVICE ═══ -->
+<div class="sec">ON DEVICE</div>
+<div class="phs">
+
+  <div class="ph" id="p1">
+    <div class="ph-n"></div>
+    <div class="ph-sb"><span>9:41</span><span></span></div>
+    <div class="hs">
+      <div class="hs-d">4월 10일 목요일</div>
+      <div style="display:flex;justify-content:center;margin-bottom:24px">
+        <div class="wg wg-m">
+          <div class="wg-scr">
+            <div class="top">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="mascot"><svg viewBox="0 0 16 20" shape-rendering="crispEdges"><rect x="7" y="0" width="2" height="2" fill="var(--px2)"/><rect x="1" y="2" width="14" height="13" fill="var(--acc)"/><rect x="2" y="1" width="12" height="1" fill="var(--acc)"/><rect x="2" y="15" width="12" height="1" fill="var(--acc)"/><rect x="0" y="3" width="1" height="11" fill="var(--acc)"/><rect x="15" y="3" width="1" height="11" fill="var(--acc)"/><rect x="2" y="3" width="12" height="8" fill="var(--scr)"/><rect x="4" y="5" width="2" height="2" fill="var(--px)"/><rect x="10" y="5" width="2" height="2" fill="var(--px)"/><rect x="6" y="8" width="4" height="1" fill="var(--px)"/><rect x="5" y="7" width="1" height="1" fill="var(--px)"/><rect x="10" y="7" width="1" height="1" fill="var(--px)"/><rect x="4" y="16" width="2" height="2" fill="var(--acc)"/><rect x="10" y="16" width="2" height="2" fill="var(--acc)"/></svg></span>
+                <span class="f">민수</span>
+              </div>
+              <span class="badge">NEW</span>
+            </div>
+            <div class="c glow">012486</div>
+            <div class="t">PM 3:24</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="hs-g"><div class="hs-i"></div><div class="hs-i"></div><div class="hs-i"></div><div class="hs-i"></div></div>
+      <div style="height:16px"></div>
+      <div class="hs-dk"><div class="hs-di"></div><div class="hs-di"></div><div class="hs-di"></div><div class="hs-di"></div></div>
+    </div>
+    <div class="ph-hi"></div>
+  </div>
+
+  <div class="ph" id="p2">
+    <div class="ph-n"></div>
+    <div class="ph-sb"><span>9:41</span><span></span></div>
+    <div class="ls">
+      <div class="ls-t">9:41</div>
+      <div class="ls-d">4월 10일 목요일</div>
+      <div class="ls-nf">
+        <div class="ls-ic">
+          <svg width="22" height="28" viewBox="0 0 16 20" shape-rendering="crispEdges">
+            <rect x="7" y="0" width="2" height="2" fill="var(--px2)"/>
+            <rect x="1" y="2" width="14" height="13" fill="var(--acc)"/>
+            <rect x="2" y="1" width="12" height="1" fill="var(--acc)"/>
+            <rect x="2" y="15" width="12" height="1" fill="var(--acc)"/>
+            <rect x="0" y="3" width="1" height="11" fill="var(--acc)"/>
+            <rect x="15" y="3" width="1" height="11" fill="var(--acc)"/>
+            <rect x="2" y="3" width="12" height="8" fill="var(--scr)"/>
+            <rect x="4" y="5" width="2" height="2" fill="var(--px)"/>
+            <rect x="10" y="5" width="2" height="2" fill="var(--px)"/>
+            <rect x="6" y="8" width="4" height="1" fill="var(--px)"/>
+            <rect x="5" y="7" width="1" height="1" fill="var(--px)"/>
+            <rect x="10" y="7" width="1" height="1" fill="var(--px)"/>
+            <rect x="4" y="16" width="2" height="2" fill="var(--acc)"/>
+            <rect x="10" y="16" width="2" height="2" fill="var(--acc)"/>
+          </svg>
+        </div>
+        <div class="ls-bd">
+          <div class="ls-ti">민수</div>
+          <div class="ls-co glow">012486</div>
+          <div class="ls-me">방금</div>
+        </div>
+      </div>
+    </div>
+    <div class="ph-hi"></div>
+  </div>
+
+</div>
+
+<script>
+function skin(c){
+  document.querySelectorAll('.sk').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  ['ws','p1','p2','ma'].forEach(id=>{
+    const e=document.getElementById(id);
+    e.className=e.className.replace(/skin-\w+/g,'').trim();
+    if(c)e.classList.add(c);
+  });
+}
+</script>
+</body>
+</html>

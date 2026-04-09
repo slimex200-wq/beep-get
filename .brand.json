@@ -1,0 +1,119 @@
+{
+  "name": "BEEP-GET",
+  "tagline": "홈 화면에 삐삐 한 대를 놓다",
+  "concept": "pixel-pager-widget",
+  "product": {
+    "primary-surface": "widget",
+    "secondary-surface": "notification-dashboard",
+    "tertiary-surface": "app",
+    "philosophy": "카톡이 있는 세상에서 앱을 또 만들 이유는 없다. 삐삐겟의 전부는 홈 화면 위젯이다. 숫자 코드로 감정을 나누는 따뜻한 소통."
+  },
+  "aesthetic": "cozy-pixel",
+  "colors": {
+    "primary": "#FF8FAB",
+    "secondary": "#94D0FF",
+    "accent": "#FFD466",
+    "background": "#FFF5EE",
+    "surface": "#FFEDE3",
+    "text": "#4A3A3A",
+    "text-muted": "#B09A8A",
+    "border": "#F0D8CC",
+    "error": "#FF6B6B",
+    "success": "#7CD4A0",
+    "warning": "#FFB347",
+    "pixel-screen": "#D4E8D0",
+    "pixel-text": "#2A4A2A",
+    "pixel-sub": "#5A8A5A"
+  },
+  "typography": {
+    "font-pixel": "Press Start 2P",
+    "font-display": "VT323",
+    "font-body": "Inter",
+    "font-mono": "Space Mono",
+    "scale": {
+      "xs": "8px",
+      "sm": "10px",
+      "base": "12px",
+      "lg": "16px",
+      "xl": "20px",
+      "2xl": "28px",
+      "3xl": "36px",
+      "code-display": "32px"
+    },
+    "usage": {
+      "widget-code": "font-display @ 3xl, letter-spacing: 3px",
+      "widget-label": "font-pixel @ xs",
+      "widget-meta": "font-pixel @ xs",
+      "app-header": "font-pixel @ sm",
+      "app-body": "font-display @ lg",
+      "app-caption": "font-pixel @ xs"
+    }
+  },
+  "spacing": {
+    "unit": "4px",
+    "radius-sm": "0px",
+    "radius-md": "0px",
+    "radius-lg": "4px",
+    "radius-widget": "12px",
+    "radius-full": "999px"
+  },
+  "widget": {
+    "sizes": ["small-2x2", "medium-4x2", "large-4x4"],
+    "hero-element": "code-number",
+    "info-hierarchy": ["code", "sender", "time"],
+    "design-principle": "한눈에 읽히는 삐삐. 탭 불필요. 보면 기분 좋아지는 따뜻한 친구.",
+    "pixel-border": "2px solid, stepped corners",
+    "screen-feel": "도트 스크린 — 픽셀 패턴 배경 위에 큰 숫자"
+  },
+  "mascot": {
+    "name": "비프콘",
+    "style": "16x16 dot character",
+    "states": ["happy", "waiting", "sleeping", "excited"],
+    "behavior": "메시지 수신시 표정 변화, 오래 안오면 졸음"
+  },
+  "tone": {
+    "voice": "warm-retro",
+    "personality": ["cozy", "pixel-art", "friendly", "nostalgic"],
+    "avoid": ["cold-tech", "corporate", "notification-heavy", "social-media-like"]
+  },
+  "darkMode": {
+    "background": "#1A1428",
+    "surface": "#2A2038",
+    "text": "#E8DFF0",
+    "text-muted": "#8A7A9A",
+    "border": "#3A2E48",
+    "pixel-screen": "#0A1A28",
+    "pixel-text": "#88FFCC",
+    "pixel-sub": "#44AA88"
+  },
+  "skins": {
+    "bomnal": {
+      "name": "봄날",
+      "tier": "free",
+      "palette": ["#FFF5EE", "#FFEDE3", "#FF8FAB", "#94D0FF", "#FFD466"]
+    },
+    "yabam": {
+      "name": "야밤 감성",
+      "tier": "premium",
+      "palette": ["#1A1428", "#2A2038", "#B8A0FF", "#6A8AFF", "#FFD466"]
+    },
+    "y2k": {
+      "name": "Y2K 반짝이",
+      "tier": "premium",
+      "palette": ["#FF00FF", "#00FFFF", "#FFD700", "#FF69B4", "#000000"]
+    },
+    "pc98": {
+      "name": "PC-98 추억",
+      "tier": "premium",
+      "palette": ["#C8B468", "#8A7848", "#486830", "#203818", "#000000"]
+    }
+  },
+  "anti-slop": [
+    "뉴모피즘 그림자 금지 — 픽셀 보더만",
+    "둥근 아바타 금지 — 도트 캐릭터만",
+    "그라데이션 금지 — 도트 패턴/디더링으로 표현",
+    "과도한 애니메이션 금지 — 3-4프레임 도트 애니만",
+    "차가운 톤 금지 — 파스텔/따뜻한 톤만",
+    "border-radius 큰 값 금지 (위젯 외곽 제외) — 직각/스텝 코너"
+  ]
+}

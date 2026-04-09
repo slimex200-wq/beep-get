@@ -2,17 +2,17 @@
   "slug": "neumorphism",
   "name": "뉴모피즘",
   "colors": {
-    "background": "#E8E8E8",
-    "surface": "#E0E0E0",
-    "lcdBackground": "#C8D8C0",
-    "lcdText": "#1A4A1A",
-    "lcdSubtext": "#3A7A3A",
-    "primary": "#6A6A8A",
-    "secondary": "#8A8AAA",
-    "accent": "#C47080",
-    "textPrimary": "#3A3A5A",
-    "textSecondary": "#8A8A9A",
-    "border": "rgba(180,160,220,0.2)"
+    "background": "#DCDCDC",
+    "surface": "#D4D4D4",
+    "lcdBackground": "#B8C8AE",
+    "lcdText": "#142A14",
+    "lcdSubtext": "#2A5A2A",
+    "primary": "#5A5A7A",
+    "secondary": "#7A7A9A",
+    "accent": "#B8606E",
+    "textPrimary": "#2A2A4A",
+    "textSecondary": "#7A7A8A",
+    "border": "rgba(160,140,200,0.15)"
   },
   "shadows": {
     "raised": {

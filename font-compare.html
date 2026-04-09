@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, initial-scale=1">
+<title>BEEP-GET Font Compare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700&family=Pixelify+Sans:wght@400;700&family=Orbitron:wght@400;700&family=VT323&family=Press+Start+2P&family=DotGothic16&family=Space+Mono&family=Bitcount+Mono+Single&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#14100C;color:#A09080;font-family:'Inter',system-ui,sans-serif;
+  padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:32px;
+}
+h1{font-family:'Pixelify Sans',sans-serif;font-size:14px;color:#706050;letter-spacing:2px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;width:100%}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+
+.card{
+  background:#1E1A16;border:2px solid #2A2420;border-radius:12px;
+  padding:20px;display:flex;flex-direction:column;gap:12px;
+}
+.card-name{font-family:'Pixelify Sans',sans-serif;font-size:13px;font-weight:700;color:#B0A090}
+.card-desc{font-size:11px;color:#706050;line-height:1.5}
+.card-tag{
+  display:inline-block;padding:2px 8px;border:1px solid #3A3028;
+  font-family:'Pixelify Sans',sans-serif;font-size:9px;color:#908070;
+}
+
+/* LCD panel for each font */
+.lcd{
+  background:#C2D0AD;border:2px solid #A8B898;border-radius:4px;
+  padding:16px;text-align:center;position:relative;overflow:hidden;
+}
+.lcd::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px);
+}
+.lcd-dark{background:#0A1A28;border-color:#0E2238}
+.lcd-dark .code{color:#88FFCC!important}
+.lcd-dark .sub{color:#44AA88!important}
+
+.code{color:#334A28;line-height:1;letter-spacing:3px}
+.sub{font-family:'Pixelify Sans',sans-serif;font-size:10px;color:#6A7E58;margin-top:6px}
+
+/* Font specific */
+.f-doto .code{font-family:'Doto',sans-serif;font-weight:700}
+.f-pixelify .code{font-family:'Pixelify Sans',sans-serif;font-weight:700}
+.f-orbitron .code{font-family:'Orbitron',sans-serif;font-weight:700}
+.f-vt323 .code{font-family:'VT323',monospace}
+.f-press .code{font-family:'Press Start 2P',monospace}
+.f-dotgothic .code{font-family:'DotGothic16',sans-serif}
+.f-spacemono .code{font-family:'Space Mono',monospace;font-weight:700}
+.f-silkscreen .code{font-family:'Silkscreen',monospace;font-weight:700}
+
+/* Size variants */
+.s48 .code{font-size:48px}
+.s36 .code{font-size:36px}
+.s28 .code{font-size:28px}
+
+/* Full width comparison */
+.full{grid-column:1/-1}
+.compare-row{
+  display:flex;gap:12px;align-items:center;padding:12px 0;
+  border-bottom:1px solid #2A2420;
+}
+.compare-row:last-child{border:none}
+.compare-label{width:120px;font-family:'Pixelify Sans',sans-serif;font-size:11px;color:#908070;flex-shrink:0}
+.compare-codes{flex:1;display:flex;gap:16px;flex-wrap:wrap}
+.compare-lcd{
+  background:#C2D0AD;border:1px solid #A8B898;border-radius:3px;
+  padding:8px 14px;text-align:center;
+}
+.compare-lcd .code{letter-spacing:2px}
+
+/* Winner badge */
+.winner{position:relative}
+.winner::after{
+  content:'PICK';position:absolute;top:-6px;right:-6px;
+  font-family:'Pixelify Sans',sans-serif;font-size:8px;font-weight:700;
+  background:#CC7058;color:#FFF;padding:2px 6px;border-radius:2px;
+}
+
+/* Widget preview */
+.widget-preview{
+  background:#E8DCCF;border:2px solid #D4C4B0;border-radius:14px;
+  padding:4px;
+}
+.widget-lcd{
+  background:#C2D0AD;border-radius:10px;padding:12px;
+  position:relative;overflow:hidden;
+}
+.widget-lcd::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px);
+}
+.widget-from{font-family:'Pixelify Sans',sans-serif;font-size:10px;color:#6A7E58;font-weight:600}
+.widget-code{color:#334A28;letter-spacing:4px;line-height:1;text-align:center;padding:8px 0}
+.widget-time{font-family:'Pixelify Sans',sans-serif;font-size:9px;color:#6A7E58;text-align:right;opacity:0.7}
+.widget-badge{font-family:'Pixelify Sans',sans-serif;font-size:9px;color:#CC7058;font-weight:700}
+</style>
+</head>
+<body>
+
+<h1>FONT COMPARE</h1>
+<p style="font-family:'Pixelify Sans',sans-serif;font-size:11px;color:#605848;text-align:center">beep-get 숫자 코드 표시용 폰트 비교</p>
+
+<div class="grid">
+
+  <!-- Doto -->
+  <div class="card f-doto s48 winner">
+    <div class="card-name">Doto</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">도트매트릭스</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">점 단위 블록 구성. 삐삐/전광판 느낌. 큰 사이즈에서 도트가 살아남</div>
+    <div class="card-tag">도트매트릭스</div>
+  </div>
+
+  <!-- Pixelify Sans -->
+  <div class="card f-pixelify s48">
+    <div class="card-name">Pixelify Sans</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">정형 픽셀</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">가독성 좋은 픽셀 서체. 따뜻하고 친근한 느낌. UI 라벨에도 사용 가능</div>
+    <div class="card-tag">픽셀 산세리프</div>
+  </div>
+
+  <!-- Orbitron -->
+  <div class="card f-orbitron s48">
+    <div class="card-name">Orbitron</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">테크노</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">기하학적 미래 감성. 사이버 네온 스킨에 특히 잘 어울림</div>
+    <div class="card-tag">SF/테크노</div>
+  </div>
+
+  <!-- VT323 (현재) -->
+  <div class="card f-vt323 s48">
+    <div class="card-name">VT323 (현재)</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">현재 사용중</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">터미널/CRT 느낌. 가독성은 좋으나 개성 부족. 너무 흔함</div>
+    <div class="card-tag">CRT 터미널</div>
+  </div>
+
+  <!-- Press Start 2P -->
+  <div class="card f-press s28">
+    <div class="card-name">Press Start 2P</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">아케이드</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">강한 아케이드 게임 감성. 큰 사이즈에서 너무 두꺼울 수 있음</div>
+    <div class="card-tag">8비트 아케이드</div>
+  </div>
+
+  <!-- DotGothic16 -->
+  <div class="card f-dotgothic s48">
+    <div class="card-name">DotGothic16</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">16px 비트맵</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">16x16 비트맵 확대. CJK 지원 (한글 가능). 메타 텍스트에 적합</div>
+    <div class="card-tag">비트맵 CJK</div>
+  </div>
+
+  <!-- Space Mono -->
+  <div class="card f-spacemono s48">
+    <div class="card-name">Space Mono</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">모던 모노</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">모던 모노스페이스. 깔끔하고 정렬 완벽. 레트로감은 약함</div>
+    <div class="card-tag">모던 모노</div>
+  </div>
+
+  <!-- Silkscreen -->
+  <div class="card f-silkscreen s48">
+    <div class="card-name">Silkscreen</div>
+    <div class="lcd"><div class="code">012486</div><div class="sub">실크스크린</div></div>
+    <div class="lcd lcd-dark"><div class="code">012486</div><div class="sub">야밤 모드</div></div>
+    <div class="card-desc">극소 픽셀 전용. 작은 사이즈에 최적화. 큰 사이즈에선 거칠 수 있음</div>
+    <div class="card-tag">극소 픽셀</div>
+  </div>
+
+</div>
+
+<!-- Full comparison: same number, all fonts -->
+<div class="grid">
+  <div class="card full">
+    <div class="card-name">나란히 비교: 같은 숫자, 다른 폰트</div>
+
+    <div class="compare-row">
+      <div class="compare-label">Doto</div>
+      <div class="compare-codes">
+        <div class="compare-lcd f-doto"><div class="code" style="font-size:32px;font-family:'Doto',sans-serif;font-weight:700">143</div></div>
+        <div class="compare-lcd f-doto"><div class="code" style="font-size:32px;font-family:'Doto',sans-serif;font-weight:700">486</div></div>
+        <div class="compare-lcd f-doto"><div class="code" style="font-size:32px;font-family:'Doto',sans-serif;font-weight:700">1004</div></div>
+        <div class="compare-lcd f-doto"><div class="code" style="font-size:32px;font-family:'Doto',sans-serif;font-weight:700">8282</div></div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-label">Pixelify Sans</div>
+      <div class="compare-codes">
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Pixelify Sans',sans-serif;font-weight:700">143</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Pixelify Sans',sans-serif;font-weight:700">486</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Pixelify Sans',sans-serif;font-weight:700">1004</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Pixelify Sans',sans-serif;font-weight:700">8282</div></div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-label">Orbitron</div>
+      <div class="compare-codes">
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Orbitron',sans-serif;font-weight:700">143</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Orbitron',sans-serif;font-weight:700">486</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Orbitron',sans-serif;font-weight:700">1004</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'Orbitron',sans-serif;font-weight:700">8282</div></div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-label">VT323 (현재)</div>
+      <div class="compare-codes">
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'VT323',monospace">143</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'VT323',monospace">486</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'VT323',monospace">1004</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:32px;font-family:'VT323',monospace">8282</div></div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-label">Press Start 2P</div>
+      <div class="compare-codes">
+        <div class="compare-lcd"><div class="code" style="font-size:20px;font-family:'Press Start 2P',monospace">143</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:20px;font-family:'Press Start 2P',monospace">486</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:20px;font-family:'Press Start 2P',monospace">1004</div></div>
+        <div class="compare-lcd"><div class="code" style="font-size:20px;font-family:'Press Start 2P',monospace">8282</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Widget mockup with each font -->
+<div class="grid">
+  <div class="card full">
+    <div class="card-name">위젯에 적용한 모습 (Medium 4x2)</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+
+      <!-- Doto widget -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div class="widget-preview" style="width:220px">
+          <div class="widget-lcd">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span class="widget-from">민수</span>
+              <span class="widget-badge">NEW</span>
+            </div>
+            <div class="widget-code" style="font-family:'Doto',sans-serif;font-weight:700;font-size:36px">012486</div>
+            <div class="widget-time">PM 3:24</div>
+          </div>
+        </div>
+        <span style="font-family:'Pixelify Sans',sans-serif;font-size:10px;color:#706050">Doto</span>
+      </div>
+
+      <!-- Pixelify widget -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div class="widget-preview" style="width:220px">
+          <div class="widget-lcd">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span class="widget-from">민수</span>
+              <span class="widget-badge">NEW</span>
+            </div>
+            <div class="widget-code" style="font-family:'Pixelify Sans',sans-serif;font-weight:700;font-size:36px">012486</div>
+            <div class="widget-time">PM 3:24</div>
+          </div>
+        </div>
+        <span style="font-family:'Pixelify Sans',sans-serif;font-size:10px;color:#706050">Pixelify Sans</span>
+      </div>
+
+      <!-- Orbitron widget -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div class="widget-preview" style="width:220px">
+          <div class="widget-lcd">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span class="widget-from">민수</span>
+              <span class="widget-badge">NEW</span>
+            </div>
+            <div class="widget-code" style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:32px">012486</div>
+            <div class="widget-time">PM 3:24</div>
+          </div>
+        </div>
+        <span style="font-family:'Pixelify Sans',sans-serif;font-size:10px;color:#706050">Orbitron</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
