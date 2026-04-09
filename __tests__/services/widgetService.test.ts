@@ -1,4 +1,11 @@
-import { buildWidgetData } from "@/services/widgetService";
+const beepWidget = require("../../modules/beep-widget");
+import {
+  buildWidgetData,
+  syncWidgetData,
+  triggerWidgetReload,
+} from "@/services/widgetService";
+
+beforeEach(() => jest.clearAllMocks());
 
 const mockMessages = [
   {
@@ -83,7 +90,7 @@ describe("buildWidgetData", () => {
 
   it("deduplicates senders", () => {
     const data = buildWidgetData(mockMessages, mockFriends);
-    const nicknames = data.recentSenders.map((s) => s.nickname);
+    const nicknames = data.recentSenders.map((s: any) => s.nickname);
     expect(new Set(nicknames).size).toBe(nicknames.length);
   });
 
@@ -93,5 +100,63 @@ describe("buildWidgetData", () => {
     expect(data.recentSenders[1].statusIcon).toBe("away");
     // user-c not in friends, defaults to "online"
     expect(data.recentSenders[2].statusIcon).toBe("online");
+  });
+
+  it("handles messages without from_user_profile", () => {
+    const msgs = [
+      {
+        id: "msg-1",
+        from_user: "user-x",
+        number_code: "999",
+        is_read: false,
+        created_at: "2026-04-02T10:00:00Z",
+      },
+    ];
+    const data = buildWidgetData(msgs, []);
+    expect(data.latestMessage!.senderNickname).toBe("???");
+    expect(data.latestMessage!.senderBeepId).toBe("");
+  });
+});
+
+describe("syncWidgetData", () => {
+  it("calls updateWidgetData with built data", () => {
+    syncWidgetData(mockMessages, mockFriends);
+    expect(beepWidget.updateWidgetData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latestMessage: expect.any(Object),
+        recentSenders: expect.any(Array),
+      })
+    );
+  });
+
+  it("does not throw when native module fails", () => {
+    beepWidget.updateWidgetData.mockImplementation(() => {
+      throw new Error("native module not available");
+    });
+
+    expect(() => syncWidgetData(mockMessages, mockFriends)).not.toThrow();
+  });
+
+  it("calls updateWidgetData with empty data for no messages", () => {
+    syncWidgetData([], []);
+    expect(beepWidget.updateWidgetData).toHaveBeenCalledWith({
+      latestMessage: null,
+      recentSenders: [],
+    });
+  });
+});
+
+describe("triggerWidgetReload", () => {
+  it("calls reloadWidgets", () => {
+    triggerWidgetReload();
+    expect(beepWidget.reloadWidgets).toHaveBeenCalled();
+  });
+
+  it("does not throw when native module fails", () => {
+    beepWidget.reloadWidgets.mockImplementation(() => {
+      throw new Error("native module not available");
+    });
+
+    expect(() => triggerWidgetReload()).not.toThrow();
   });
 });

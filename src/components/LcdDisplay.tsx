@@ -14,6 +14,8 @@ export function LcdDisplay({ fromName, code, time, isNew }: LcdDisplayProps) {
 
   return (
     <View
+      accessibilityRole="summary"
+      accessibilityLabel={`${fromName}에게서 온 메시지, 코드 ${code}, ${time}${isNew ? ", 새 메시지" : ""}`}
       style={[
         styles.container,
         {

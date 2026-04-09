@@ -27,6 +27,8 @@ export function BeepButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [

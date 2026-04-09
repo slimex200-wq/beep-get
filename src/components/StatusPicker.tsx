@@ -23,6 +23,8 @@ export function StatusPicker({ currentIcon, onSelect }: StatusPickerProps) {
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`상태: ${item.label}`}
             onPress={() => onSelect(item.icon, item.label)}
             style={[
               styles.chip,

@@ -28,6 +28,8 @@ export function VibrationPicker({ currentPattern, onSelect }: VibrationPickerPro
       <View style={styles.grid}>
         {VIBRATION_PRESETS.map((preset) => (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`진동 패턴: ${preset.name}`}
             key={preset.name}
             onPress={() => handlePress(preset.pattern, preset.name)}
             style={[

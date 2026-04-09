@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, Modal } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 import { BeepButton } from "@/components/BeepButton";
 import { isValidBeepId } from "@/services/authService";
 
@@ -12,6 +12,7 @@ interface QrScannerProps {
 }
 
 export function QrScanner({ visible, onClose, onScan }: QrScannerProps) {
+  const theme = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -25,6 +26,28 @@ export function QrScanner({ visible, onClose, onScan }: QrScannerProps) {
       onClose();
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+      gap: theme.spacing.md,
+    },
+    text: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 18,
+      color: theme.colors.textPrimary,
+    },
+    overlay: {
+      position: "absolute",
+      bottom: 60,
+      left: 0,
+      right: 0,
+      alignItems: "center",
+    },
+  }), [theme]);
 
   if (!permission?.granted) {
     return (
@@ -51,25 +74,3 @@ export function QrScanner({ visible, onClose, onScan }: QrScannerProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.background,
-    gap: theme.spacing.md,
-  },
-  text: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 18,
-    color: theme.colors.textPrimary,
-  },
-  overlay: {
-    position: "absolute",
-    bottom: 60,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-});

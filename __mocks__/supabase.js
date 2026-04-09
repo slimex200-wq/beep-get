@@ -1,22 +1,37 @@
-const mockFrom = jest.fn(() => ({
-  select: jest.fn().mockReturnThis(),
-  insert: jest.fn().mockReturnThis(),
-  update: jest.fn().mockReturnThis(),
-  delete: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  gt: jest.fn().mockReturnThis(),
-  order: jest.fn().mockReturnThis(),
-  single: jest.fn().mockResolvedValue({ data: null, error: null }),
-}));
+function createMockChain(result = { data: null, error: null }) {
+  const chain = {
+    select: jest.fn(() => chain),
+    insert: jest.fn(() => chain),
+    update: jest.fn(() => chain),
+    delete: jest.fn(() => chain),
+    upsert: jest.fn(() => chain),
+    eq: jest.fn(() => chain),
+    gt: jest.fn(() => chain),
+    in: jest.fn(() => chain),
+    lte: jest.fn(() => chain),
+    gte: jest.fn(() => chain),
+    order: jest.fn(() => chain),
+    limit: jest.fn(() => chain),
+    single: jest.fn(() => Promise.resolve(result)),
+    then: (resolve) => Promise.resolve(result).then(resolve),
+  };
+  return chain;
+}
+
+const mockFrom = jest.fn(() => createMockChain());
 
 module.exports = {
   supabase: {
     from: mockFrom,
+    rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
     auth: {
-      signInWithOAuth: jest.fn(),
-      signInWithIdToken: jest.fn(),
-      signOut: jest.fn(),
-      getSession: jest.fn(),
+      signInWithOAuth: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      signInWithIdToken: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      signOut: jest.fn().mockResolvedValue({ error: null }),
+      getSession: jest.fn().mockResolvedValue({
+        data: { session: null },
+        error: null,
+      }),
       onAuthStateChange: jest.fn(),
     },
     channel: jest.fn(() => ({
@@ -25,4 +40,5 @@ module.exports = {
     })),
     removeChannel: jest.fn(),
   },
+  createMockChain,
 };

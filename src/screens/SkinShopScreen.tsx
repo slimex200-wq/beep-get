@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, FlatList, StyleSheet, Alert } from "react-native";
 import { useTheme } from "@/theme/ThemeProvider";
 import { SkinPreview } from "@/components/SkinPreview";
@@ -16,8 +16,11 @@ export function SkinShopScreen() {
     if (profile) fetchOwned(profile.id);
   }, [profile?.id]);
 
-  const isOwned = (skinId: string) =>
-    ownedSkins.some((os) => os.skin_id === skinId);
+  const ownedSkinIds = useMemo(
+    () => new Set(ownedSkins.map((os) => os.skin_id)),
+    [ownedSkins]
+  );
+  const isOwned = (skinId: string) => ownedSkinIds.has(skinId);
 
   const handlePress = async (skin: any) => {
     if (!profile) return;

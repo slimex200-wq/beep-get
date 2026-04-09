@@ -31,35 +31,14 @@ export async function signInWithApple() {
 }
 
 export async function createUserProfile(userId: string, nickname: string) {
-  let beepId = "";
   for (let attempt = 0; attempt < MAX_BEEP_ID_RETRIES; attempt++) {
-    beepId = generateBeepId();
-    const { error } = await supabase.from("users").insert({
-      id: userId,
-      beep_id: beepId,
-      nickname,
+    const beepId = generateBeepId();
+    const { data, error } = await supabase.rpc("create_user_profile", {
+      p_nickname: nickname,
+      p_beep_id: beepId,
     });
-    if (!error) {
-      // Grant default free skin
-      const { data: freeSkin } = await supabase
-        .from("skins")
-        .select("id")
-        .eq("is_free", true)
-        .single();
-      if (freeSkin) {
-        await supabase.from("user_skins").insert({
-          user_id: userId,
-          skin_id: freeSkin.id,
-          acquired_type: "default",
-        });
-        await supabase
-          .from("users")
-          .update({ active_skin_id: freeSkin.id })
-          .eq("id", userId);
-      }
-      return beepId;
-    }
-    if (error.code !== "23505") throw error; // 23505 = unique violation → retry
+    if (!error) return data as string;
+    if (error.code !== "23505") throw error;
   }
   throw new Error("beep_id 생성 실패: 최대 재시도 횟수 초과");
 }

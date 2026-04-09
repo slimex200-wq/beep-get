@@ -9,7 +9,6 @@ import {
 } from "@/services/messageService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { syncWidgetData } from "@/services/widgetService";
-import { useFriendStore } from "@/stores/friendStore";
 
 interface Message {
   id: string;
@@ -29,7 +28,7 @@ interface MessageState {
   saved: Message[];
   loading: boolean;
   channel: RealtimeChannel | null;
-  fetchReceived: (userId: string) => Promise<void>;
+  fetchReceived: (userId: string, friends?: any[]) => Promise<void>;
   fetchSaved: (userId: string) => Promise<void>;
   send: (fromId: string, toId: string, code: string, memo?: string) => Promise<void>;
   read: (messageId: string) => Promise<void>;
@@ -44,11 +43,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   loading: false,
   channel: null,
 
-  fetchReceived: async (userId) => {
+  fetchReceived: async (userId, friends?) => {
     set({ loading: true });
     const received = await getReceivedMessages(userId);
     set({ received, loading: false });
-    syncWidgetData(received, useFriendStore.getState().friends);
+    syncWidgetData(received, friends ?? []);
   },
 
   fetchSaved: async (userId) => {

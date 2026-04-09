@@ -37,6 +37,8 @@ export function buildWidgetData(
         }
       : null;
 
+  const friendMap = new Map(friends.map((f) => [f.friend_id, f]));
+
   // Extract unique recent senders (up to WIDGET_MAX_RECENT_SENDERS)
   const seen = new Set<string>();
   const recentSenders: RecentSender[] = [];
@@ -47,7 +49,7 @@ export function buildWidgetData(
     if (seen.has(senderId)) continue;
     seen.add(senderId);
 
-    const friend = friends.find((f) => f.friend_id === senderId);
+    const friend = friendMap.get(senderId);
     recentSenders.push({
       nickname: msg.from_user_profile?.nickname ?? "???",
       beepId: msg.from_user_profile?.beep_id ?? "",

@@ -17,7 +17,7 @@ interface StatusState {
   setStatus: (userId: string, icon: string, label?: string) => Promise<void>;
   fetchMyStatus: (userId: string) => Promise<void>;
   fetchFriendStatuses: (friendIds: string[]) => Promise<void>;
-  subscribeRealtime: () => void;
+  subscribeRealtime: (friendIds: string[]) => void;
   unsubscribeRealtime: () => void;
 }
 
@@ -52,7 +52,8 @@ export const useStatusStore = create<StatusState>((set, get) => ({
     set({ friendStatuses: map });
   },
 
-  subscribeRealtime: () => {
+  subscribeRealtime: (friendIds: string[]) => {
+    const friendSet = new Set(friendIds);
     const channel = supabase
       .channel("status_broadcasts")
       .on(
@@ -60,7 +61,7 @@ export const useStatusStore = create<StatusState>((set, get) => ({
         { event: "*", schema: "public", table: "status_broadcasts" },
         (payload) => {
           const updated = payload.new as StatusBroadcast;
-          if (updated) {
+          if (updated && friendSet.has(updated.user_id)) {
             set((state) => {
               const map = new Map(state.friendStatuses);
               map.set(updated.user_id, updated);

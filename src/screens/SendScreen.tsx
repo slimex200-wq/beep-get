@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 import { CodeInput } from "@/components/CodeInput";
 import { BeepButton } from "@/components/BeepButton";
 import { useMessageStore } from "@/stores/messageStore";
@@ -11,6 +11,7 @@ import type { RootStackParamList } from "@/navigation/RootNavigator";
 type Props = NativeStackScreenProps<RootStackParamList, "Send">;
 
 export function SendScreen({ route, navigation }: Props) {
+  const theme = useTheme();
   const { friendId, friendName } = route.params;
   const { profile } = useAuthStore();
   const { send } = useMessageStore();
@@ -28,6 +29,22 @@ export function SendScreen({ route, navigation }: Props) {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: theme.spacing.lg,
+      gap: theme.spacing.lg,
+    },
+    to: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 20,
+      color: theme.colors.primary,
+      textAlign: "center",
+      marginTop: theme.spacing.xl,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.to}>TO: {friendName}</Text>
@@ -43,19 +60,3 @@ export function SendScreen({ route, navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-  },
-  to: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 20,
-    color: theme.colors.primary,
-    textAlign: "center",
-    marginTop: theme.spacing.xl,
-  },
-});

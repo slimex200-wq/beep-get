@@ -16,31 +16,24 @@ export async function setMyStatus(
   statusIcon: string,
   label?: string
 ) {
-  // Upsert: update if exists, insert if not
-  const { data: existing } = await supabase
+  const { error } = await supabase
     .from("status_broadcasts")
-    .select("id")
-    .eq("user_id", userId)
-    .single();
+    .upsert(
+      {
+        user_id: userId,
+        status_icon: statusIcon,
+        label: label ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+  if (error) throw error;
 
-  if (existing) {
-    const { error } = await supabase
-      .from("status_broadcasts")
-      .update({ status_icon: statusIcon, label, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from("status_broadcasts")
-      .insert({ user_id: userId, status_icon: statusIcon, label });
-    if (error) throw error;
-  }
-
-  // Also update user's status_icon
-  await supabase
+  const { error: userError } = await supabase
     .from("users")
     .update({ status_icon: statusIcon })
     .eq("id", userId);
+  if (userError) throw userError;
 }
 
 export async function getMyStatus(userId: string) {

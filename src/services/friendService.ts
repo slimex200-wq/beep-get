@@ -3,13 +3,11 @@ import { isValidBeepId } from "@/services/authService";
 
 export async function findUserByBeepId(beepId: string) {
   if (!isValidBeepId(beepId)) return null;
-  const { data, error } = await supabase
-    .from("users")
-    .select("id, beep_id, nickname")
-    .eq("beep_id", beepId)
-    .single();
-  if (error) return null;
-  return data;
+  const { data, error } = await supabase.rpc("find_user_by_beep_id", {
+    target_beep_id: beepId,
+  });
+  if (error || !data || data.length === 0) return null;
+  return data[0];
 }
 
 export async function addFriend(userId: string, friendId: string, nickname?: string) {

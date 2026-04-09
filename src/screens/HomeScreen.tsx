@@ -1,12 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 import { LcdDisplay } from "@/components/LcdDisplay";
 import { BeepButton } from "@/components/BeepButton";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 
 export function HomeScreen() {
+  const theme = useTheme();
   const { profile } = useAuthStore();
   const { received, loading, fetchReceived, read, save, subscribeRealtime, unsubscribeRealtime } =
     useMessageStore();
@@ -26,6 +27,69 @@ export function HomeScreen() {
     const m = d.getMinutes().toString().padStart(2, "0");
     return `${h >= 12 ? "PM" : "AM"} ${h % 12 || 12}:${m}`;
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: theme.spacing.md,
+    },
+    header: {
+      fontFamily: theme.fonts.pixel,
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      letterSpacing: 2,
+      textAlign: "center",
+      marginBottom: theme.spacing.md,
+      marginTop: theme.spacing.xl,
+    },
+    lcdArea: {
+      gap: theme.spacing.md,
+    },
+    actions: {
+      flexDirection: "row",
+      gap: theme.spacing.sm,
+    },
+    empty: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.xl * 2,
+      alignItems: "center",
+      ...theme.shadows.inset,
+    },
+    emptyText: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 18,
+      color: theme.colors.textSecondary,
+    },
+    list: {
+      marginTop: theme.spacing.lg,
+    },
+    listItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    listName: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 16,
+      color: theme.colors.textPrimary,
+      flex: 1,
+    },
+    listCode: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 16,
+      color: theme.colors.lcdText,
+      marginRight: theme.spacing.md,
+    },
+    listTime: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -78,66 +142,3 @@ export function HomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.md,
-  },
-  header: {
-    fontFamily: theme.fonts.pixel,
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: theme.spacing.md,
-    marginTop: theme.spacing.xl,
-  },
-  lcdArea: {
-    gap: theme.spacing.md,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  empty: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.xl * 2,
-    alignItems: "center",
-    ...theme.shadows.inset,
-  },
-  emptyText: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 18,
-    color: theme.colors.textSecondary,
-  },
-  list: {
-    marginTop: theme.spacing.lg,
-  },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  listName: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 16,
-    color: theme.colors.textPrimary,
-    flex: 1,
-  },
-  listCode: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 16,
-    color: theme.colors.lcdText,
-    marginRight: theme.spacing.md,
-  },
-  listTime: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-  },
-});

@@ -21,6 +21,7 @@ interface UserIcon {
 interface CollectionState {
   allIcons: Icon[];
   ownedIcons: UserIcon[];
+  ownedIconIds: Set<string>;
   loading: boolean;
   fetchAll: () => Promise<void>;
   fetchOwned: (userId: string) => Promise<void>;
@@ -31,6 +32,7 @@ interface CollectionState {
 export const useCollectionStore = create<CollectionState>((set, get) => ({
   allIcons: [],
   ownedIcons: [],
+  ownedIconIds: new Set(),
   loading: false,
 
   fetchAll: async () => {
@@ -41,7 +43,7 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
 
   fetchOwned: async (userId) => {
     const ownedIcons = await getUserIcons(userId);
-    set({ ownedIcons });
+    set({ ownedIcons, ownedIconIds: new Set(ownedIcons.map((ui) => ui.icon_id)) });
   },
 
   grant: async (userId, iconId) => {
@@ -50,6 +52,6 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   },
 
   isOwned: (iconId) => {
-    return get().ownedIcons.some((ui) => ui.icon_id === iconId);
+    return get().ownedIconIds.has(iconId);
   },
 }));

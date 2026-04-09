@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, FlatList, StyleSheet, TextInput, Alert } from "react-native";
-import { neumorphism as theme } from "@/theme/neumorphism";
+import { useTheme } from "@/theme/ThemeProvider";
 import { BeepButton } from "@/components/BeepButton";
 import { QrScanner } from "@/components/QrScanner";
 import { useAuthStore } from "@/stores/authStore";
@@ -10,6 +10,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 
 export function FriendsScreen() {
+  const theme = useTheme();
   const { profile } = useAuthStore();
   const { friends, loading, fetch, add } = useFriendStore();
   const [beepIdInput, setBeepIdInput] = useState("");
@@ -30,6 +31,57 @@ export function FriendsScreen() {
       Alert.alert("오류", err.message);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: theme.spacing.md,
+    },
+    header: {
+      fontFamily: theme.fonts.pixel,
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      letterSpacing: 2,
+      textAlign: "center",
+      marginBottom: theme.spacing.md,
+      marginTop: theme.spacing.xl,
+    },
+    addRow: {
+      flexDirection: "row",
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.lg,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.sm,
+      padding: theme.spacing.sm,
+      fontFamily: theme.fonts.lcd,
+      fontSize: 18,
+      color: theme.colors.textPrimary,
+      textAlign: "center",
+      letterSpacing: 2,
+    },
+    friendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    friendInfo: { flex: 1 },
+    friendName: {
+      fontFamily: theme.fonts.lcd,
+      fontSize: 18,
+      color: theme.colors.textPrimary,
+    },
+    friendBeepId: {
+      fontFamily: theme.fonts.mono,
+      fontSize: 11,
+      color: theme.colors.textSecondary,
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -88,54 +140,3 @@ export function FriendsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.md,
-  },
-  header: {
-    fontFamily: theme.fonts.pixel,
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: theme.spacing.md,
-    marginTop: theme.spacing.xl,
-  },
-  addRow: {
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-    fontFamily: theme.fonts.lcd,
-    fontSize: 18,
-    color: theme.colors.textPrimary,
-    textAlign: "center",
-    letterSpacing: 2,
-  },
-  friendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  friendInfo: { flex: 1 },
-  friendName: {
-    fontFamily: theme.fonts.lcd,
-    fontSize: 18,
-    color: theme.colors.textPrimary,
-  },
-  friendBeepId: {
-    fontFamily: theme.fonts.mono,
-    fontSize: 11,
-    color: theme.colors.textSecondary,
-  },
-});

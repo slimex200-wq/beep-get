@@ -24,7 +24,12 @@ export function SkinPreview({
   const previewTheme = getSkinTheme(slug);
 
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`스킨: ${name}${isActive ? ", 적용중" : ""}${!isOwned && !isFree ? ", 프리미엄" : ""}`}
+      onPress={onPress}
+      style={styles.container}
+    >
       {/* Mini LCD preview */}
       <View
         style={[
