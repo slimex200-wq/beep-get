@@ -15,5 +15,13 @@
         <key>NSExtensionPointIdentifier</key>
         <string>com.apple.widgetkit-extension</string>
     </dict>
+    <key>UIAppFonts</key>
+    <array>
+        <string>Fonts/Fraunces.ttf</string>
+        <string>Fonts/Fraunces-Italic.ttf</string>
+        <string>Fonts/IBMPlexMono-Regular.ttf</string>
+        <string>Fonts/IBMPlexMono-Medium.ttf</string>
+        <string>Fonts/IBMPlexMono-Bold.ttf</string>
+    </array>
 </dict>
 </plist>

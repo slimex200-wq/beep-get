@@ -5,31 +5,58 @@ struct BeepWidgetSmallView: View {
     let entry: BeepWidgetEntry
 
     var body: some View {
-        ZStack {
-            Color(hex: "#E0E0E0")
+        if let msg = entry.latestMessage {
+            SwissPaperSmallView(
+                code: msg.code,
+                fromName: msg.senderNickname,
+                time: formatTime(msg.receivedAt),
+                indexNo: formatIndex(msg),
+                isNew: !msg.isRead
+            )
+        } else {
+            PlaceholderSmallView()
+        }
+    }
 
-            if let msg = entry.latestMessage {
-                LcdView(
-                    fromName: msg.senderNickname,
-                    code: msg.code,
-                    time: formatTime(msg.receivedAt),
-                    isNew: !msg.isRead
-                )
-                .padding(4)
-            } else {
-                VStack(spacing: 8) {
-                    Text("BEEP-GET")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(hex: "#6A6A8A"))
-                    Text("수신 대기 중...")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(Color(hex: "#8A8A9A"))
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(hex: "#C8D8C0"))
-                .cornerRadius(8)
-                .padding(4)
-            }
+    private func formatTime(_ isoString: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        guard let date = formatter.date(from: isoString) else { return "--:--" }
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "HH:mm"
+        displayFormatter.locale = Locale(identifier: "ko_KR")
+        return displayFormatter.string(from: date)
+    }
+
+    private func formatIndex(_ msg: WidgetMessage) -> String {
+        let suffix = String(msg.messageId.suffix(2))
+        return suffix.isEmpty ? "01" : suffix
+    }
+}
+
+struct PlaceholderSmallView: View {
+    private let skin = BeepSkin.swissPaper
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text("BEEP·GET")
+                .font(.custom(skin.displayFont, size: 13))
+                .fontWeight(.heavy)
+                .foregroundColor(skin.ink)
+            Text("대기")
+                .font(.custom(skin.monoFont, size: 10))
+                .tracking(1.2)
+                .foregroundColor(skin.mute)
+                .textCase(.uppercase)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: skin.innerRadius, style: .continuous)
+                .stroke(skin.ink, lineWidth: skin.ruleWidth)
+                .padding(10)
+        )
+        .containerBackground(for: .widget) {
+            skin.paper
         }
     }
 }
@@ -42,16 +69,7 @@ struct BeepWidgetSmallWidget: Widget {
             BeepWidgetSmallView(entry: entry)
         }
         .configurationDisplayName("삐삐")
-        .description("마지막 수신 코드를 표시합니다")
+        .description("마지막 수신 코드")
         .supportedFamilies([.systemSmall])
     }
-}
-
-private func formatTime(_ isoString: String) -> String {
-    let formatter = ISO8601DateFormatter()
-    guard let date = formatter.date(from: isoString) else { return "" }
-    let displayFormatter = DateFormatter()
-    displayFormatter.dateFormat = "a h:mm"
-    displayFormatter.locale = Locale(identifier: "ko_KR")
-    return displayFormatter.string(from: date)
 }
