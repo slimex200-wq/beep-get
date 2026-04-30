@@ -7,7 +7,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 ## Current Status
 
 - Active Git repo with Expo, Supabase, Jest, and React Native dependencies.
-- `.omc/`, `.omx/`, and `coverage/` are currently untracked; do not clean them up unless explicitly asked.
+- AI harness files are committed and pushed on `master`.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -15,6 +15,19 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Prefer Android/web/Jest checks when iOS cannot be verified locally.
 - Avoid broad app rewrites while platform verification is limited.
+
+## Known Blockers
+
+- iOS verification may require macOS.
+
+## Last Verified
+
+- 2026-04-30: `npm test -- --runInBand` passed.
+- Known gap: Android and iOS runs were not performed.
+
+## Related Vault Notes
+
+- `C:/Users/slime/claude-projects/Obsidian Vault/Projects/beep-get/`
 
 ## Handoff Rule
 
