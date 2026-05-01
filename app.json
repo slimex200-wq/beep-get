@@ -8,6 +8,9 @@
       "expo-secure-store",
       "expo-font",
       "./modules/beep-widget/plugin/build/index"
-    ]
+    ],
+    "android": {
+      "package": "com.hypeboyo.beepget"
+    }
   }
 }
