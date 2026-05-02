@@ -5,6 +5,7 @@ ios/
 android/
 !modules/**/ios/
 !modules/**/android/
+modules/**/android/build/
 web-build/
 dist/
 *.jks

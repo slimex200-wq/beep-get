@@ -12,14 +12,16 @@ class BeepWidgetModule : Module() {
         Name("BeepWidget")
 
         Function("updateWidgetData") { data: String ->
-            val context = appContext.reactContext ?: return@Function
+            val context = appContext.reactContext ?: return@Function null
             BeepWidgetData.save(context, data)
             triggerWidgetUpdate(context)
+            null
         }
 
         Function("reloadWidgets") {
-            val context = appContext.reactContext ?: return@Function
+            val context = appContext.reactContext ?: return@Function null
             triggerWidgetUpdate(context)
+            null
         }
 
         AsyncFunction("getWidgetData") {

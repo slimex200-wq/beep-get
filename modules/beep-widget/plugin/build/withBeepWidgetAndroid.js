@@ -37,13 +37,34 @@ exports.withBeepWidgetAndroid = void 0;
 const config_plugins_1 = require("expo/config-plugins");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const MIN_ANDROID_SDK = 26;
+const withWidgetMinSdk = (config) => {
+    return (0, config_plugins_1.withProjectBuildGradle)(config, (mod) => {
+        const marker = 'apply plugin: "com.facebook.react.rootproject"';
+        const snippet = `
+
+// Beep widget uses Glance/AppWidget APIs through the local native module.
+def beepWidgetMinSdk = ${MIN_ANDROID_SDK}
+if (rootProject.ext.has("minSdkVersion") && rootProject.ext.minSdkVersion < beepWidgetMinSdk) {
+  rootProject.ext.minSdkVersion = beepWidgetMinSdk
+}
+`;
+        mod.modResults.contents = mod.modResults.contents.replace(/\n\/\/ Beep widget uses Glance\/AppWidget APIs through the local native module\.\ndef beepWidgetMinSdk = \d+\nif \(rootProject\.ext\.has\("minSdkVersion"\) && rootProject\.ext\.minSdkVersion < beepWidgetMinSdk\) \{\n  rootProject\.ext\.minSdkVersion = beepWidgetMinSdk\n\}\n/g, "\n");
+        mod.modResults.contents = mod.modResults.contents.replace(marker, `${snippet}${marker}`);
+        return mod;
+    });
+};
 const withWidgetManifest = (config) => {
     return (0, config_plugins_1.withAndroidManifest)(config, (mod) => {
         const app = mod.modResults.manifest.application?.[0];
         if (!app)
             return mod;
         // Add widget receiver
-        const receivers = app.receiver ?? [];
+        const receivers = (app.receiver ?? []).filter((receiver) => {
+            const name = receiver?.$?.["android:name"];
+            return (name !== "expo.modules.beepwidget.BeepWidgetReceiver" &&
+                name !== "expo.modules.beepwidget.BeepWidgetMediumReceiver");
+        });
         const widgetReceiver = {
             $: {
                 "android:name": "expo.modules.beepwidget.BeepWidgetReceiver",
@@ -121,6 +142,7 @@ function copyDirSync(src, dst) {
     }
 }
 const withBeepWidgetAndroid = (config) => {
+    config = withWidgetMinSdk(config);
     config = withWidgetManifest(config);
     config = withWidgetResources(config);
     return config;
