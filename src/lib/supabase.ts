@@ -49,6 +49,13 @@ function createMissingSupabaseClient(): SupabaseClient {
     },
     from: () => chain,
     rpc: async () => result,
+    storage: {
+      from: () => ({
+        createSignedUploadUrl: async () => result,
+        createSignedUrl: async () => result,
+        upload: async () => result,
+      }),
+    },
     channel: () => ({
       on: function () {
         return this;
