@@ -9,6 +9,7 @@ import {
 } from "@/services/messageService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { syncWidgetData } from "@/services/widgetService";
+import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
 
 interface Message {
   id: string;
@@ -44,6 +45,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   channel: null,
 
   fetchReceived: async (userId, friends?) => {
+    if (isUiPreviewUser(userId)) {
+      set({ received: uiPreviewMessages, loading: false });
+      syncWidgetData(uiPreviewMessages, friends ?? []);
+      return;
+    }
     set({ loading: true });
     const received = await getReceivedMessages(userId);
     set({ received, loading: false });
@@ -51,11 +57,31 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   fetchSaved: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ saved: uiPreviewMessages.filter((message) => message.is_saved) });
+      return;
+    }
     const saved = await getSavedMessages(userId);
     set({ saved });
   },
 
   send: async (fromId, toId, code, memo) => {
+    if (isUiPreviewUser(fromId)) {
+      const message = {
+        id: `preview-sent-${Date.now()}`,
+        from_user: fromId,
+        to_user: toId,
+        number_code: code,
+        memo: memo ?? null,
+        is_read: true,
+        is_saved: false,
+        expires_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+        created_at: new Date().toISOString(),
+        from_user_profile: { nickname: "YOU", beep_id: "48624862" },
+      };
+      set((state) => ({ saved: [message, ...state.saved] }));
+      return;
+    }
     await sendMessage(fromId, toId, code, memo);
   },
 
@@ -82,6 +108,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   subscribeRealtime: (userId) => {
+    if (isUiPreviewUser(userId)) return;
     const channel = supabase
       .channel(`messages:${userId}`)
       .on(

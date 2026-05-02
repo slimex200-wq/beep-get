@@ -5,6 +5,7 @@ import {
   getDictionary,
   updateEntry,
 } from "@/services/dictionaryService";
+import { isUiPreviewUser, uiPreviewDictionary } from "@/lib/uiPreview";
 
 interface DictionaryEntry {
   id: string;
@@ -28,12 +29,27 @@ export const useDictionaryStore = create<DictionaryState>((set, get) => ({
   loading: false,
 
   fetch: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ entries: uiPreviewDictionary, loading: false });
+      return;
+    }
     set({ loading: true });
     const entries = await getDictionary(userId);
     set({ entries, loading: false });
   },
 
   add: async (userId, code, meaning) => {
+    if (isUiPreviewUser(userId)) {
+      const entry = {
+        id: `preview-code-${Date.now()}`,
+        user_id: userId,
+        code,
+        meaning,
+        created_at: new Date().toISOString(),
+      };
+      set((state) => ({ entries: [entry, ...state.entries] }));
+      return;
+    }
     const entry = await addEntry(userId, code, meaning);
     set((state) => ({ entries: [entry, ...state.entries] }));
   },

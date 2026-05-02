@@ -2,6 +2,12 @@ import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import { setMyStatus, getMyStatus, getFriendStatuses } from "@/services/statusService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import {
+  isUiPreviewUser,
+  UI_PREVIEW_USER_ID,
+  uiPreviewStatus,
+} from "@/lib/uiPreview";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface StatusBroadcast {
   user_id: string;
@@ -27,6 +33,17 @@ export const useStatusStore = create<StatusState>((set, get) => ({
   channel: null,
 
   setStatus: async (userId, icon, label) => {
+    if (isUiPreviewUser(userId)) {
+      set({
+        myStatus: {
+          user_id: userId,
+          status_icon: icon,
+          label: label ?? null,
+          updated_at: new Date().toISOString(),
+        },
+      });
+      return;
+    }
     await setMyStatus(userId, icon, label);
     set({
       myStatus: {
@@ -39,11 +56,33 @@ export const useStatusStore = create<StatusState>((set, get) => ({
   },
 
   fetchMyStatus: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ myStatus: uiPreviewStatus });
+      return;
+    }
     const status = await getMyStatus(userId);
     set({ myStatus: status });
   },
 
   fetchFriendStatuses: async (friendIds) => {
+    if (!isSupabaseConfigured || friendIds.some(isUiPreviewUser)) {
+      const map = new Map<string, StatusBroadcast>();
+      map.set(UI_PREVIEW_USER_ID, uiPreviewStatus);
+      map.set("friend-1", {
+        user_id: "friend-1",
+        status_icon: "busy",
+        label: "busy",
+        updated_at: new Date().toISOString(),
+      });
+      map.set("friend-2", {
+        user_id: "friend-2",
+        status_icon: "online",
+        label: "online",
+        updated_at: new Date().toISOString(),
+      });
+      set({ friendStatuses: map });
+      return;
+    }
     const statuses = await getFriendStatuses(friendIds);
     const map = new Map<string, StatusBroadcast>();
     for (const s of statuses) {
@@ -53,6 +92,7 @@ export const useStatusStore = create<StatusState>((set, get) => ({
   },
 
   subscribeRealtime: (friendIds: string[]) => {
+    if (!isSupabaseConfigured || friendIds.some(isUiPreviewUser)) return;
     const friendSet = new Set(friendIds);
     const channel = supabase
       .channel("status_broadcasts")
