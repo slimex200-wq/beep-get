@@ -3,6 +3,6 @@ export const customFonts = {
   Silkscreen: require("../../assets/fonts/Silkscreen-Regular.ttf"),
   "Silkscreen-Bold": require("../../assets/fonts/Silkscreen-Bold.ttf"),
   SpaceMono: require("../../assets/fonts/SpaceMono-Regular.ttf"),
-  Inter: require("../../assets/fonts/Inter-Regular.ttf"),
-  "Inter-Bold": require("../../assets/fonts/Inter-Bold.ttf"),
+  Inter: require("../../assets/fonts/Inter.ttf"),
+  "Inter-Bold": require("../../assets/fonts/Inter.ttf"),
 };

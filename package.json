@@ -7,7 +7,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "eas:info": "npx eas-cli@latest project:info",
+    "build:android:preview": "npx eas-cli@latest build -p android --profile preview",
+    "build:android:production": "npx eas-cli@latest build -p android --profile production",
+    "submit:android:production": "npx eas-cli@latest submit -p android --profile production"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.15.9",

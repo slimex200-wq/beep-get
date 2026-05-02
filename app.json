@@ -1,16 +1,63 @@
 {
   "expo": {
-    "name": "beep-get",
+    "name": "Beep Get",
     "slug": "beep-get",
     "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "beepget",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF5EE"
+    },
     "plugins": [
       "expo-secure-store",
       "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "QR 코드로 친구를 추가하기 위해 카메라 접근이 필요합니다.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "연락처에서 BEEP-GET 친구를 찾기 위해 접근이 필요합니다."
+        }
+      ],
       "./modules/beep-widget/plugin/build/index"
     ],
+    "ios": {
+      "bundleIdentifier": "com.hypeboyo.beepget",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
-      "package": "com.hypeboyo.beepget"
-    }
+      "package": "com.hypeboyo.beepget",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFF5EE"
+      },
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2c41736e-942b-4593-8fcd-53373d03ee53"
+      }
+    },
+    "owner": "hypeboyo"
   }
 }
