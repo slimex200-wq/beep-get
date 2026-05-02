@@ -95,16 +95,25 @@ export const useStatusStore = create<StatusState>((set, get) => ({
     if (!isSupabaseConfigured || friendIds.some(isUiPreviewUser)) return;
     const friendSet = new Set(friendIds);
     const channel = supabase
-      .channel("status_broadcasts")
+      .channel("profiles:status")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "status_broadcasts" },
+        { event: "UPDATE", schema: "public", table: "profiles" },
         (payload) => {
-          const updated = payload.new as StatusBroadcast;
-          if (updated && friendSet.has(updated.user_id)) {
+          const profile = payload.new as {
+            id?: string;
+            status_icon?: string;
+            updated_at?: string;
+          };
+          if (profile.id && profile.status_icon && friendSet.has(profile.id)) {
             set((state) => {
               const map = new Map(state.friendStatuses);
-              map.set(updated.user_id, updated);
+              map.set(profile.id!, {
+                user_id: profile.id!,
+                status_icon: profile.status_icon!,
+                label: null,
+                updated_at: profile.updated_at ?? new Date().toISOString(),
+              });
               return { friendStatuses: map };
             });
           }

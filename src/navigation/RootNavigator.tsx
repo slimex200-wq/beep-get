@@ -11,12 +11,14 @@ import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { SkinShopScreen } from "@/screens/SkinShopScreen";
 import { CollectionScreen } from "@/screens/CollectionScreen";
 import { ProfileScreen } from "@/screens/ProfileScreen";
+import { ReplyRoomScreen } from "@/screens/ReplyRoomScreen";
 import { Text } from "react-native";
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Send: { friendId: string; friendName: string };
+  ReplyRoom: { signalId: string };
 };
 
 export type MainTabParamList = {
@@ -129,6 +131,11 @@ export function RootNavigator() {
           <Stack.Screen
             name="Send"
             component={SendScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="ReplyRoom"
+            component={ReplyRoomScreen}
             options={{ presentation: "modal" }}
           />
         </>

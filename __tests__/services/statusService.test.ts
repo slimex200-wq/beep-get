@@ -1,9 +1,9 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
-  STATUS_PRESETS,
-  setMyStatus,
-  getMyStatus,
   getFriendStatuses,
+  getMyStatus,
+  setMyStatus,
+  STATUS_PRESETS,
 } from "@/services/statusService";
 
 beforeEach(() => jest.clearAllMocks());
@@ -28,114 +28,101 @@ describe("STATUS_PRESETS", () => {
 });
 
 describe("setMyStatus", () => {
-  it("upserts status and updates user", async () => {
-    const chain1 = createMockChain({ data: null, error: null });
-    const chain2 = createMockChain({ data: null, error: null });
-    let callCount = 0;
-    supabase.from.mockImplementation(() => {
-      callCount++;
-      return callCount === 1 ? chain1 : chain2;
-    });
-
-    await setMyStatus("u1", "study", "studying");
-    expect(supabase.from).toHaveBeenCalledWith("status_broadcasts");
-    expect(supabase.from).toHaveBeenCalledWith("users");
-    expect(chain1.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        user_id: "u1",
-        status_icon: "study",
-        label: "studying",
-      }),
-      { onConflict: "user_id" }
-    );
-    expect(chain2.update).toHaveBeenCalledWith({ status_icon: "study" });
-  });
-
-  it("sets label to null when not provided", async () => {
-    const chain1 = createMockChain({ data: null, error: null });
-    const chain2 = createMockChain({ data: null, error: null });
-    let callCount = 0;
-    supabase.from.mockImplementation(() => {
-      callCount++;
-      return callCount === 1 ? chain1 : chain2;
-    });
-
-    await setMyStatus("u1", "online");
-    expect(chain1.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ label: null }),
-      { onConflict: "user_id" }
-    );
-  });
-
-  it("throws when upsert fails", async () => {
-    const chain = createMockChain({ data: null, error: { message: "upsert fail" } });
+  it("updates profile status", async () => {
+    const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    await expect(setMyStatus("u1", "study")).rejects.toEqual({ message: "upsert fail" });
+    await setMyStatus("u1", "study", "studying");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
+    expect(chain.update).toHaveBeenCalledWith({ status_icon: "study" });
+    expect(chain.eq).toHaveBeenCalledWith("id", "u1");
   });
 
-  it("throws when user update fails", async () => {
-    const chain1 = createMockChain({ data: null, error: null });
-    const chain2 = createMockChain({ data: null, error: { message: "user update fail" } });
-    let callCount = 0;
-    supabase.from.mockImplementation(() => {
-      callCount++;
-      return callCount === 1 ? chain1 : chain2;
-    });
+  it("throws when update fails", async () => {
+    const chain = createMockChain({ data: null, error: { message: "update fail" } });
+    supabase.from.mockReturnValue(chain);
 
-    await expect(setMyStatus("u1", "study")).rejects.toEqual({ message: "user update fail" });
+    await expect(setMyStatus("u1", "study")).rejects.toEqual({
+      message: "update fail",
+    });
   });
 });
 
 describe("getMyStatus", () => {
-  it("returns status when found", async () => {
-    const status = { user_id: "u1", status_icon: "online", label: null };
-    const chain = createMockChain({ data: status, error: null });
+  it("returns profile status mapped to legacy status shape", async () => {
+    const chain = createMockChain({
+      data: {
+        id: "u1",
+        status_icon: "online",
+        updated_at: "2026-05-03T00:00:00.000Z",
+      },
+      error: null,
+    });
     supabase.from.mockReturnValue(chain);
 
     const result = await getMyStatus("u1");
-    expect(supabase.from).toHaveBeenCalledWith("status_broadcasts");
-    expect(chain.eq).toHaveBeenCalledWith("user_id", "u1");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
+    expect(chain.eq).toHaveBeenCalledWith("id", "u1");
     expect(chain.single).toHaveBeenCalled();
-    expect(result).toEqual(status);
+    expect(result).toEqual({
+      user_id: "u1",
+      status_icon: "online",
+      label: null,
+      updated_at: "2026-05-03T00:00:00.000Z",
+    });
   });
 
   it("returns null on error", async () => {
     const chain = createMockChain({ data: null, error: { message: "not found" } });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getMyStatus("u1");
-    expect(result).toBeNull();
+    await expect(getMyStatus("u1")).resolves.toBeNull();
   });
 });
 
 describe("getFriendStatuses", () => {
   it("returns statuses for given friend ids", async () => {
-    const statuses = [
-      { user_id: "f1", status_icon: "study" },
-      { user_id: "f2", status_icon: "online" },
-    ];
-    const chain = createMockChain({ data: statuses, error: null });
+    const chain = createMockChain({
+      data: [
+        { id: "f1", status_icon: "study", updated_at: "2026-05-03T00:00:00.000Z" },
+        { id: "f2", status_icon: "online", updated_at: "2026-05-03T00:00:00.000Z" },
+      ],
+      error: null,
+    });
     supabase.from.mockReturnValue(chain);
 
     const result = await getFriendStatuses(["f1", "f2"]);
-    expect(supabase.from).toHaveBeenCalledWith("status_broadcasts");
-    expect(chain.in).toHaveBeenCalledWith("user_id", ["f1", "f2"]);
-    expect(result).toEqual(statuses);
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
+    expect(chain.in).toHaveBeenCalledWith("id", ["f1", "f2"]);
+    expect(result).toEqual([
+      {
+        user_id: "f1",
+        status_icon: "study",
+        label: null,
+        updated_at: "2026-05-03T00:00:00.000Z",
+      },
+      {
+        user_id: "f2",
+        status_icon: "online",
+        label: null,
+        updated_at: "2026-05-03T00:00:00.000Z",
+      },
+    ]);
   });
 
   it("returns empty array for empty friendIds", async () => {
-    const result = await getFriendStatuses([]);
+    await expect(getFriendStatuses([])).resolves.toEqual([]);
     expect(supabase.from).not.toHaveBeenCalled();
-    expect(result).toEqual([]);
   });
 
   it("returns empty array when data is null", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getFriendStatuses(["f1"]);
-    expect(result).toEqual([]);
+    await expect(getFriendStatuses(["f1"])).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {

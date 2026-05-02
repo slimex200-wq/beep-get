@@ -32,7 +32,7 @@ export async function purchaseSkin(userId: string, skinId: string) {
 
 export async function setActiveSkin(userId: string, skinId: string) {
   const { error } = await supabase
-    .from("users")
+    .from("profiles")
     .update({ active_skin_id: skinId })
     .eq("id", userId);
   if (error) throw error;
@@ -40,10 +40,10 @@ export async function setActiveSkin(userId: string, skinId: string) {
 
 export async function getActiveSkinSlug(userId: string): Promise<string> {
   const { data, error } = await supabase
-    .from("users")
-    .select("active_skin_id, skins:skins!users_active_skin_id_fkey(slug)")
+    .from("profiles")
+    .select("active_skin_id, active_skin:skins!profiles_active_skin_id_fkey(slug)")
     .eq("id", userId)
     .single();
-  if (error || !data?.skins) return "neumorphism";
-  return (data.skins as any).slug ?? "neumorphism";
+  if (error || !data?.active_skin) return "swiss-paper";
+  return (data.active_skin as any).slug ?? "swiss-paper";
 }

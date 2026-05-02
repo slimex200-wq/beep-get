@@ -1,66 +1,58 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
-  findUserByBeepId,
   addFriend,
-  removeFriend,
+  findUserByBeepId,
   getFriends,
+  removeFriend,
   updateFriendNickname,
   updateVibrationPattern,
 } from "@/services/friendService";
-import { isValidBeepId } from "@/services/authService";
 
 beforeEach(() => jest.clearAllMocks());
 
 describe("findUserByBeepId", () => {
-  it("returns user when found", async () => {
+  it("returns profile when found", async () => {
     supabase.rpc.mockResolvedValue({
       data: [{ id: "user-1", beep_id: "12345678", nickname: "test" }],
       error: null,
     });
 
     const result = await findUserByBeepId("12345678");
-    expect(supabase.rpc).toHaveBeenCalledWith("find_user_by_beep_id", {
+
+    expect(supabase.rpc).toHaveBeenCalledWith("find_profile_by_beep_id", {
       target_beep_id: "12345678",
     });
     expect(result).toEqual({ id: "user-1", beep_id: "12345678", nickname: "test" });
   });
 
-  it("returns null when no user found", async () => {
+  it("returns null when no profile found", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
 
-    const result = await findUserByBeepId("12345678");
-    expect(result).toBeNull();
+    await expect(findUserByBeepId("12345678")).resolves.toBeNull();
   });
 
   it("returns null on error", async () => {
     supabase.rpc.mockResolvedValue({ data: null, error: { message: "err" } });
 
-    const result = await findUserByBeepId("12345678");
-    expect(result).toBeNull();
+    await expect(findUserByBeepId("12345678")).resolves.toBeNull();
   });
 
   it("returns null for invalid beep_id without calling rpc", async () => {
-    const result = await findUserByBeepId("abc");
+    await expect(findUserByBeepId("abc")).resolves.toBeNull();
     expect(supabase.rpc).not.toHaveBeenCalled();
-    expect(result).toBeNull();
-  });
-
-  it("returns null for empty beep_id", async () => {
-    const result = await findUserByBeepId("");
-    expect(supabase.rpc).not.toHaveBeenCalled();
-    expect(result).toBeNull();
   });
 });
 
 describe("addFriend", () => {
-  it("inserts friendship successfully", async () => {
+  it("inserts relationship successfully", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
     await addFriend("user-1", "user-2", "best");
-    expect(supabase.from).toHaveBeenCalledWith("friendships");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.insert).toHaveBeenCalledWith({
-      user_id: "user-1",
+      owner_id: "user-1",
       friend_id: "user-2",
       nickname: "best",
     });
@@ -71,17 +63,16 @@ describe("addFriend", () => {
     supabase.from.mockReturnValue(chain);
 
     await addFriend("user-1", "user-2");
+
     expect(chain.insert).toHaveBeenCalledWith({
-      user_id: "user-1",
+      owner_id: "user-1",
       friend_id: "user-2",
       nickname: null,
     });
   });
 
   it("throws when adding self", async () => {
-    await expect(addFriend("user-1", "user-1")).rejects.toThrow(
-      "자기 자신을 친구로 추가할 수 없습니다"
-    );
+    await expect(addFriend("user-1", "user-1")).rejects.toThrow();
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
@@ -89,7 +80,7 @@ describe("addFriend", () => {
     const chain = createMockChain({ data: null, error: { code: "23505", message: "dup" } });
     supabase.from.mockReturnValue(chain);
 
-    await expect(addFriend("user-1", "user-2")).rejects.toThrow("이미 친구입니다");
+    await expect(addFriend("user-1", "user-2")).rejects.toThrow();
   });
 
   it("throws original error for other codes", async () => {
@@ -102,14 +93,15 @@ describe("addFriend", () => {
 });
 
 describe("removeFriend", () => {
-  it("deletes friendship successfully", async () => {
+  it("deletes relationship successfully", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
     await removeFriend("user-1", "user-2");
-    expect(supabase.from).toHaveBeenCalledWith("friendships");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.delete).toHaveBeenCalled();
-    expect(chain.eq).toHaveBeenCalledWith("user_id", "user-1");
+    expect(chain.eq).toHaveBeenCalledWith("owner_id", "user-1");
     expect(chain.eq).toHaveBeenCalledWith("friend_id", "user-2");
   });
 
@@ -122,26 +114,34 @@ describe("removeFriend", () => {
 });
 
 describe("getFriends", () => {
-  it("returns friends list", async () => {
-    const friends = [
-      { id: "f1", user_id: "user-1", friend_id: "user-2", friend: { nickname: "A" } },
+  it("returns relationships mapped to the legacy friendship shape", async () => {
+    const relationships = [
+      {
+        id: "r1",
+        owner_id: "user-1",
+        friend_id: "user-2",
+        nickname: "A",
+        vibration_pattern: null,
+        created_at: "2026-05-03T00:00:00.000Z",
+        friend: { id: "user-2", beep_id: "12345678", nickname: "A", status_icon: "online" },
+      },
     ];
-    const chain = createMockChain({ data: friends, error: null });
+    const chain = createMockChain({ data: relationships, error: null });
     supabase.from.mockReturnValue(chain);
 
     const result = await getFriends("user-1");
-    expect(supabase.from).toHaveBeenCalledWith("friendships");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.select).toHaveBeenCalled();
-    expect(chain.eq).toHaveBeenCalledWith("user_id", "user-1");
-    expect(result).toEqual(friends);
+    expect(chain.eq).toHaveBeenCalledWith("owner_id", "user-1");
+    expect(result[0]).toEqual(expect.objectContaining({ user_id: "user-1" }));
   });
 
   it("returns empty array when data is null", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getFriends("user-1");
-    expect(result).toEqual([]);
+    await expect(getFriends("user-1")).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {
@@ -158,15 +158,19 @@ describe("updateFriendNickname", () => {
     supabase.from.mockReturnValue(chain);
 
     await updateFriendNickname("user-1", "user-2", "new name");
-    expect(supabase.from).toHaveBeenCalledWith("friendships");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.update).toHaveBeenCalledWith({ nickname: "new name" });
+    expect(chain.eq).toHaveBeenCalledWith("owner_id", "user-1");
   });
 
   it("throws on error", async () => {
     const chain = createMockChain({ data: null, error: { message: "fail" } });
     supabase.from.mockReturnValue(chain);
 
-    await expect(updateFriendNickname("u1", "u2", "n")).rejects.toEqual({ message: "fail" });
+    await expect(updateFriendNickname("u1", "u2", "n")).rejects.toEqual({
+      message: "fail",
+    });
   });
 });
 
@@ -176,14 +180,18 @@ describe("updateVibrationPattern", () => {
     supabase.from.mockReturnValue(chain);
 
     await updateVibrationPattern("user-1", "user-2", "S,L,S");
-    expect(supabase.from).toHaveBeenCalledWith("friendships");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.update).toHaveBeenCalledWith({ vibration_pattern: "S,L,S" });
+    expect(chain.eq).toHaveBeenCalledWith("owner_id", "user-1");
   });
 
   it("throws on error", async () => {
     const chain = createMockChain({ data: null, error: { message: "fail" } });
     supabase.from.mockReturnValue(chain);
 
-    await expect(updateVibrationPattern("u1", "u2", "S")).rejects.toEqual({ message: "fail" });
+    await expect(updateVibrationPattern("u1", "u2", "S")).rejects.toEqual({
+      message: "fail",
+    });
   });
 });

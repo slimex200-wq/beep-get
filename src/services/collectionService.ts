@@ -1,10 +1,25 @@
-import { supabase } from "@/lib/supabase";
-
 export interface DropCondition {
   type: "streak" | "friends" | "messages_sent";
   days?: number;
   count?: number;
 }
+
+export type CollectionIcon = {
+  id: string;
+  name: string;
+  image_url: string;
+  rarity: string;
+  drop_condition: unknown;
+  season_id: string | null;
+};
+
+export type UserCollectionIcon = {
+  id: string;
+  user_id: string;
+  icon_id: string;
+  acquired_at: string;
+  icon: CollectionIcon;
+};
 
 export function checkDropCondition(
   condition: DropCondition,
@@ -42,31 +57,16 @@ export function getRarityColor(rarity: string): string {
   return colors[rarity] ?? "#8A8A9A";
 }
 
-export async function getAllIcons() {
-  const { data, error } = await supabase
-    .from("icons")
-    .select("*")
-    .order("rarity", { ascending: true });
-  if (error) throw error;
-  return data ?? [];
+export async function getAllIcons(): Promise<CollectionIcon[]> {
+  return [];
 }
 
-export async function getUserIcons(userId: string) {
-  const { data, error } = await supabase
-    .from("user_icons")
-    .select("*, icon:icons(*)")
-    .eq("user_id", userId);
-  if (error) throw error;
-  return data ?? [];
+export async function getUserIcons(userId: string): Promise<UserCollectionIcon[]> {
+  void userId;
+  return [];
 }
 
 export async function grantIcon(userId: string, iconId: string) {
-  const { error } = await supabase.from("user_icons").insert({
-    user_id: userId,
-    icon_id: iconId,
-  });
-  if (error) {
-    if (error.code === "23505") return; // Already owned
-    throw error;
-  }
+  void userId;
+  void iconId;
 }

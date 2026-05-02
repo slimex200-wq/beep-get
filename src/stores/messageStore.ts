@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import {
+  type LegacyMessage,
   getReceivedMessages,
   getSavedMessages,
   markAsRead,
@@ -11,18 +12,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { syncWidgetData } from "@/services/widgetService";
 import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
 
-interface Message {
-  id: string;
-  from_user: string;
-  to_user: string;
-  number_code: string;
-  memo: string | null;
-  is_read: boolean;
-  is_saved: boolean;
-  expires_at: string;
-  created_at: string;
-  from_user_profile?: { nickname: string; beep_id: string };
-}
+type Message = LegacyMessage;
 
 interface MessageState {
   received: Message[];
@@ -110,14 +100,14 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   subscribeRealtime: (userId) => {
     if (isUiPreviewUser(userId)) return;
     const channel = supabase
-      .channel(`messages:${userId}`)
+      .channel(`signals:${userId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "messages",
-          filter: `to_user=eq.${userId}`,
+          table: "signals",
+          filter: `receiver_id=eq.${userId}`,
         },
         async () => {
           await get().fetchReceived(userId);

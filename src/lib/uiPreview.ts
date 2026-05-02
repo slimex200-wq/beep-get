@@ -1,4 +1,5 @@
 import type { Session, User } from "@supabase/supabase-js";
+import type { LegacyMessage } from "@/services/messageService";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
 export const isUiPreviewEnabled = process.env.EXPO_PUBLIC_UI_PREVIEW === "1";
@@ -32,18 +33,26 @@ export function createUiPreviewSession(): Session {
   } as Session;
 }
 
-export const uiPreviewMessages = [
+export const uiPreviewMessages: LegacyMessage[] = [
   {
     id: "preview-message-1",
     from_user: "friend-1",
     to_user: UI_PREVIEW_USER_ID,
+    kind: "blink",
     number_code: "8282",
-    memo: "lunch?",
+    memo: "2 sec blink",
     is_read: false,
     is_saved: false,
     expires_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     created_at: new Date().toISOString(),
     from_user_profile: { nickname: "Mina", beep_id: "12031997" },
+    media: {
+      durationMs: 2000,
+      status: "processed",
+      thumbnailUri: "preview-blink-thumb",
+      stripFrameUris: ["preview-strip-1", "preview-strip-2", "preview-strip-3"],
+      playbackUri: "preview-private-playback",
+    },
   },
   {
     id: "preview-message-2",

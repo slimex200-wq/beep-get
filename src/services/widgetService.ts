@@ -8,7 +8,7 @@ interface Message {
   number_code: string;
   is_read: boolean;
   created_at: string;
-  from_user_profile?: { nickname: string; beep_id: string };
+  from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
 }
 
 interface Friend {
