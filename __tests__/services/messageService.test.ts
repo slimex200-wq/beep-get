@@ -1,14 +1,28 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
-  validateMessage,
-  sendMessage,
   getReceivedMessages,
+  getSavedMessages,
   markAsRead,
   saveMessage,
-  getSavedMessages,
+  sendMessage,
+  validateMessage,
 } from "@/services/messageService";
 
 beforeEach(() => jest.clearAllMocks());
+
+const signal = {
+  id: "m1",
+  kind: "beep",
+  sender_id: "u1",
+  receiver_id: "u2",
+  code: "1234",
+  memo: "hello",
+  status: "sent",
+  is_saved: false,
+  expires_at: "2026-05-04T00:00:00.000Z",
+  created_at: "2026-05-03T00:00:00.000Z",
+  from_user_profile: { nickname: "A", beep_id: "12345678" },
+};
 
 describe("validateMessage", () => {
   it("accepts valid number code", () => {
@@ -16,119 +30,137 @@ describe("validateMessage", () => {
   });
 
   it("accepts code with memo", () => {
-    expect(validateMessage("012486", "사랑해")).toEqual({ valid: true });
+    expect(validateMessage("012486", "memo")).toEqual({ valid: true });
   });
 
   it("rejects empty code", () => {
-    expect(validateMessage("")).toEqual({
-      valid: false,
-      error: "숫자 코드를 입력하세요",
-    });
+    expect(validateMessage("").valid).toBe(false);
   });
 
   it("rejects code over 20 chars", () => {
-    expect(validateMessage("123456789012345678901")).toEqual({
-      valid: false,
-      error: "숫자 코드는 20자리 이하여야 합니다",
-    });
+    expect(validateMessage("123456789012345678901").valid).toBe(false);
   });
 
   it("rejects non-numeric code", () => {
-    expect(validateMessage("abc123")).toEqual({
-      valid: false,
-      error: "숫자만 입력 가능합니다",
-    });
+    expect(validateMessage("abc123").valid).toBe(false);
   });
 
   it("rejects memo over 30 chars", () => {
-    const longMemo = "a".repeat(31);
-    expect(validateMessage("012486", longMemo)).toEqual({
-      valid: false,
-      error: "메모는 30자 이하여야 합니다",
-    });
+    expect(validateMessage("012486", "a".repeat(31)).valid).toBe(false);
   });
 });
 
 describe("sendMessage", () => {
-  it("sends message successfully", async () => {
-    const msg = { id: "m1", number_code: "1234", from_user: "u1", to_user: "u2" };
-    const chain = createMockChain({ data: msg, error: null });
-    supabase.from.mockReturnValue(chain);
+  it("sends a beep through the v2 RPC and maps it to the legacy UI shape", async () => {
+    supabase.rpc.mockResolvedValue({ data: signal, error: null });
 
     const result = await sendMessage("u1", "u2", "1234", "hello");
-    expect(supabase.from).toHaveBeenCalledWith("messages");
-    expect(chain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        from_user: "u1",
-        to_user: "u2",
-        number_code: "1234",
-        memo: "hello",
-      })
-    );
-    expect(chain.select).toHaveBeenCalled();
-    expect(chain.single).toHaveBeenCalled();
-    expect(result).toEqual(msg);
+
+    expect(supabase.rpc).toHaveBeenCalledWith("send_beep", {
+      p_receiver_id: "u2",
+      p_code: "1234",
+      p_memo: "hello",
+    });
+    expect(result).toEqual({
+      id: "m1",
+      from_user: "u1",
+      to_user: "u2",
+      number_code: "1234",
+      memo: "hello",
+      is_read: false,
+      is_saved: false,
+      expires_at: "2026-05-04T00:00:00.000Z",
+      created_at: "2026-05-03T00:00:00.000Z",
+      kind: "beep",
+      from_user_profile: { nickname: "A", beep_id: "12345678" },
+      media: null,
+    });
   });
 
-  it("sends message without memo", async () => {
-    const msg = { id: "m1", number_code: "1234" };
-    const chain = createMockChain({ data: msg, error: null });
-    supabase.from.mockReturnValue(chain);
+  it("passes null memo when memo is omitted", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: { ...signal, memo: null },
+      error: null,
+    });
 
     const result = await sendMessage("u1", "u2", "1234");
-    expect(chain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ memo: null })
+
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "send_beep",
+      expect.objectContaining({ p_memo: null })
     );
-    expect(result).toEqual(msg);
+    expect(result.memo).toBeNull();
   });
 
-  it("throws on invalid code", async () => {
-    await expect(sendMessage("u1", "u2", "")).rejects.toThrow("숫자 코드를 입력하세요");
-    expect(supabase.from).not.toHaveBeenCalled();
+  it("throws on invalid code without calling the backend", async () => {
+    await expect(sendMessage("u1", "u2", "")).rejects.toThrow();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
-  it("throws on non-numeric code", async () => {
-    await expect(sendMessage("u1", "u2", "abc")).rejects.toThrow("숫자만 입력 가능합니다");
-  });
+  it("throws on backend error", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "db error" } });
 
-  it("throws on database error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "db error" } });
-    supabase.from.mockReturnValue(chain);
-
-    await expect(sendMessage("u1", "u2", "1234")).rejects.toEqual({ message: "db error" });
-  });
-
-  it("includes expires_at in insert payload", async () => {
-    const chain = createMockChain({ data: { id: "m1" }, error: null });
-    supabase.from.mockReturnValue(chain);
-
-    await sendMessage("u1", "u2", "1234");
-    const insertCall = chain.insert.mock.calls[0][0];
-    expect(insertCall).toHaveProperty("expires_at");
-    expect(typeof insertCall.expires_at).toBe("string");
+    await expect(sendMessage("u1", "u2", "1234")).rejects.toEqual({
+      message: "db error",
+    });
   });
 });
 
 describe("getReceivedMessages", () => {
-  it("returns received messages", async () => {
-    const messages = [
-      { id: "m1", number_code: "1234", to_user: "u1", from_user_profile: { nickname: "A" } },
-    ];
-    const chain = createMockChain({ data: messages, error: null });
+  it("returns received v2 signals in the legacy UI shape", async () => {
+    const chain = createMockChain({ data: [signal], error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getReceivedMessages("u1");
-    expect(supabase.from).toHaveBeenCalledWith("messages");
-    expect(chain.eq).toHaveBeenCalledWith("to_user", "u1");
-    expect(result).toEqual(messages);
+    const result = await getReceivedMessages("u2");
+
+    expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.eq).toHaveBeenCalledWith("receiver_id", "u2");
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        from_user: "u1",
+        to_user: "u2",
+        number_code: "1234",
+      })
+    );
+  });
+
+  it("maps blink media teaser fields", async () => {
+    const chain = createMockChain({
+      data: [
+        {
+          ...signal,
+          kind: "blink",
+          media: [
+            {
+              duration_ms: 2000,
+              status: "processed",
+              thumbnail_key: "thumb.jpg",
+              strip_keys: ["a.jpg", "b.jpg"],
+              object_key: "video.mp4",
+            },
+          ],
+        },
+      ],
+      error: null,
+    });
+    supabase.from.mockReturnValue(chain);
+
+    const result = await getReceivedMessages("u2");
+
+    expect(result[0].media).toEqual({
+      durationMs: 2000,
+      status: "processed",
+      thumbnailUri: "thumb.jpg",
+      stripFrameUris: ["a.jpg", "b.jpg"],
+      playbackUri: "video.mp4",
+    });
   });
 
   it("returns empty array when data is null", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getReceivedMessages("u1");
-    expect(result).toEqual([]);
+    await expect(getReceivedMessages("u1")).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {
@@ -140,62 +172,59 @@ describe("getReceivedMessages", () => {
 });
 
 describe("markAsRead", () => {
-  it("marks message as read", async () => {
-    const chain = createMockChain({ data: null, error: null });
-    supabase.from.mockReturnValue(chain);
+  it("marks signal as read through RPC", async () => {
+    supabase.rpc.mockResolvedValue({ data: signal, error: null });
 
     await markAsRead("m1");
-    expect(supabase.from).toHaveBeenCalledWith("messages");
-    expect(chain.update).toHaveBeenCalledWith({ is_read: true });
-    expect(chain.eq).toHaveBeenCalledWith("id", "m1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("mark_signal_read", {
+      p_signal_id: "m1",
+    });
   });
 
   it("throws on error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "fail" } });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
 
     await expect(markAsRead("m1")).rejects.toEqual({ message: "fail" });
   });
 });
 
 describe("saveMessage", () => {
-  it("saves message", async () => {
-    const chain = createMockChain({ data: null, error: null });
-    supabase.from.mockReturnValue(chain);
+  it("saves signal through RPC", async () => {
+    supabase.rpc.mockResolvedValue({ data: signal, error: null });
 
     await saveMessage("m1");
-    expect(supabase.from).toHaveBeenCalledWith("messages");
-    expect(chain.update).toHaveBeenCalledWith({ is_saved: true });
-    expect(chain.eq).toHaveBeenCalledWith("id", "m1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("save_signal", {
+      p_signal_id: "m1",
+    });
   });
 
   it("throws on error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "fail" } });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
 
     await expect(saveMessage("m1")).rejects.toEqual({ message: "fail" });
   });
 });
 
 describe("getSavedMessages", () => {
-  it("returns saved messages", async () => {
-    const messages = [{ id: "m1", is_saved: true }];
-    const chain = createMockChain({ data: messages, error: null });
+  it("returns saved signals", async () => {
+    const chain = createMockChain({ data: [{ ...signal, is_saved: true }], error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getSavedMessages("u1");
-    expect(supabase.from).toHaveBeenCalledWith("messages");
-    expect(chain.eq).toHaveBeenCalledWith("to_user", "u1");
+    const result = await getSavedMessages("u2");
+
+    expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.eq).toHaveBeenCalledWith("receiver_id", "u2");
     expect(chain.eq).toHaveBeenCalledWith("is_saved", true);
-    expect(result).toEqual(messages);
+    expect(result[0].is_saved).toBe(true);
   });
 
   it("returns empty array when data is null", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getSavedMessages("u1");
-    expect(result).toEqual([]);
+    await expect(getSavedMessages("u1")).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {

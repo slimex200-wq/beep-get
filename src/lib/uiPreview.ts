@@ -1,4 +1,5 @@
 import type { Session, User } from "@supabase/supabase-js";
+import type { LegacyMessage } from "@/services/messageService";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
 export const isUiPreviewEnabled = process.env.EXPO_PUBLIC_UI_PREVIEW === "1";
@@ -32,7 +33,7 @@ export function createUiPreviewSession(): Session {
   } as Session;
 }
 
-export const uiPreviewMessages = [
+export const uiPreviewMessages: LegacyMessage[] = [
   {
     id: "preview-message-1",
     from_user: "friend-1",

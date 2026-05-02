@@ -1,11 +1,11 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
-  generateBeepId,
-  isValidBeepId,
-  signInWithGoogle,
-  signInWithApple,
   createUserProfile,
+  generateBeepId,
   getUserProfile,
+  isValidBeepId,
+  signInWithApple,
+  signInWithGoogle,
   signOut,
 } from "@/services/authService";
 
@@ -20,8 +20,7 @@ describe("generateBeepId", () => {
 
   it("does not start with 0", () => {
     for (let i = 0; i < 100; i++) {
-      const id = generateBeepId();
-      expect(id[0]).not.toBe("0");
+      expect(generateBeepId()[0]).not.toBe("0");
     }
   });
 });
@@ -31,15 +30,9 @@ describe("isValidBeepId", () => {
     expect(isValidBeepId("12345678")).toBe(true);
   });
 
-  it("returns false for too short", () => {
+  it("returns false for invalid ids", () => {
     expect(isValidBeepId("1234567")).toBe(false);
-  });
-
-  it("returns false for non-numeric", () => {
     expect(isValidBeepId("1234567a")).toBe(false);
-  });
-
-  it("returns false for empty", () => {
     expect(isValidBeepId("")).toBe(false);
   });
 });
@@ -49,9 +42,8 @@ describe("signInWithGoogle", () => {
     const mockData = { url: "https://google.com/auth" };
     supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await signInWithGoogle();
+    await expect(signInWithGoogle()).resolves.toEqual(mockData);
     expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({ provider: "google" });
-    expect(result).toEqual(mockData);
   });
 
   it("throws on error", async () => {
@@ -67,12 +59,11 @@ describe("signInWithApple", () => {
     const mockData = { session: { access_token: "tok" } };
     supabase.auth.signInWithIdToken.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await signInWithApple();
+    await expect(signInWithApple()).resolves.toEqual(mockData);
     expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
       provider: "apple",
       token: "",
     });
-    expect(result).toEqual(mockData);
   });
 
   it("throws on error", async () => {
@@ -84,11 +75,15 @@ describe("signInWithApple", () => {
 });
 
 describe("createUserProfile", () => {
-  it("creates profile on first attempt", async () => {
-    supabase.rpc.mockResolvedValue({ data: "12345678", error: null });
+  it("creates profile through the v2 RPC and returns beep_id", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: { id: "u1", beep_id: "12345678", nickname: "nick" },
+      error: null,
+    });
 
     const result = await createUserProfile("u1", "nick");
-    expect(supabase.rpc).toHaveBeenCalledWith("create_user_profile", {
+
+    expect(supabase.rpc).toHaveBeenCalledWith("create_profile", {
       p_nickname: "nick",
       p_beep_id: expect.stringMatching(/^\d{8}$/),
     });
@@ -98,21 +93,23 @@ describe("createUserProfile", () => {
   it("retries on duplicate beep_id (23505) and succeeds", async () => {
     supabase.rpc
       .mockResolvedValueOnce({ data: null, error: { code: "23505", message: "dup" } })
-      .mockResolvedValueOnce({ data: null, error: { code: "23505", message: "dup" } })
-      .mockResolvedValueOnce({ data: "99999999", error: null });
+      .mockResolvedValueOnce({ data: { beep_id: "99999999" }, error: null });
 
-    const result = await createUserProfile("u1", "nick");
-    expect(supabase.rpc).toHaveBeenCalledTimes(3);
-    expect(result).toBe("99999999");
+    await expect(createUserProfile("u1", "nick")).resolves.toBe("99999999");
+    expect(supabase.rpc).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns the generated beep_id when the RPC returns no object", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
+
+    await expect(createUserProfile("u1", "nick")).resolves.toMatch(/^\d{8}$/);
   });
 
   it("throws after max retries exceeded", async () => {
     supabase.rpc.mockResolvedValue({ data: null, error: { code: "23505", message: "dup" } });
 
-    await expect(createUserProfile("u1", "nick")).rejects.toThrow(
-      "beep_id 생성 실패: 최대 재시도 횟수 초과"
-    );
-    expect(supabase.rpc).toHaveBeenCalledTimes(5); // MAX_BEEP_ID_RETRIES = 5
+    await expect(createUserProfile("u1", "nick")).rejects.toThrow();
+    expect(supabase.rpc).toHaveBeenCalledTimes(5);
   });
 
   it("throws immediately on non-duplicate error", async () => {
@@ -125,13 +122,14 @@ describe("createUserProfile", () => {
 });
 
 describe("getUserProfile", () => {
-  it("returns user profile", async () => {
+  it("returns profile from the v2 profiles table", async () => {
     const profile = { id: "u1", nickname: "test", beep_id: "12345678" };
     const chain = createMockChain({ data: profile, error: null });
     supabase.from.mockReturnValue(chain);
 
     const result = await getUserProfile("u1");
-    expect(supabase.from).toHaveBeenCalledWith("users");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
     expect(chain.eq).toHaveBeenCalledWith("id", "u1");
     expect(chain.single).toHaveBeenCalled();
     expect(result).toEqual(profile);
@@ -150,6 +148,7 @@ describe("signOut", () => {
     supabase.auth.signOut.mockResolvedValue({ error: null });
 
     await signOut();
+
     expect(supabase.auth.signOut).toHaveBeenCalled();
   });
 

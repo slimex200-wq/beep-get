@@ -1,5 +1,11 @@
 import { supabase } from "@/lib/supabase";
 
+type ProfileStatusRow = {
+  id: string;
+  status_icon: string;
+  updated_at?: string | null;
+};
+
 export const STATUS_PRESETS = [
   { icon: "online", label: "온라인" },
   { icon: "study", label: "공부중" },
@@ -16,42 +22,40 @@ export async function setMyStatus(
   statusIcon: string,
   label?: string
 ) {
-  const { error } = await supabase
-    .from("status_broadcasts")
-    .upsert(
-      {
-        user_id: userId,
-        status_icon: statusIcon,
-        label: label ?? null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
-  if (error) throw error;
+  void label;
 
-  const { error: userError } = await supabase
-    .from("users")
+  const { error } = await supabase
+    .from("profiles")
     .update({ status_icon: statusIcon })
     .eq("id", userId);
-  if (userError) throw userError;
+  if (error) throw error;
 }
 
 export async function getMyStatus(userId: string) {
   const { data, error } = await supabase
-    .from("status_broadcasts")
-    .select("*")
-    .eq("user_id", userId)
+    .from("profiles")
+    .select("id, status_icon, updated_at")
+    .eq("id", userId)
     .single();
   if (error) return null;
-  return data;
+  return mapProfileStatus(data as ProfileStatusRow);
 }
 
 export async function getFriendStatuses(friendIds: string[]) {
   if (friendIds.length === 0) return [];
   const { data, error } = await supabase
-    .from("status_broadcasts")
-    .select("*")
-    .in("user_id", friendIds);
+    .from("profiles")
+    .select("id, status_icon, updated_at")
+    .in("id", friendIds);
   if (error) throw error;
-  return data ?? [];
+  return ((data ?? []) as ProfileStatusRow[]).map(mapProfileStatus);
+}
+
+function mapProfileStatus(profile: ProfileStatusRow) {
+  return {
+    user_id: profile.id,
+    status_icon: profile.status_icon,
+    label: null,
+    updated_at: profile.updated_at ?? new Date().toISOString(),
+  };
 }

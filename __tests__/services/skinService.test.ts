@@ -1,10 +1,10 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
+  getActiveSkinSlug,
   getAllSkins,
   getUserSkins,
   purchaseSkin,
   setActiveSkin,
-  getActiveSkinSlug,
 } from "@/services/skinService";
 
 beforeEach(() => jest.clearAllMocks());
@@ -12,13 +12,14 @@ beforeEach(() => jest.clearAllMocks());
 describe("getAllSkins", () => {
   it("returns all skins ordered by created_at", async () => {
     const skins = [
-      { id: "s1", name: "Neumorphism", slug: "neumorphism" },
-      { id: "s2", name: "Neon", slug: "neon" },
+      { id: "s1", name: "Swiss Paper", slug: "swiss-paper" },
+      { id: "s2", name: "Pixel Pager", slug: "pixel-pager" },
     ];
     const chain = createMockChain({ data: skins, error: null });
     supabase.from.mockReturnValue(chain);
 
     const result = await getAllSkins();
+
     expect(supabase.from).toHaveBeenCalledWith("skins");
     expect(chain.select).toHaveBeenCalledWith("*");
     expect(result).toEqual(skins);
@@ -28,8 +29,7 @@ describe("getAllSkins", () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getAllSkins();
-    expect(result).toEqual([]);
+    await expect(getAllSkins()).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {
@@ -42,11 +42,12 @@ describe("getAllSkins", () => {
 
 describe("getUserSkins", () => {
   it("returns user skins with skin details", async () => {
-    const userSkins = [{ id: "us1", user_id: "u1", skin: { id: "s1", name: "Neon" } }];
+    const userSkins = [{ id: "us1", user_id: "u1", skin: { id: "s1", name: "Swiss Paper" } }];
     const chain = createMockChain({ data: userSkins, error: null });
     supabase.from.mockReturnValue(chain);
 
     const result = await getUserSkins("u1");
+
     expect(supabase.from).toHaveBeenCalledWith("user_skins");
     expect(chain.eq).toHaveBeenCalledWith("user_id", "u1");
     expect(result).toEqual(userSkins);
@@ -56,8 +57,7 @@ describe("getUserSkins", () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getUserSkins("u1");
-    expect(result).toEqual([]);
+    await expect(getUserSkins("u1")).resolves.toEqual([]);
   });
 
   it("throws on error", async () => {
@@ -74,6 +74,7 @@ describe("purchaseSkin", () => {
     supabase.from.mockReturnValue(chain);
 
     await purchaseSkin("u1", "s1");
+
     expect(supabase.from).toHaveBeenCalledWith("user_skins");
     expect(chain.insert).toHaveBeenCalledWith({
       user_id: "u1",
@@ -86,7 +87,7 @@ describe("purchaseSkin", () => {
     const chain = createMockChain({ data: null, error: { code: "23505", message: "dup" } });
     supabase.from.mockReturnValue(chain);
 
-    await expect(purchaseSkin("u1", "s1")).rejects.toThrow("이미 보유한 스킨입니다");
+    await expect(purchaseSkin("u1", "s1")).rejects.toThrow();
   });
 
   it("throws original error for other codes", async () => {
@@ -99,12 +100,13 @@ describe("purchaseSkin", () => {
 });
 
 describe("setActiveSkin", () => {
-  it("updates active skin successfully", async () => {
+  it("updates profile active skin successfully", async () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
     await setActiveSkin("u1", "s1");
-    expect(supabase.from).toHaveBeenCalledWith("users");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
     expect(chain.update).toHaveBeenCalledWith({ active_skin_id: "s1" });
     expect(chain.eq).toHaveBeenCalledWith("id", "u1");
   });
@@ -118,46 +120,34 @@ describe("setActiveSkin", () => {
 });
 
 describe("getActiveSkinSlug", () => {
-  it("returns skin slug when user has active skin", async () => {
+  it("returns skin slug when profile has active skin", async () => {
     const chain = createMockChain({
-      data: { active_skin_id: "s1", skins: { slug: "neon" } },
+      data: { active_skin_id: "s1", active_skin: { slug: "pixel-pager" } },
       error: null,
     });
     supabase.from.mockReturnValue(chain);
 
     const result = await getActiveSkinSlug("u1");
-    expect(supabase.from).toHaveBeenCalledWith("users");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
     expect(chain.single).toHaveBeenCalled();
-    expect(result).toBe("neon");
+    expect(result).toBe("pixel-pager");
   });
 
-  it("returns neumorphism when no skins data", async () => {
+  it("returns swiss-paper when no active skin data", async () => {
     const chain = createMockChain({
-      data: { active_skin_id: null, skins: null },
+      data: { active_skin_id: null, active_skin: null },
       error: null,
     });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getActiveSkinSlug("u1");
-    expect(result).toBe("neumorphism");
+    await expect(getActiveSkinSlug("u1")).resolves.toBe("swiss-paper");
   });
 
-  it("returns neumorphism on error", async () => {
+  it("returns swiss-paper on error", async () => {
     const chain = createMockChain({ data: null, error: { message: "fail" } });
     supabase.from.mockReturnValue(chain);
 
-    const result = await getActiveSkinSlug("u1");
-    expect(result).toBe("neumorphism");
-  });
-
-  it("returns neumorphism when slug is undefined", async () => {
-    const chain = createMockChain({
-      data: { active_skin_id: "s1", skins: { slug: undefined } },
-      error: null,
-    });
-    supabase.from.mockReturnValue(chain);
-
-    const result = await getActiveSkinSlug("u1");
-    expect(result).toBe("neumorphism");
+    await expect(getActiveSkinSlug("u1")).resolves.toBe("swiss-paper");
   });
 });

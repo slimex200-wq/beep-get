@@ -1,10 +1,64 @@
 import { supabase } from "@/lib/supabase";
-import { MAX_CODE_LENGTH, MAX_MEMO_LENGTH, MESSAGE_TTL_HOURS } from "@/lib/constants";
+import { MAX_CODE_LENGTH, MAX_MEMO_LENGTH } from "@/lib/constants";
 
 interface ValidationResult {
   valid: boolean;
   error?: string;
 }
+
+type SignalKind = "beep" | "blink";
+type SignalStatus = "sent" | "delivered" | "read" | "dismissed";
+type SignalMediaStatus =
+  | "pending_upload"
+  | "uploaded"
+  | "processed"
+  | "failed"
+  | "expired"
+  | "deleted";
+
+type SignalMediaRow = {
+  duration_ms: number;
+  status: SignalMediaStatus;
+  thumbnail_key: string | null;
+  strip_keys: string[] | null;
+  object_key: string;
+};
+
+type SignalRow = {
+  id: string;
+  kind: SignalKind;
+  sender_id: string;
+  receiver_id: string;
+  code: string;
+  memo: string | null;
+  status: SignalStatus;
+  is_saved: boolean;
+  expires_at: string;
+  created_at: string;
+  from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
+  media?: SignalMediaRow | SignalMediaRow[] | null;
+};
+
+export type LegacyMessage = {
+  id: string;
+  from_user: string;
+  to_user: string;
+  number_code: string;
+  memo: string | null;
+  is_read: boolean;
+  is_saved: boolean;
+  expires_at: string;
+  created_at: string;
+  kind?: SignalKind;
+  from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
+  media?: {
+    durationMs: number;
+    status: SignalMediaStatus;
+    thumbnailUri?: string | null;
+    stripFrameUris?: string[] | null;
+    playbackUri?: string | null;
+  } | null;
+};
 
 export function validateMessage(code: string, memo?: string): ValidationResult {
   if (!code) return { valid: false, error: "숫자 코드를 입력하세요" };
@@ -26,61 +80,93 @@ export async function sendMessage(
   const validation = validateMessage(numberCode, memo);
   if (!validation.valid) throw new Error(validation.error);
 
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + MESSAGE_TTL_HOURS);
+  void fromUserId;
 
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({
-      from_user: fromUserId,
-      to_user: toUserId,
-      number_code: numberCode,
-      memo: memo || null,
-      expires_at: expiresAt.toISOString(),
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("send_beep", {
+    p_receiver_id: toUserId,
+    p_code: numberCode,
+    p_memo: memo ?? null,
+  });
 
   if (error) throw error;
-  return data;
+  return mapSignalToLegacyMessage(data as SignalRow);
 }
 
 export async function getReceivedMessages(userId: string) {
   const { data, error } = await supabase
-    .from("messages")
-    .select("*, from_user_profile:users!messages_from_user_fkey(nickname, beep_id)")
-    .eq("to_user", userId)
+    .from("signals")
+    .select(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+    )
+    .eq("receiver_id", userId)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  return mapSignalsToLegacyMessages(data as SignalRow[] | null);
 }
 
 export async function markAsRead(messageId: string) {
-  const { error } = await supabase
-    .from("messages")
-    .update({ is_read: true })
-    .eq("id", messageId);
+  const { error } = await supabase.rpc("mark_signal_read", {
+    p_signal_id: messageId,
+  });
   if (error) throw error;
 }
 
 export async function saveMessage(messageId: string) {
-  const { error } = await supabase
-    .from("messages")
-    .update({ is_saved: true })
-    .eq("id", messageId);
+  const { error } = await supabase.rpc("save_signal", {
+    p_signal_id: messageId,
+  });
   if (error) throw error;
 }
 
 export async function getSavedMessages(userId: string) {
   const { data, error } = await supabase
-    .from("messages")
-    .select("*, from_user_profile:users!messages_from_user_fkey(nickname, beep_id)")
-    .eq("to_user", userId)
+    .from("signals")
+    .select(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+    )
+    .eq("receiver_id", userId)
     .eq("is_saved", true)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  return mapSignalsToLegacyMessages(data as SignalRow[] | null);
+}
+
+function mapSignalsToLegacyMessages(signals: SignalRow[] | null): LegacyMessage[] {
+  return (signals ?? []).map(mapSignalToLegacyMessage);
+}
+
+function mapSignalToLegacyMessage(signal: SignalRow): LegacyMessage {
+  const media = firstSignalMedia(signal.media);
+  return {
+    id: signal.id,
+    from_user: signal.sender_id,
+    to_user: signal.receiver_id,
+    number_code: signal.code,
+    memo: signal.memo,
+    is_read: signal.status === "read",
+    is_saved: signal.is_saved,
+    expires_at: signal.expires_at,
+    created_at: signal.created_at,
+    kind: signal.kind,
+    from_user_profile: signal.from_user_profile ?? null,
+    media: media
+      ? {
+          durationMs: media.duration_ms,
+          status: media.status,
+          thumbnailUri: media.thumbnail_key,
+          stripFrameUris: media.strip_keys ?? [],
+          playbackUri: media.object_key,
+        }
+      : null,
+  };
+}
+
+function firstSignalMedia(
+  media: SignalMediaRow | SignalMediaRow[] | null | undefined
+): SignalMediaRow | null {
+  if (!media) return null;
+  return Array.isArray(media) ? (media[0] ?? null) : media;
 }

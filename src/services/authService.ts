@@ -31,13 +31,15 @@ export async function signInWithApple() {
 }
 
 export async function createUserProfile(userId: string, nickname: string) {
+  void userId;
+
   for (let attempt = 0; attempt < MAX_BEEP_ID_RETRIES; attempt++) {
     const beepId = generateBeepId();
-    const { data, error } = await supabase.rpc("create_user_profile", {
+    const { data, error } = await supabase.rpc("create_profile", {
       p_nickname: nickname,
       p_beep_id: beepId,
     });
-    if (!error) return data as string;
+    if (!error) return readBeepId(data) ?? beepId;
     if (error.code !== "23505") throw error;
   }
   throw new Error("beep_id 생성 실패: 최대 재시도 횟수 초과");
@@ -45,7 +47,7 @@ export async function createUserProfile(userId: string, nickname: string) {
 
 export async function getUserProfile(userId: string) {
   const { data, error } = await supabase
-    .from("users")
+    .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
@@ -56,4 +58,13 @@ export async function getUserProfile(userId: string) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+function readBeepId(data: unknown): string | null {
+  if (typeof data === "string") return data;
+  if (data && typeof data === "object" && "beep_id" in data) {
+    const beepId = (data as { beep_id?: unknown }).beep_id;
+    return typeof beepId === "string" ? beepId : null;
+  }
+  return null;
 }

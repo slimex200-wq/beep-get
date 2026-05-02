@@ -6,6 +6,14 @@ interface ValidationResult {
   error?: string;
 }
 
+type CodePresetRow = {
+  id: string;
+  owner_id: string;
+  code: string;
+  label: string;
+  created_at: string;
+};
+
 export function validateDictionaryEntry(code: string, meaning: string): ValidationResult {
   if (!code) return { valid: false, error: "숫자 코드를 입력하세요" };
   if (code.length > MAX_CODE_LENGTH)
@@ -18,12 +26,12 @@ export function validateDictionaryEntry(code: string, meaning: string): Validati
 
 export async function getDictionary(userId: string) {
   const { data, error } = await supabase
-    .from("code_dictionary")
+    .from("code_presets")
     .select("*")
-    .eq("user_id", userId)
+    .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return ((data ?? []) as CodePresetRow[]).map(mapCodePresetToDictionaryEntry);
 }
 
 export async function addEntry(userId: string, code: string, meaning: string) {
@@ -31,12 +39,12 @@ export async function addEntry(userId: string, code: string, meaning: string) {
   if (!validation.valid) throw new Error(validation.error);
 
   const { data, error } = await supabase
-    .from("code_dictionary")
-    .insert({ user_id: userId, code, meaning })
+    .from("code_presets")
+    .insert({ owner_id: userId, code, label: meaning, is_widget_slot: false })
     .select()
     .single();
   if (error) throw error;
-  return data;
+  return mapCodePresetToDictionaryEntry(data as CodePresetRow);
 }
 
 export async function updateEntry(entryId: string, code: string, meaning: string) {
@@ -44,16 +52,26 @@ export async function updateEntry(entryId: string, code: string, meaning: string
   if (!validation.valid) throw new Error(validation.error);
 
   const { error } = await supabase
-    .from("code_dictionary")
-    .update({ code, meaning })
+    .from("code_presets")
+    .update({ code, label: meaning })
     .eq("id", entryId);
   if (error) throw error;
 }
 
 export async function deleteEntry(entryId: string) {
   const { error } = await supabase
-    .from("code_dictionary")
+    .from("code_presets")
     .delete()
     .eq("id", entryId);
   if (error) throw error;
+}
+
+function mapCodePresetToDictionaryEntry(row: CodePresetRow) {
+  return {
+    id: row.id,
+    user_id: row.owner_id,
+    code: row.code,
+    meaning: row.label,
+    created_at: row.created_at,
+  };
 }
