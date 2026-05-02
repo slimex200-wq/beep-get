@@ -38,7 +38,7 @@ npm run submit:android:production
 - Native/module changes: prefer Android verification in this environment; mark iOS as not tested unless a Mac is available.
 - Visual changes: compare against `.brand.json`, `mockup.html`, or `font-compare.html`.
 - Supabase changes: verify environment assumptions and avoid committing secrets.
-- Supabase project changes: use the project-local CLI (`npm run supabase -- ...` or `npm exec supabase -- ...`) and run `npm run supabase:dry-run` after linking a remote project.
+- Supabase project changes: use the project-local CLI (`npm exec supabase -- ...`) and run `npm run supabase:dry-run` after linking a remote project.
 
 ## Before Delivery
 

@@ -17,6 +17,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Active Supabase migration direction is now v2 `profiles/signals/signal_media/usage_daily`; the old `users/messages/friendships` migrations are archived and should not be pushed to a new project.
 - Supabase project `beep-get-prod` is linked locally with project ref `dyuzxilukcwiavtvbmci`; initial remote dry-run is blocked while the project status remains `COMING_UP`.
 - Beep/Blink domain limits and presentation payload helpers are implemented with tests, including the 2-second Blink cap and widget-safe teaser payloads.
+- Home preview now acts as a Today/Reply Room entry point for the Beep/Blink loop, and `ReplyRoom` is available as a modal/deep-link target.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -24,7 +25,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Perform real Android home-screen widget placement QA after the preview app review.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - Wait for `beep-get-prod` to become Active Healthy, then run `npm run supabase:dry-run` before pushing schema.
-- Wire the Beep/Blink presentation model into the Today/Reply Room preview UI.
+- Use a local DB password/pooler connection to run remote `npm run supabase:dry-run`; the direct DB host resolves only IPv6 on this network.
+- Continue from the static Reply Room into real Signal service wiring.
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build, especially non-home tabs and real native Android widget placement.
@@ -41,7 +43,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 ## Last Verified
 
 - 2026-05-02: EAS project linked; `npx expo-doctor` passed 17/17, `npm run typecheck` passed, `npm test -- --runInBand` passed 181 tests, `npx expo prebuild --platform android --no-install` completed, `android/gradlew.bat -p android :app:assembleDebug --console=plain` built successfully, and `android/gradlew.bat -p android :app:bundleRelease --console=plain` built a release AAB successfully after adding missing font assets.
-- 2026-05-03: Beep/Blink domain and presentation tests added; `npm run typecheck` passed and `npm test -- --runInBand` passed 196 tests. `npm run supabase:lint` could not rerun because Docker Desktop was not running after the local stack had been stopped.
+- 2026-05-03: Beep/Blink domain/presentation and Today/Reply Room preview work added; `npm run typecheck` passed, `npm test -- --runInBand` passed 198 tests, and `npx expo-doctor` passed 17/17. `npm run supabase:lint` could not rerun because Docker Desktop was not running after the local stack had been stopped.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Real Android launcher widget placement and iOS verification were not performed.

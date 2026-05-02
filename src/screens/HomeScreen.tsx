@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo } from "react";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Pressable,
   ScrollView,
@@ -8,17 +10,24 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useTheme } from "@/theme/ThemeProvider";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { buildSignalPresentation, type SignalPresentation } from "@/lib/beepBlinkPresentation";
 import {
   formatWidgetIndex,
   formatWidgetTimeParts,
   getWidgetSenderName,
-  type WidgetPresentationMessage,
 } from "@/lib/homeWidgetPresentation";
+import {
+  legacyMessageToSignalInput,
+  type LegacySignalMessage,
+} from "@/lib/messageSignalAdapter";
 
-type HomeMessage = WidgetPresentationMessage & {
+type HomeMessage = LegacySignalMessage & {
   id: string;
+  from_user: string;
+  to_user: string;
   number_code: string;
   is_read: boolean;
   is_saved?: boolean;
@@ -40,6 +49,7 @@ const SWISS = {
 
 export function HomeScreen() {
   const theme = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width } = useWindowDimensions();
   const { profile } = useAuthStore();
   const { received, loading, fetchReceived, read, save, subscribeRealtime, unsubscribeRealtime } =
@@ -54,7 +64,14 @@ export function HomeScreen() {
 
   const latestMessage = received[0] as HomeMessage | undefined;
   const recentMessages = received.slice(1, 4) as HomeMessage[];
+  const latestPresentation = latestMessage
+    ? buildSignalPresentation(legacyMessageToSignalInput(latestMessage))
+    : null;
   const styles = useMemo(() => createStyles(width), [width]);
+  const openReplyRoom = () => {
+    if (!latestMessage) return;
+    navigation.navigate("ReplyRoom", { signalId: latestMessage.id });
+  };
 
   return (
     <ScrollView
@@ -66,10 +83,10 @@ export function HomeScreen() {
         <View style={styles.headerRule} />
         <Text style={styles.kicker}>BEEP-GET / WIDGET SYSTEM</Text>
         <View style={styles.titleLockup}>
-          <Text style={styles.titleModern}>Modern</Text>
-          <Text style={styles.titlePager}>Pager</Text>
+          <Text style={styles.titleModern}>Today</Text>
+          <Text style={styles.titlePager}>Room</Text>
         </View>
-        <Text style={styles.subhead}>HOME SCREEN IS THE PRODUCT</Text>
+        <Text style={styles.subhead}>WIDGET TEASER OPENS THE ROOM</Text>
       </View>
 
       <View style={styles.phone}>
@@ -80,9 +97,10 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.widgetStage}>
-          {latestMessage ? (
+          {latestMessage && latestPresentation ? (
             <SwissPaperWidget
               message={latestMessage}
+              presentation={latestPresentation}
               totalMessages={received.length}
               disabled={loading}
               onConfirm={() => read(latestMessage.id)}
@@ -111,14 +129,29 @@ export function HomeScreen() {
               <Text style={styles.emptyRecent}>NO ARCHIVE YET</Text>
             )}
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Reply Room"
+            disabled={!latestMessage}
+            onPress={openReplyRoom}
+            style={({ pressed }) => [
+              styles.replyRoomButton,
+              pressed && styles.replyRoomButtonPressed,
+              !latestMessage && styles.replyRoomButtonDisabled,
+            ]}
+          >
+            <Text style={styles.replyRoomButtonText}>
+              OPEN REPLY ROOM
+            </Text>
+          </Pressable>
         </View>
       </View>
 
       <View style={styles.footerStrip}>
         <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
-          WIDGET-FIRST PREVIEW
+          WIDGET-FIRST LOOP
         </Text>
-        <Text style={styles.footerText}>SWISS PAPER / CREAM + INK</Text>
+        <Text style={styles.footerText}>BEEP / BLINK / LOG</Text>
       </View>
     </ScrollView>
   );
@@ -126,12 +159,14 @@ export function HomeScreen() {
 
 function SwissPaperWidget({
   message,
+  presentation,
   totalMessages,
   disabled,
   onConfirm,
   onSave,
 }: {
   message: HomeMessage;
+  presentation: SignalPresentation;
   totalMessages: number;
   disabled: boolean;
   onConfirm: () => void;
@@ -139,7 +174,7 @@ function SwissPaperWidget({
 }) {
   const time = formatWidgetTimeParts(message.created_at);
   const indexNo = formatWidgetIndex(totalMessages);
-  const fromName = getWidgetSenderName(message);
+  const fromName = presentation.senderName;
 
   return (
     <View
@@ -151,13 +186,19 @@ function SwissPaperWidget({
         <View style={stylesStatic.widgetTop}>
           <View style={stylesStatic.titleCell}>
             <Text style={stylesStatic.incoming}>Incoming</Text>
-            <Text style={stylesStatic.beepWord}>Beep</Text>
+            <Text style={stylesStatic.beepWord}>
+              {presentation.kind === "blink" ? "Blink" : "Beep"}
+            </Text>
             <Text style={stylesStatic.metaLine}>
               FROM - {fromName.toUpperCase()} - N {indexNo}
             </Text>
           </View>
           <View style={stylesStatic.symbolCell}>
-            <DotCircle size={72} />
+            {presentation.teaser ? (
+              <MiniFilmStrip teaser={presentation.teaser} />
+            ) : (
+              <DotCircle size={72} />
+            )}
           </View>
         </View>
 
@@ -182,6 +223,21 @@ function SwissPaperWidget({
         <WidgetAction title="CONFIRM" onPress={onConfirm} disabled={disabled} />
         <WidgetAction title="SAVE" onPress={onSave} disabled={disabled} />
       </View>
+    </View>
+  );
+}
+
+function MiniFilmStrip({ teaser }: { teaser: NonNullable<SignalPresentation["teaser"]> }) {
+  const frames = teaser.stripFrameUris.length > 0 ? teaser.stripFrameUris : ["01", "02", "03"];
+
+  return (
+    <View style={stylesStatic.filmStrip}>
+      {frames.slice(0, 3).map((frame, index) => (
+        <View key={`${frame}-${index}`} style={stylesStatic.filmFrame}>
+          <Text style={stylesStatic.filmFrameText}>{String(index + 1).padStart(2, "0")}</Text>
+        </View>
+      ))}
+      <Text style={stylesStatic.filmDuration}>02 SEC</Text>
     </View>
   );
 }
@@ -395,6 +451,25 @@ function createStyles(width: number) {
     recentList: {
       gap: 10,
     },
+    replyRoomButton: {
+      borderWidth: 1,
+      borderColor: "rgba(242,237,228,0.72)",
+      paddingVertical: 14,
+      alignItems: "center",
+      backgroundColor: SWISS.paper,
+    },
+    replyRoomButtonPressed: {
+      backgroundColor: "#FFFFFF",
+    },
+    replyRoomButtonDisabled: {
+      opacity: 0.34,
+    },
+    replyRoomButtonText: {
+      fontFamily: "IBMPlexMono-Bold",
+      fontSize: 10,
+      letterSpacing: 2,
+      color: SWISS.ink,
+    },
     emptyRecent: {
       fontFamily: "IBMPlexMono",
       fontSize: 11,
@@ -604,6 +679,32 @@ const stylesStatic = StyleSheet.create({
     borderColor: SWISS.paper,
     outlineColor: SWISS.ink,
     outlineWidth: 1,
+  },
+  filmStrip: {
+    width: 76,
+    gap: 4,
+    alignItems: "center",
+  },
+  filmFrame: {
+    width: 58,
+    height: 14,
+    borderWidth: 1,
+    borderColor: SWISS.ink,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E2D9CB",
+  },
+  filmFrameText: {
+    fontFamily: "IBMPlexMono-Bold",
+    fontSize: 7,
+    color: SWISS.ink,
+  },
+  filmDuration: {
+    fontFamily: "IBMPlexMono-Bold",
+    fontSize: 8,
+    letterSpacing: 1,
+    color: SWISS.accent,
+    marginTop: 2,
   },
   recentRow: {
     flexDirection: "row",

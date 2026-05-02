@@ -9,7 +9,6 @@
     "web": "expo start --web",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "supabase": "supabase",
     "supabase:dry-run": "supabase db push --dry-run",
     "supabase:lint": "supabase db lint",
     "eas:info": "npx eas-cli@latest project:info",

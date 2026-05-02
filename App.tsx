@@ -20,6 +20,7 @@ const linking = {
     screens: {
       Main: { screens: { Home: "home" } },
       Send: "message/reply/:friendId/:friendName",
+      ReplyRoom: "reply/:signalId",
     },
   },
 };
