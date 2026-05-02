@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import { getAllIcons, getUserIcons, grantIcon } from "@/services/collectionService";
+import {
+  isUiPreviewUser,
+  uiPreviewIcons,
+  uiPreviewOwnedIcons,
+} from "@/lib/uiPreview";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface Icon {
   id: string;
@@ -36,17 +42,50 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   loading: false,
 
   fetchAll: async () => {
+    if (!isSupabaseConfigured) {
+      set({ allIcons: uiPreviewIcons, loading: false });
+      return;
+    }
     set({ loading: true });
     const allIcons = await getAllIcons();
     set({ allIcons, loading: false });
   },
 
   fetchOwned: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({
+        ownedIcons: uiPreviewOwnedIcons,
+        ownedIconIds: new Set(uiPreviewOwnedIcons.map((ui) => ui.icon_id)),
+      });
+      return;
+    }
     const ownedIcons = await getUserIcons(userId);
     set({ ownedIcons, ownedIconIds: new Set(ownedIcons.map((ui) => ui.icon_id)) });
   },
 
   grant: async (userId, iconId) => {
+    if (isUiPreviewUser(userId)) {
+      const icon = uiPreviewIcons.find((item) => item.id === iconId);
+      if (icon) {
+        set((state) => {
+          const ownedIcons = [
+            ...state.ownedIcons,
+            {
+              id: `owned-${iconId}`,
+              user_id: userId,
+              icon_id: iconId,
+              acquired_at: new Date().toISOString(),
+              icon,
+            },
+          ];
+          return {
+            ownedIcons,
+            ownedIconIds: new Set(ownedIcons.map((ui) => ui.icon_id)),
+          };
+        });
+      }
+      return;
+    }
     await grantIcon(userId, iconId);
     await get().fetchOwned(userId);
   },

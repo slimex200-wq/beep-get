@@ -7,6 +7,12 @@ import {
   getActiveSkinSlug,
 } from "@/services/skinService";
 import { triggerWidgetReload } from "@/services/widgetService";
+import {
+  isUiPreviewUser,
+  uiPreviewOwnedSkins,
+  uiPreviewSkins,
+} from "@/lib/uiPreview";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface Skin {
   id: string;
@@ -41,30 +47,65 @@ interface SkinState {
 export const useSkinStore = create<SkinState>((set, get) => ({
   allSkins: [],
   ownedSkins: [],
-  activeSkinSlug: "neumorphism",
+  activeSkinSlug: "swiss-paper",
   loading: false,
 
   fetchAll: async () => {
+    if (!isSupabaseConfigured) {
+      set({ allSkins: uiPreviewSkins });
+      return;
+    }
     const allSkins = await getAllSkins();
     set({ allSkins });
   },
 
   fetchOwned: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ ownedSkins: uiPreviewOwnedSkins });
+      return;
+    }
     const ownedSkins = await getUserSkins(userId);
     set({ ownedSkins });
   },
 
   fetchActiveSkin: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ activeSkinSlug: "swiss-paper" });
+      return;
+    }
     const slug = await getActiveSkinSlug(userId);
     set({ activeSkinSlug: slug });
   },
 
   purchase: async (userId, skinId) => {
+    if (isUiPreviewUser(userId)) {
+      const skin = uiPreviewSkins.find((item) => item.id === skinId);
+      if (skin) {
+        set((state) => ({
+          ownedSkins: [
+            ...state.ownedSkins,
+            {
+              id: `owned-${skinId}`,
+              user_id: userId,
+              skin_id: skinId,
+              acquired_type: "preview",
+              skin,
+            },
+          ],
+        }));
+      }
+      return;
+    }
     await purchaseSkin(userId, skinId);
     await get().fetchOwned(userId);
   },
 
   apply: async (userId, skinId, slug) => {
+    if (isUiPreviewUser(userId)) {
+      set({ activeSkinSlug: slug });
+      triggerWidgetReload();
+      return;
+    }
     await setActiveSkin(userId, skinId);
     set({ activeSkinSlug: slug });
     triggerWidgetReload();

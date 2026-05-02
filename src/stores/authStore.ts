@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import { createUserProfile, getUserProfile } from "@/services/authService";
 import type { Session, User } from "@supabase/supabase-js";
+import { createUiPreviewSession, uiPreviewProfile } from "@/lib/uiPreview";
 
 interface UserProfile {
   id: string;
@@ -17,6 +18,7 @@ interface AuthState {
   profile: UserProfile | null;
   loading: boolean;
   setSession: (session: Session | null) => void;
+  enterPreviewMode: () => void;
   fetchProfile: () => Promise<void>;
   initProfile: (nickname: string) => Promise<string>;
 }
@@ -29,6 +31,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setSession: (session) => {
     set({ session, user: session?.user ?? null, loading: false });
+  },
+
+  enterPreviewMode: () => {
+    const session = createUiPreviewSession();
+    set({
+      session,
+      user: session.user,
+      profile: uiPreviewProfile,
+      loading: false,
+    });
   },
 
   fetchProfile: async () => {

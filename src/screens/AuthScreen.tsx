@@ -4,10 +4,12 @@ import { useTheme } from "@/theme/ThemeProvider";
 import { BeepButton } from "@/components/BeepButton";
 import { useAuthStore } from "@/stores/authStore";
 import { signInWithGoogle } from "@/services/authService";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { isUiPreviewEnabled } from "@/lib/uiPreview";
 
 export function AuthScreen() {
   const theme = useTheme();
-  const { setSession, initProfile } = useAuthStore();
+  const { enterPreviewMode, initProfile } = useAuthStore();
   const [nickname, setNickname] = useState("");
   const [step, setStep] = useState<"login" | "nickname">("login");
 
@@ -91,6 +93,13 @@ export function AuthScreen() {
             onPress={() => {}}
             variant="secondary"
           />
+          {isUiPreviewEnabled && !isSupabaseConfigured && (
+            <BeepButton
+              title="UI PREVIEW"
+              onPress={enterPreviewMode}
+              variant="secondary"
+            />
+          )}
         </View>
       ) : (
         <View style={styles.nicknameForm}>

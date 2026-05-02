@@ -6,8 +6,10 @@ import neumorphismSkin from "./skins/neumorphism.json";
 import cyberNeonSkin from "./skins/cyber-neon.json";
 import retroFutureSkin from "./skins/retro-future.json";
 import glassmorphismSkin from "./skins/glassmorphism.json";
+import swissPaperSkin from "./skins/swiss-paper.json";
 
 const skinMap: Record<string, any> = {
+  "swiss-paper": swissPaperSkin,
   neumorphism: neumorphismSkin,
   "cyber-neon": cyberNeonSkin,
   "retro-future": retroFutureSkin,

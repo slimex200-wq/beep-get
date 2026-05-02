@@ -7,6 +7,7 @@ import {
   updateFriendNickname,
   updateVibrationPattern,
 } from "@/services/friendService";
+import { isUiPreviewUser, uiPreviewFriends } from "@/lib/uiPreview";
 
 interface Friend {
   id: string;
@@ -37,12 +38,33 @@ export const useFriendStore = create<FriendState>((set, get) => ({
   loading: false,
 
   fetch: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ friends: uiPreviewFriends, loading: false });
+      return;
+    }
     set({ loading: true });
     const friends = await getFriends(userId);
     set({ friends, loading: false });
   },
 
   add: async (userId, friendBeepId, nickname) => {
+    if (isUiPreviewUser(userId)) {
+      const friend = {
+        id: `preview-friendship-${Date.now()}`,
+        user_id: userId,
+        friend_id: `preview-friend-${friendBeepId}`,
+        nickname: nickname ?? null,
+        vibration_pattern: "short",
+        friend: {
+          id: `preview-friend-${friendBeepId}`,
+          beep_id: friendBeepId,
+          nickname: nickname || "New friend",
+          status_icon: "online",
+        },
+      };
+      set((state) => ({ friends: [friend, ...state.friends] }));
+      return;
+    }
     const found = await findUserByBeepId(friendBeepId);
     if (!found) throw new Error("존재하지 않는 삐삐 번호입니다");
     await addFriend(userId, found.id, nickname);
