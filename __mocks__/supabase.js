@@ -19,11 +19,25 @@ function createMockChain(result = { data: null, error: null }) {
 }
 
 const mockFrom = jest.fn(() => createMockChain());
+const createMockStorageBucket = () => ({
+  createSignedUploadUrl: jest.fn().mockResolvedValue({
+    data: { signedUrl: "https://upload.example", token: "upload-token", path: "object.mp4" },
+    error: null,
+  }),
+  createSignedUrl: jest.fn().mockResolvedValue({
+    data: { signedUrl: "https://signed.example" },
+    error: null,
+  }),
+  upload: jest.fn().mockResolvedValue({ data: { path: "object.mp4" }, error: null }),
+});
 
 module.exports = {
   supabase: {
     from: mockFrom,
     rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
+    storage: {
+      from: jest.fn(() => createMockStorageBucket()),
+    },
     auth: {
       signInWithOAuth: jest.fn().mockResolvedValue({ data: {}, error: null }),
       signInWithIdToken: jest.fn().mockResolvedValue({ data: {}, error: null }),
