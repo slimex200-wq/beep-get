@@ -15,13 +15,14 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Home preview now follows the saved Swiss Paper widget mockup direction instead of the old generic LCD/neumorphic card layout.
 - Supabase CLI is installed as a project dev dependency; local Supabase config is initialized for the clean Beep/Blink backend plan.
 - Active Supabase migration direction is now v2 `profiles/signals/signal_media/usage_daily`; the old `users/messages/friendships` migrations are archived and should not be pushed to a new project.
+- Supabase project `beep-get-prod` is linked locally with project ref `dyuzxilukcwiavtvbmci`; initial remote dry-run is blocked while the project status remains `COMING_UP`.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
 
 - Perform real Android home-screen widget placement QA after the preview app review.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
-- Create/link the dedicated `beep-get-prod` Supabase project, then run migration dry-run before pushing schema.
+- Wait for `beep-get-prod` to become Active Healthy, then run `npm run supabase:dry-run` before pushing schema.
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build, especially non-home tabs and real native Android widget placement.
