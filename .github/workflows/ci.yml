@@ -43,6 +43,9 @@ jobs:
       - name: Check Expo dependencies
         run: npx --yes expo-doctor
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Run Jest tests
         run: npm test -- --runInBand
 

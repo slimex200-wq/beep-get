@@ -4,6 +4,7 @@
 
 ```bash
 npx expo-doctor
+npm run typecheck
 npm test
 npm run android
 npm run web
@@ -16,9 +17,19 @@ Pull requests into `master` must pass the GitHub Actions `validate` job before m
 ```bash
 npm ci
 npx --yes expo-doctor
+npm run typecheck
 npm test -- --runInBand
 npx expo prebuild --platform android --no-install
 cd android && ./gradlew :app:assembleDebug --console=plain --no-daemon
+```
+
+## Release Commands
+
+```bash
+npm run eas:info
+npm run build:android:preview
+npm run build:android:production
+npm run submit:android:production
 ```
 
 ## Risk-Based Checks
