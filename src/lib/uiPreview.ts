@@ -9,7 +9,7 @@ export const uiPreviewProfile = {
   beep_id: "48624862",
   nickname: "BEEP TESTER",
   status_icon: "online",
-  active_skin_id: "skin-neumorphism",
+  active_skin_id: "skin-swiss-paper",
 };
 
 export function createUiPreviewSession(): Session {
@@ -114,6 +114,15 @@ export const uiPreviewDictionary = [
 
 export const uiPreviewSkins = [
   {
+    id: "skin-swiss-paper",
+    name: "Swiss Paper",
+    slug: "swiss-paper",
+    category: "editorial",
+    assets_url: "",
+    is_free: true,
+    price_tier: null,
+  },
+  {
     id: "skin-neumorphism",
     name: "Soft Pager",
     slug: "neumorphism",
@@ -153,18 +162,25 @@ export const uiPreviewSkins = [
 
 export const uiPreviewOwnedSkins = [
   {
+    id: "owned-skin-swiss-paper",
+    user_id: UI_PREVIEW_USER_ID,
+    skin_id: "skin-swiss-paper",
+    acquired_type: "default",
+    skin: uiPreviewSkins[0],
+  },
+  {
     id: "owned-skin-neumorphism",
     user_id: UI_PREVIEW_USER_ID,
     skin_id: "skin-neumorphism",
     acquired_type: "default",
-    skin: uiPreviewSkins[0],
+    skin: uiPreviewSkins[1],
   },
   {
     id: "owned-skin-glass",
     user_id: UI_PREVIEW_USER_ID,
     skin_id: "skin-glass",
     acquired_type: "preview",
-    skin: uiPreviewSkins[3],
+    skin: uiPreviewSkins[4],
   },
 ];
 

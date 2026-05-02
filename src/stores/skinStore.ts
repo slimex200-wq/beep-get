@@ -47,7 +47,7 @@ interface SkinState {
 export const useSkinStore = create<SkinState>((set, get) => ({
   allSkins: [],
   ownedSkins: [],
-  activeSkinSlug: "neumorphism",
+  activeSkinSlug: "swiss-paper",
   loading: false,
 
   fetchAll: async () => {
@@ -70,7 +70,7 @@ export const useSkinStore = create<SkinState>((set, get) => ({
 
   fetchActiveSkin: async (userId) => {
     if (isUiPreviewUser(userId)) {
-      set({ activeSkinSlug: "neumorphism" });
+      set({ activeSkinSlug: "swiss-paper" });
       return;
     }
     const slug = await getActiveSkinSlug(userId);
