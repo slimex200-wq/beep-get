@@ -36,6 +36,17 @@ export type BlinkPlaybackReference = {
   signedUrl: string;
 };
 
+export type BlinkUploadResult = {
+  bucket: string;
+  objectKey: string;
+  path: string;
+  fullPath?: string | null;
+};
+
+export type BlinkUploadOptions = {
+  contentType?: string;
+};
+
 export type CreateBlinkObjectKeyOptions = {
   senderId: string;
   receiverId: string;
@@ -59,6 +70,12 @@ type CreateBlinkMetadataRow = {
 
 export interface BlinkMediaStorage {
   requestUploadTarget(request: BlinkUploadRequest): Promise<BlinkUploadTarget>;
+  uploadToTarget(
+    target: BlinkUploadTarget,
+    body: Blob,
+    options?: BlinkUploadOptions
+  ): Promise<BlinkUploadResult>;
+  finalizeUpload(target: BlinkUploadTarget): Promise<void>;
   createPlaybackReference(input: {
     bucket: string;
     objectKey: string;
@@ -145,6 +162,33 @@ export function createSupabaseBlinkMediaStorage(
         uploadUrl: uploadData?.signedUrl ?? "",
         uploadToken: uploadData?.token ?? "",
       };
+    },
+
+    uploadToTarget: async (target, body, uploadOptions) => {
+      const { data, error } = await supabase.storage
+        .from(target.bucket)
+        .uploadToSignedUrl(target.objectKey, target.uploadToken, body, {
+          contentType: uploadOptions?.contentType,
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      return {
+        bucket: target.bucket,
+        objectKey: target.objectKey,
+        path: data?.path ?? target.objectKey,
+        fullPath: data?.fullPath ?? null,
+      };
+    },
+
+    finalizeUpload: async (target) => {
+      const { error } = await supabase.rpc("finalize_blink_upload", {
+        p_signal_id: target.signalId,
+        p_object_key: target.objectKey,
+      });
+
+      if (error) throw error;
     },
 
     createPlaybackReference: async ({

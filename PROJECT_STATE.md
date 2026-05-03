@@ -23,6 +23,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Legacy UI shapes are preserved through adapters so existing screens and widget sync can keep using `from_user`, `number_code`, `is_read`, and `user_id` while the backend stores `sender_id`, `code`, `status`, and `owner_id`.
 - Blink media storage now has a test-covered adapter boundary that validates 2-second/750KB uploads, creates `create_blink_metadata` rows, returns signed Supabase upload targets, and issues short-lived playback references without permanent public URLs.
 - App-side usage guardrails now have a pure evaluator for daily Beep/Blink limits and per-relationship Blink cooldowns before the UI calls paid/storage-heavy paths.
+- Blink send now has an app-side capture/send path: `SendScreen` can switch between Beep and Blink, records a 2-second muted camera clip through `expo-camera`, uploads through the signed Supabase Storage target, and finalizes media with `finalize_blink_upload`.
+- The `finalize_blink_upload` RPC has been pushed to `beep-get-prod`; it only lets the authenticated sender mark their own pending Blink media as `uploaded`.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -30,7 +32,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Perform real Android home-screen widget placement QA after the preview app review.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
-- Wire the Blink media adapter into a capture/send UI path and confirm Supabase Storage upload works on Android.
+- Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
 - Add thumbnail/3-frame strip generation path for Blink teaser payloads.
 - Decide whether v2 should reintroduce collection/season/icon rewards; production collection/season services currently return empty safe fallbacks because those tables are intentionally absent from the v2 migration.
 - Configure Google Play Console/service account, then run production EAS build and submit.
@@ -46,7 +48,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Google Play service account credentials are not configured in the repo and must not be committed.
 - Collection/season/icon rewards are preview-only until a v2 rewards schema is designed.
 - Status labels are UI-only for now; v2 persists `profiles.status_icon`, not separate `status_broadcasts.label`.
-- Blink upload adapter is unit-tested, but real Android camera/file upload and Supabase Storage policy behavior still need runtime QA.
+- Blink upload adapter and SendScreen preview UI are verified, but real authenticated Android camera/file upload and Supabase Storage policy behavior still need runtime QA.
 - iOS verification may require macOS.
 
 ## Last Verified
@@ -56,6 +58,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Remote Supabase `beep-get-prod` migration push succeeded after relinking with the DB password and IPv4 pooler path; `supabase db lint --linked` reported no schema errors and remote table stats showed the v2 Beep/Blink tables.
 - 2026-05-03: App service layer was rewired to the v2 Supabase schema; `npm run typecheck` passed, `npm test -- --runInBand` passed 169 tests, `npx expo-doctor` passed 17/17, and `supabase db lint --linked` reported no schema errors.
 - 2026-05-03: Blink media storage adapter and usage limit evaluator were added; `npm run typecheck` passed, `npm test -- --runInBand` passed 187 tests, `npx expo-doctor` passed 17/17, and `supabase db lint --linked` reported no schema errors after linking the worktree to `beep-get-prod`.
+- 2026-05-03: Blink Send UI and upload-finalize path added; `npm run typecheck` passed, `npm test -- --runInBand` passed 194 tests, `npx expo-doctor` passed 17/17, `supabase db push --dry-run --password ...` reported only `20260503050000_finalize_blink_upload.sql`, `supabase db push --password ...` applied it, a follow-up dry-run reported the remote database up to date, and `supabase db lint --linked` found no schema errors.
+- 2026-05-03: Android runtime smoke passed on `emulator-5554`: `npx expo prebuild --platform android --no-install` completed, `:app:assembleDebug` passed from short path `C:/bg-blink`, x86_64 debug APK installed after emulator space cleanup, Metro bundled successfully with `EXPO_PUBLIC_UI_PREVIEW=1`, UI Preview entered Home, and the Send screen showed the Beep/Blink switch plus Blink capture panel. Screenshots: `C:/Users/slime/AppData/Local/Temp/beep-get-ui-preview-home.png`, `C:/Users/slime/AppData/Local/Temp/beep-get-blink-send-screen.png`.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Real Android launcher widget placement and iOS verification were not performed.
