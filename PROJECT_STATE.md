@@ -30,6 +30,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Main app navigation now opens the slip-first primary tabs: Today, People, Send, Studio, and Logs, with Reply Room and widget states available as modal/deep-link targets.
 - Android emulator visual QA refined the slip UI shell: pager screens now respect the status-bar safe area, primary tabs stay to five one-line labels, and the Send Beep/Blink switcher lives inside the pager surface.
 - Base stage/shell colors are neutral black/charcoal; avoid warm near-black values such as `#11110F` because they read as mugwort/olive on Android emulator screenshots.
+- Login now uses a frameless cream paper-slip surface with the approved concept-1 Beepy pager mascot; do not add a literal phone/iPhone frame inside the app UI.
+- Platform auth CTAs are split by runtime platform: iOS uses Apple, Android/web/other platforms use Google. Android UI preview should show Google plus UI Preview only.
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - macOS/iOS availability may block iOS verification.
 
@@ -72,6 +74,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Downloaded `DESIGN.md` UI starter integrated into the existing Expo app navigation as Today/People/Send/Studio/Logs/Widget tabs plus slip Reply Room modal; `npx expo-doctor` passed 17/17, `npm run typecheck` passed, and `npm test -- --runInBand` passed 194 tests.
 - 2026-05-03: Android emulator visual QA for the integrated slip UI passed after safe-area/tab/Send switcher polish; screenshots saved at `C:/Users/slime/AppData/Local/Temp/beep-get-slip-ui-polished-today.png`, `C:/Users/slime/AppData/Local/Temp/beep-get-slip-ui-polished-send-v2.png`, and `C:/Users/slime/AppData/Local/Temp/beep-get-slip-ui-polished-studio.png`.
 - 2026-05-03: Shell color cast fix verified on `emulator-5554`; `src/design/tokens.ts` stage/shell colors were neutralized, screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-neutral-shell-today.png`, `npm run typecheck` passed, `npm test -- --runInBand` passed 194 tests, and `npx expo-doctor` passed 17/17.
+- 2026-05-03: Login mascot/platform-auth pass verified on `emulator-5554`; Android screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-login-mascot-android-v2.png`, visual verdict scored 92/pass in `.omx/state/login-mascot/ralph-progress.json`, `npm run typecheck` passed, `npm test -- --runInBand` passed 197 tests, and `npx --yes expo-doctor` passed 17/17. iOS Apple-only runtime verification is still pending on macOS.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Real Android launcher widget placement and iOS verification were not performed.

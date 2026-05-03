@@ -55,20 +55,17 @@ describe("signInWithGoogle", () => {
 });
 
 describe("signInWithApple", () => {
-  it("calls signInWithIdToken and returns data", async () => {
-    const mockData = { session: { access_token: "tok" } };
-    supabase.auth.signInWithIdToken.mockResolvedValue({ data: mockData, error: null });
+  it("calls signInWithOAuth and returns data", async () => {
+    const mockData = { url: "https://appleid.apple.com/auth" };
+    supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
 
     await expect(signInWithApple()).resolves.toEqual(mockData);
-    expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
-      provider: "apple",
-      token: "",
-    });
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({ provider: "apple" });
   });
 
   it("throws on error", async () => {
     const err = { message: "apple sign in failed" };
-    supabase.auth.signInWithIdToken.mockResolvedValue({ data: null, error: err });
+    supabase.auth.signInWithOAuth.mockResolvedValue({ data: null, error: err });
 
     await expect(signInWithApple()).rejects.toEqual(err);
   });
