@@ -4,6 +4,7 @@ import {
   getSavedMessages,
   markAsRead,
   saveMessage,
+  sendQuickReplyToMessage,
   sendMessage,
   validateMessage,
 } from "@/services/messageService";
@@ -103,6 +104,59 @@ describe("sendMessage", () => {
     await expect(sendMessage("u1", "u2", "1234")).rejects.toEqual({
       message: "db error",
     });
+  });
+});
+
+describe("sendQuickReplyToMessage", () => {
+  it("sends a Beep back to the source sender", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: { ...signal, sender_id: "u2", receiver_id: "u1", code: "8282" },
+      error: null,
+    });
+
+    await sendQuickReplyToMessage(
+      "u2",
+      {
+        id: "source-1",
+        from_user: "u1",
+        to_user: "u2",
+        number_code: "486",
+        memo: null,
+        is_read: false,
+        is_saved: false,
+        expires_at: "2026-05-04T00:00:00.000Z",
+        created_at: "2026-05-03T00:00:00.000Z",
+      },
+      "8282"
+    );
+
+    expect(supabase.rpc).toHaveBeenCalledWith("send_beep", {
+      p_receiver_id: "u1",
+      p_code: "8282",
+      p_memo: null,
+    });
+  });
+
+  it("rejects replying to another user's signal", async () => {
+    await expect(
+      sendQuickReplyToMessage(
+        "u3",
+        {
+          id: "source-1",
+          from_user: "u1",
+          to_user: "u2",
+          number_code: "486",
+          memo: null,
+          is_read: false,
+          is_saved: false,
+          expires_at: "2026-05-04T00:00:00.000Z",
+          created_at: "2026-05-03T00:00:00.000Z",
+        },
+        "8282"
+      )
+    ).rejects.toThrow("Cannot reply");
+
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 });
 

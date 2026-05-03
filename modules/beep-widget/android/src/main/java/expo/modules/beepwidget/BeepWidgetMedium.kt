@@ -41,59 +41,43 @@ private fun MediumWidgetContent(data: WidgetData?) {
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(BeepWidgetColors.surface)
+            .background(BeepWidgetColors.paper)
             .padding(4.dp),
     ) {
-        // Left: LCD display (main message)
         Column(
             modifier = GlanceModifier
-                .defaultWeight()
+                .width(154.dp)
                 .fillMaxHeight(),
         ) {
-            if (data?.latestMessage != null) {
-                val msg = data.latestMessage
+            val msg = data?.latestMessage
+            if (msg != null) {
                 LcdDisplay(
                     fromName = msg.senderNickname,
                     code = msg.code,
                     time = formatTime(msg.receivedAt),
                     isNew = !msg.isRead,
+                    actions = msg.actions,
+                    showActions = true,
                     modifier = GlanceModifier.fillMaxSize(),
                 )
             } else {
-                Column(
-                    modifier = GlanceModifier
-                        .fillMaxSize()
-                        .background(BeepWidgetColors.lcdBackground)
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "BEEP-GET",
-                        style = TextStyle(color = BeepWidgetColors.lcdSubtext),
-                    )
-                    Text(
-                        text = "수신 대기 중...",
-                        style = TextStyle(color = BeepWidgetColors.textSecondary),
-                    )
-                }
+                EmptyWidgetContent()
             }
         }
 
         Spacer(modifier = GlanceModifier.width(4.dp))
 
-        // Right: Recent senders list
         Column(
             modifier = GlanceModifier
                 .width(100.dp)
                 .fillMaxHeight()
-                .background(BeepWidgetColors.surface)
+                .background(BeepWidgetColors.paperWarm)
                 .padding(8.dp),
         ) {
             Text(
                 text = "RECENT",
                 style = TextStyle(
-                    color = BeepWidgetColors.textSecondary,
+                    color = BeepWidgetColors.muted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 ),
@@ -104,7 +88,7 @@ private fun MediumWidgetContent(data: WidgetData?) {
             if (senders.isEmpty()) {
                 Text(
                     text = "-",
-                    style = TextStyle(color = BeepWidgetColors.textSecondary),
+                    style = TextStyle(color = BeepWidgetColors.muted),
                 )
             } else {
                 senders.forEach { sender ->
@@ -116,7 +100,7 @@ private fun MediumWidgetContent(data: WidgetData?) {
                         Text(
                             text = sender.nickname,
                             style = TextStyle(
-                                color = BeepWidgetColors.lcdText,
+                                color = BeepWidgetColors.ink,
                                 fontSize = 12.sp,
                             ),
                             maxLines = 1,
@@ -124,7 +108,7 @@ private fun MediumWidgetContent(data: WidgetData?) {
                         Text(
                             text = sender.lastCode,
                             style = TextStyle(
-                                color = BeepWidgetColors.lcdSubtext,
+                                color = BeepWidgetColors.muted,
                                 fontSize = 10.sp,
                             ),
                             maxLines = 1,
@@ -137,12 +121,33 @@ private fun MediumWidgetContent(data: WidgetData?) {
     }
 }
 
+@Composable
+private fun EmptyWidgetContent() {
+    Column(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .background(BeepWidgetColors.paperWarm)
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "BEEP-GET",
+            style = TextStyle(color = BeepWidgetColors.muted),
+        )
+        Text(
+            text = "WAITING",
+            style = TextStyle(color = BeepWidgetColors.muted),
+        )
+    }
+}
+
 private fun formatTime(isoTime: String): String {
     return try {
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("UTC")
         val date = sdf.parse(isoTime) ?: return isoTime
-        val outFmt = SimpleDateFormat("a h:mm", Locale.KOREA)
+        val outFmt = SimpleDateFormat("HH:mm", Locale.KOREA)
         outFmt.format(date)
     } catch (e: Exception) {
         isoTime

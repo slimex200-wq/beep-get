@@ -10,7 +10,20 @@ data class WidgetMessage(
     @SerializedName("senderBeepId") val senderBeepId: String,
     @SerializedName("messageId") val messageId: String,
     @SerializedName("receivedAt") val receivedAt: String,
-    @SerializedName("isRead") val isRead: Boolean
+    @SerializedName("isRead") val isRead: Boolean,
+    val actions: WidgetActions? = null
+)
+
+data class WidgetActionLink(
+    val code: String,
+    val url: String
+)
+
+data class WidgetActions(
+    @SerializedName("openReplyRoomUrl") val openReplyRoomUrl: String,
+    @SerializedName("confirmUrl") val confirmUrl: String,
+    @SerializedName("saveUrl") val saveUrl: String,
+    @SerializedName("quickReplyUrls") val quickReplyUrls: List<WidgetActionLink>
 )
 
 data class RecentSender(

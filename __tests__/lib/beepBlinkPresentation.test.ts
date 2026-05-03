@@ -128,7 +128,20 @@ describe("beep/blink presentation", () => {
     });
 
     expect(JSON.stringify(payload)).not.toContain("private-playback-url");
-    expect(payload.actions.quickReplyCodes).toEqual(["8282", "1004", "404"]);
+    expect(payload.actions.quickReplyUrls).toEqual([
+      {
+        code: "8282",
+        url: "beepget://signal/signal-5/quick-reply/8282",
+      },
+      {
+        code: "1004",
+        url: "beepget://signal/signal-5/quick-reply/1004",
+      },
+      {
+        code: "404",
+        url: "beepget://signal/signal-5/quick-reply/404",
+      },
+    ]);
     expect(payload.actions.openReplyRoomUrl).toBe("beepget://reply/signal-5");
   });
 });

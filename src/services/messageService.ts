@@ -92,6 +92,21 @@ export async function sendMessage(
   return mapSignalToLegacyMessage(data as SignalRow);
 }
 
+export async function sendQuickReplyToMessage(
+  currentUserId: string,
+  sourceMessage: LegacyMessage,
+  numberCode: string
+) {
+  if (sourceMessage.to_user !== currentUserId) {
+    throw new Error("Cannot reply to a signal that was not received by this user");
+  }
+
+  const validation = validateMessage(numberCode);
+  if (!validation.valid) throw new Error(validation.error);
+
+  return sendMessage(currentUserId, sourceMessage.from_user, numberCode);
+}
+
 export async function getReceivedMessages(userId: string) {
   const { data, error } = await supabase
     .from("signals")

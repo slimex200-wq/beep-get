@@ -6,11 +6,13 @@ import {
   getSavedMessages,
   markAsRead,
   saveMessage,
+  sendQuickReplyToMessage,
   sendMessage,
 } from "@/services/messageService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { syncWidgetData } from "@/services/widgetService";
 import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
+import { buildQuickReplyActionKey } from "@/lib/widgetActions";
 
 type Message = LegacyMessage;
 
@@ -19,9 +21,11 @@ interface MessageState {
   saved: Message[];
   loading: boolean;
   channel: RealtimeChannel | null;
+  quickReplyActionKeys: string[];
   fetchReceived: (userId: string, friends?: any[]) => Promise<void>;
   fetchSaved: (userId: string) => Promise<void>;
   send: (fromId: string, toId: string, code: string, memo?: string) => Promise<void>;
+  quickReply: (messageId: string, code: string) => Promise<void>;
   read: (messageId: string) => Promise<void>;
   save: (messageId: string) => Promise<void>;
   subscribeRealtime: (userId: string) => void;
@@ -33,6 +37,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   saved: [],
   loading: false,
   channel: null,
+  quickReplyActionKeys: [],
 
   fetchReceived: async (userId, friends?) => {
     if (isUiPreviewUser(userId)) {
@@ -75,7 +80,69 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     await sendMessage(fromId, toId, code, memo);
   },
 
+  quickReply: async (messageId, code) => {
+    const sourceMessage = get().received.find((m) => m.id === messageId);
+    if (!sourceMessage) throw new Error("Signal is not available for quick reply");
+
+    const actionKey = buildQuickReplyActionKey(messageId, code);
+    if (get().quickReplyActionKeys.includes(actionKey)) return;
+
+    set((state) => ({
+      quickReplyActionKeys: [...state.quickReplyActionKeys, actionKey],
+    }));
+
+    try {
+      if (isUiPreviewUser(sourceMessage.to_user)) {
+        const sentAt = new Date().toISOString();
+        const previewReply = {
+          id: `preview-${actionKey}`,
+          from_user: sourceMessage.to_user,
+          to_user: sourceMessage.from_user,
+          number_code: code,
+          memo: null,
+          is_read: true,
+          is_saved: false,
+          expires_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+          created_at: sentAt,
+          from_user_profile: { nickname: "YOU", beep_id: "48624862" },
+        };
+        set((state) => ({
+          received: state.received.map((m) =>
+            m.id === messageId ? { ...m, is_read: true } : m
+          ),
+          saved: state.saved.some((m) => m.id === previewReply.id)
+            ? state.saved
+            : [previewReply, ...state.saved],
+        }));
+        return;
+      }
+
+      await sendQuickReplyToMessage(sourceMessage.to_user, sourceMessage, code);
+      await markAsRead(messageId);
+      set((state) => ({
+        received: state.received.map((m) =>
+          m.id === messageId ? { ...m, is_read: true } : m
+        ),
+      }));
+    } catch (error) {
+      set((state) => ({
+        quickReplyActionKeys: state.quickReplyActionKeys.filter((key) => key !== actionKey),
+      }));
+      throw error;
+    }
+  },
+
   read: async (messageId) => {
+    const msg = get().received.find((m) => m.id === messageId);
+    if (msg && isUiPreviewUser(msg.to_user)) {
+      set((state) => ({
+        received: state.received.map((m) =>
+          m.id === messageId ? { ...m, is_read: true } : m
+        ),
+      }));
+      return;
+    }
+
     await markAsRead(messageId);
     set((state) => ({
       received: state.received.map((m) =>
@@ -85,8 +152,20 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   save: async (messageId) => {
-    await saveMessage(messageId);
     const msg = get().received.find((m) => m.id === messageId);
+    if (msg && isUiPreviewUser(msg.to_user)) {
+      set((state) => ({
+        received: state.received.map((m) =>
+          m.id === messageId ? { ...m, is_saved: true } : m
+        ),
+        saved: state.saved.some((m) => m.id === messageId)
+          ? state.saved
+          : [{ ...msg, is_saved: true }, ...state.saved],
+      }));
+      return;
+    }
+
+    await saveMessage(messageId);
     if (msg) {
       set((state) => ({
         received: state.received.map((m) =>
