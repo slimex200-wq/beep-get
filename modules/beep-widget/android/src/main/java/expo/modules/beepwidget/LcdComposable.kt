@@ -1,7 +1,7 @@
 package expo.modules.beepwidget
 
-import android.graphics.Color
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
@@ -22,14 +22,14 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 
 object BeepWidgetColors {
-    val paper = ColorProvider(Color.parseColor("#F4EFE5"))
-    val paperWarm = ColorProvider(Color.parseColor("#FFF5E4"))
-    val paperDeep = ColorProvider(Color.parseColor("#E8DDCD"))
-    val ink = ColorProvider(Color.parseColor("#0A0A0A"))
-    val muted = ColorProvider(Color.parseColor("#6B6259"))
-    val rule = ColorProvider(Color.parseColor("#B8A996"))
-    val red = ColorProvider(Color.parseColor("#D8361E"))
-    val white = ColorProvider(Color.parseColor("#F7F3EA"))
+    val paper = ColorProvider(Color(0xFFF4EFE5))
+    val paperWarm = ColorProvider(Color(0xFFFFF5E4))
+    val paperDeep = ColorProvider(Color(0xFFE8DDCD))
+    val ink = ColorProvider(Color(0xFF0A0A0A))
+    val muted = ColorProvider(Color(0xFF6B6259))
+    val rule = ColorProvider(Color(0xFFB8A996))
+    val red = ColorProvider(Color(0xFFD8361E))
+    val white = ColorProvider(Color(0xFFF7F3EA))
 }
 
 @Composable

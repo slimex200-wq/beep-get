@@ -36,11 +36,12 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - Android widget action URLs now cover open reply room, confirm, save, and preset quick reply; the app handles these deep links and preview mode syncs native widget sample data after entering UI Preview.
 - Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
+- Android Glance widget colors must use Compose `Color(...)` values inside `ColorProvider`; Android `Color.parseColor(...)` ints are treated as resource IDs by RemoteViews hosts and can show `Can't load widget`.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
 
-- Perform real Android home-screen widget placement QA after the preview app review; see `docs/plans/2026-05-03-widget-quick-reply-actions.md` for the manual launcher flow.
+- Perform real Android medium-widget placement/action-chip QA after the small widget smoke; see `docs/plans/2026-05-03-widget-quick-reply-actions.md` for the manual launcher flow.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
@@ -57,7 +58,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 
 ## Known Blockers
 
-- Android emulator QA is available, but the current Pixel Launcher path still needs manual home-screen widget placement because `adb shell cmd appwidget` reported `No shell command implementation.`
+- Android emulator QA is available, but Pixel Launcher widget placement is manual because `adb shell cmd appwidget` reported `No shell command implementation.`
 - EAS production environment currently has no Supabase public variables, so a submitted build would not be runtime-ready until those are set.
 - Google Play service account credentials are not configured in the repo and must not be committed.
 - Collection/season/icon rewards are preview-only until a v2 rewards schema is designed.
@@ -81,9 +82,10 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Beepy mascot was revised from a clean code-vector drawing to a handdrawn ink-textured PNG asset to match mockup A more closely; Android screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-handdrawn-beepy-login-android.png`, and local visual verdict scored 94/pass in `.omx/state/login-mascot/ralph-progress.json`.
 - 2026-05-03: Runtime app screens were moved off the black `PagerFrame` hardware shell onto a cream `AppSurface`; Android UI preview screenshots saved at `C:/Users/slime/AppData/Local/Temp/beep-get-frameless-today-v3.png` and `C:/Users/slime/AppData/Local/Temp/beep-get-frameless-send.png`, with local visual verdict scored 94/pass in `.omx/state/remove-app-pager-frame/ralph-progress.json`.
 - 2026-05-03: Widget quick-reply app path and Android Glance slip styling added; `npm run typecheck` passed, `npm test -- --runInBand` passed 204 tests, `android/gradlew.bat -p android :app:assembleDebug --console=plain --no-daemon` passed, widget providers were visible in `dumpsys appwidget`, preview widget shared preferences included `beepget://signal/preview-message-1/quick-reply/8282`, and that deep link smoked on `emulator-5554` without AndroidRuntime crashes. Actual launcher widget placement still needs manual QA because programmatic widget binding was unavailable on the emulator.
+- 2026-05-03: Actual Android launcher small-widget placement smoke passed after fixing Glance `ColorProvider` values to use Compose colors; x86_64 debug APK installed on `emulator-5554`, UI Preview synced widget data, Pixel Launcher placed the `BeepWidgetReceiver`, screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-widget-visible-fixed.png`, and logcat no longer reported the previous `Resource ID #0xfff4efe5` RemoteViews color failure.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
-- Known gap: Real Android launcher widget placement and iOS verification were not performed.
+- Known gap: Medium Android launcher widget action-chip placement and iOS verification were not performed.
 
 ## Related Vault Notes
 
