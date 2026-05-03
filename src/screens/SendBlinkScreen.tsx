@@ -10,10 +10,15 @@ import { MetaRow } from '../components/MetaRow';
 import { PagerFrame } from '../components/PagerFrame';
 import { SlipFrame } from '../components/SlipFrame';
 
-export function SendBlinkScreen() {
+type Props = {
+  modeSwitch?: React.ReactNode;
+};
+
+export function SendBlinkScreen({ modeSwitch }: Props = {}) {
   return (
     <PagerFrame>
       <HeaderBar title="보낼 Blink" left="취소" right="기록" />
+      {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SlipFrame title="보낼 Blink" accent={false}>
           <View style={styles.recipientRow}>
