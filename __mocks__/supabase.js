@@ -28,6 +28,10 @@ const createMockStorageBucket = () => ({
     data: { signedUrl: "https://signed.example" },
     error: null,
   }),
+  uploadToSignedUrl: jest.fn().mockResolvedValue({
+    data: { path: "object.mp4", fullPath: "blink-originals/object.mp4" },
+    error: null,
+  }),
   upload: jest.fn().mockResolvedValue({ data: { path: "object.mp4" }, error: null }),
 });
 

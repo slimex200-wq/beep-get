@@ -144,4 +144,64 @@ describe("Supabase blink media storage", () => {
       expiresInSeconds: 60,
     });
   });
+
+  it("uploads a captured file to the signed target", async () => {
+    const uploadToSignedUrl = jest.fn().mockResolvedValue({
+      data: { path: "object.mp4", fullPath: "blink-originals/object.mp4" },
+      error: null,
+    });
+    supabase.storage.from.mockReturnValue({ uploadToSignedUrl });
+    const storage = createSupabaseBlinkMediaStorage({ senderId: "sender-1" });
+    const body = new Blob(["video"], { type: "video/mp4" });
+
+    const result = await storage.uploadToTarget(
+      {
+        signalId: "signal-1",
+        mediaId: "media-1",
+        provider: "supabase_storage",
+        bucket: "blink-originals",
+        objectKey: "object.mp4",
+        uploadUrl: "https://upload.example",
+        uploadToken: "upload-token",
+      },
+      body,
+      { contentType: "video/mp4" }
+    );
+
+    expect(uploadToSignedUrl).toHaveBeenCalledWith(
+      "object.mp4",
+      "upload-token",
+      body,
+      { contentType: "video/mp4", upsert: false }
+    );
+    expect(result).toEqual({
+      bucket: "blink-originals",
+      objectKey: "object.mp4",
+      path: "object.mp4",
+      fullPath: "blink-originals/object.mp4",
+    });
+  });
+
+  it("finalizes a Blink upload after storage succeeds", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: { id: "media-1", status: "uploaded" },
+      error: null,
+    });
+    const storage = createSupabaseBlinkMediaStorage({ senderId: "sender-1" });
+
+    await storage.finalizeUpload({
+      signalId: "signal-1",
+      mediaId: "media-1",
+      provider: "supabase_storage",
+      bucket: "blink-originals",
+      objectKey: "object.mp4",
+      uploadUrl: "https://upload.example",
+      uploadToken: "upload-token",
+    });
+
+    expect(supabase.rpc).toHaveBeenCalledWith("finalize_blink_upload", {
+      p_signal_id: "signal-1",
+      p_object_key: "object.mp4",
+    });
+  });
 });

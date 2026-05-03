@@ -53,6 +53,7 @@ function createMissingSupabaseClient(): SupabaseClient {
       from: () => ({
         createSignedUploadUrl: async () => result,
         createSignedUrl: async () => result,
+        uploadToSignedUrl: async () => result,
         upload: async () => result,
       }),
     },
