@@ -5,7 +5,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { colors } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { Text } from "react-native";
 import { FirstRunScreen } from "@/screens/FirstRunScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { PeopleScreen } from "@/screens/PeopleScreen";
@@ -30,7 +29,6 @@ export type MainTabParamList = {
   Compose: undefined;
   Studio: undefined;
   Logs: undefined;
-  Widgets: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,74 +44,44 @@ function MainTabs() {
           borderTopColor: "rgba(247,243,234,0.16)",
           paddingTop: 8,
         },
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: colors.paperWarm,
+        tabBarInactiveTintColor: "rgba(247,243,234,0.45)",
+        tabBarIcon: () => null,
+        tabBarIconStyle: { height: 0 },
+        tabBarItemStyle: { paddingBottom: 8 },
+        tabBarLabelStyle: {
+          fontFamily: type.tinyMono.fontFamily,
+          fontSize: 9,
+          lineHeight: 11,
+          letterSpacing: 0.4,
+        },
+        tabBarShowLabel: true,
       }}
     >
       <Tab.Screen
         name="Today"
         component={TodayScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              TODAY
-            </Text>
-          ),
-        }}
+        options={{ tabBarLabel: "TODAY" }}
       />
       <Tab.Screen
         name="People"
         component={PeopleScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              PEOPLE
-            </Text>
-          ),
-        }}
+        options={{ tabBarLabel: "PEOPLE" }}
       />
       <Tab.Screen
         name="Compose"
         component={SendSignalScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              SEND
-            </Text>
-          ),
-        }}
+        options={{ tabBarLabel: "SEND" }}
       />
       <Tab.Screen
         name="Studio"
         component={StudioScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              STUDIO
-            </Text>
-          ),
-        }}
+        options={{ tabBarLabel: "STUDIO" }}
       />
       <Tab.Screen
         name="Logs"
         component={LogsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              LOGS
-            </Text>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Widgets"
-        component={WidgetStatesScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
-              WIDGET
-            </Text>
-          ),
-        }}
+        options={{ tabBarLabel: "LOGS" }}
       />
     </Tab.Navigator>
   );

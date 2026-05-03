@@ -25,7 +25,6 @@ const linking = {
           Compose: "send",
           Studio: "studio",
           Logs: "logs",
-          Widgets: "widgets",
         },
       },
       FirstRun: "first-run",

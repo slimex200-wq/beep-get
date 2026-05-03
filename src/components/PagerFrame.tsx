@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, shadow, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { StatusDot } from './StatusDot';
@@ -15,7 +16,7 @@ export function PagerFrame({ children, variant = 'dark', label = 'BEEP-GET', sty
   const isCream = variant === 'cream';
 
   return (
-    <View style={styles.stage}>
+    <SafeAreaView edges={['top']} style={styles.stage}>
       <View style={[styles.shell, isCream && styles.creamShell, style]}>
         <View style={styles.topHardware}>
           <View style={styles.vents}>
@@ -40,7 +41,7 @@ export function PagerFrame({ children, variant = 'dark', label = 'BEEP-GET', sty
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

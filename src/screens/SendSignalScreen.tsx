@@ -10,16 +10,14 @@ type SendMode = "beep" | "blink";
 export function SendSignalScreen() {
   const [mode, setMode] = useState<SendMode>("beep");
   const ActiveScreen = mode === "beep" ? SendBeepScreen : SendBlinkScreen;
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.switcher}>
-        <ModeButton label="BEEP" active={mode === "beep"} onPress={() => setMode("beep")} />
-        <ModeButton label="BLINK" active={mode === "blink"} onPress={() => setMode("blink")} />
-      </View>
-      <ActiveScreen />
+  const modeSwitch = (
+    <View style={styles.switcher}>
+      <ModeButton label="BEEP" active={mode === "beep"} onPress={() => setMode("beep")} />
+      <ModeButton label="BLINK" active={mode === "blink"} onPress={() => setMode("blink")} />
     </View>
   );
+
+  return <ActiveScreen modeSwitch={modeSwitch} />;
 }
 
 function ModeButton({
@@ -46,20 +44,16 @@ function ModeButton({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.stage,
-  },
   switcher: {
     alignSelf: "center",
-    backgroundColor: colors.stageSoft,
-    borderColor: "rgba(247,243,234,0.18)",
+    backgroundColor: "rgba(10,10,10,0.04)",
+    borderColor: colors.ruleStrong,
     borderRadius: radius.control,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacing[2],
     marginBottom: spacing[4],
-    marginTop: spacing[4],
+    marginHorizontal: spacing[5],
     padding: spacing[2],
     width: "92%",
     maxWidth: 430,
@@ -74,13 +68,13 @@ const styles = StyleSheet.create({
     minHeight: 34,
   },
   modeButtonActive: {
-    backgroundColor: colors.paperWarm,
-    borderColor: colors.paperWarm,
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
   },
   modeText: {
-    color: colors.white,
+    color: colors.ink,
   },
   modeTextActive: {
-    color: colors.ink,
+    color: colors.paperWarm,
   },
 });

@@ -9,10 +9,15 @@ import { PagerFrame } from '../components/PagerFrame';
 import { SignalCode } from '../components/SignalCode';
 import { SlipFrame } from '../components/SlipFrame';
 
-export function SendBeepScreen() {
+type Props = {
+  modeSwitch?: React.ReactNode;
+};
+
+export function SendBeepScreen({ modeSwitch }: Props = {}) {
   return (
     <PagerFrame>
       <HeaderBar title="보낼 Beep" left="취소" right="기록" />
+      {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SlipFrame title="보낼 Beep" accent={false}>
           <View style={styles.recipientRow}>
