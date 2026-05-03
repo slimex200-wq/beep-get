@@ -121,6 +121,35 @@ describe("buildWidgetData", () => {
     );
   });
 
+  it("keeps a Blink teaser when only a thumbnail is available", () => {
+    const data = buildWidgetData(
+      [
+        {
+          ...mockMessages[0],
+          kind: "blink",
+          media: {
+            durationMs: 1600,
+            status: "processed",
+            thumbnailUri: "file:///cache/blink-thumb.jpg",
+            stripFrameUris: [],
+          },
+        },
+      ],
+      mockFriends
+    );
+
+    expect(data.latestMessage).toEqual(
+      expect.objectContaining({
+        kind: "blink",
+        teaser: {
+          durationMs: 1600,
+          thumbnailUri: "file:///cache/blink-thumb.jpg",
+          stripFrameUris: [],
+        },
+      })
+    );
+  });
+
   it("extracts up to 3 unique recent senders", () => {
     const data = buildWidgetData(mockMessages, mockFriends);
     expect(data.recentSenders).toHaveLength(3);
