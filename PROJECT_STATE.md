@@ -25,6 +25,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - App-side usage guardrails now have a pure evaluator for daily Beep/Blink limits and per-relationship Blink cooldowns before the UI calls paid/storage-heavy paths.
 - Blink send now has an app-side capture/send path: `SendScreen` can switch between Beep and Blink, records a 2-second muted camera clip through `expo-camera`, uploads through the signed Supabase Storage target, and finalizes media with `finalize_blink_upload`.
 - The `finalize_blink_upload` RPC has been pushed to `beep-get-prod`; it only lets the authenticated sender mark their own pending Blink media as `uploaded`.
+- The approved UX direction is now the Swiss Paper "slip" model: widget as `Incoming Slip`, Send screen as `Outgoing Slip`, and Reply Room as `Signal Detail + Quick Reply`.
+- Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -34,6 +36,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
 - Add thumbnail/3-frame strip generation path for Blink teaser payloads.
+- Implement the approved slip UX spec in `docs/superpowers/specs/2026-05-03-slip-reply-widget-design.md`: redesign Send, redesign Reply Room, add app-side quick replies, then add idempotent widget direct reply.
 - Decide whether v2 should reintroduce collection/season/icon rewards; production collection/season services currently return empty safe fallbacks because those tables are intentionally absent from the v2 migration.
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
