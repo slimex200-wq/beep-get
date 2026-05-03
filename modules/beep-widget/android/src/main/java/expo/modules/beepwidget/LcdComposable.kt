@@ -34,28 +34,33 @@ object BeepWidgetColors {
 
 @Composable
 fun LcdDisplay(
+    kind: String = "beep",
     fromName: String,
     code: String,
     time: String,
     isNew: Boolean,
+    teaser: WidgetSignalTeaser? = null,
     actions: WidgetActions? = null,
     showActions: Boolean = false,
     modifier: GlanceModifier = GlanceModifier
 ) {
+    val hasTeaser = teaser?.stripFrameUris?.isNotEmpty() == true
+    val compactBlink = hasTeaser && !showActions
+
     Column(
         modifier = modifier
             .background(BeepWidgetColors.paperWarm)
-            .padding(10.dp),
+            .padding(if (compactBlink) 7.dp else 10.dp),
     ) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Incoming Beep",
+                text = if (kind == "blink") "Incoming Blink" else "Incoming Beep",
                 style = TextStyle(
                     color = BeepWidgetColors.ink,
-                    fontSize = 15.sp,
+                    fontSize = if (compactBlink) 13.sp else 15.sp,
                     fontWeight = FontWeight.Bold,
                 ),
             )
@@ -64,18 +69,18 @@ fun LcdDisplay(
                     text = "●",
                     style = TextStyle(
                         color = BeepWidgetColors.red,
-                        fontSize = 12.sp,
+                        fontSize = if (compactBlink) 10.sp else 12.sp,
                         fontWeight = FontWeight.Bold,
                     ),
                 )
             }
         }
-        Divider()
+        Divider(gapAfterDp = if (compactBlink) 3 else 5)
         Text(
             text = "NO.",
             style = TextStyle(
                 color = BeepWidgetColors.muted,
-                fontSize = 9.sp,
+                fontSize = if (compactBlink) 7.sp else 9.sp,
                 fontWeight = FontWeight.Bold,
             ),
         )
@@ -83,15 +88,18 @@ fun LcdDisplay(
             text = code,
             style = TextStyle(
                 color = BeepWidgetColors.ink,
-                fontSize = 36.sp,
+                fontSize = if (compactBlink) 29.sp else 36.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             ),
             modifier = GlanceModifier.fillMaxWidth(),
         )
-        Divider()
-        MetaLine(label = "FROM.", value = fromName)
-        MetaLine(label = "TIME.", value = time)
+        Divider(gapAfterDp = if (compactBlink) 3 else 5)
+        MetaLine(label = "FROM.", value = fromName, compact = compactBlink)
+        MetaLine(label = "TIME.", value = time, compact = compactBlink)
+        if (hasTeaser && !showActions) {
+            BlinkStrip(compact = compactBlink)
+        }
         if (showActions && actions != null) {
             Spacer(modifier = GlanceModifier.height(6.dp))
             Row(modifier = GlanceModifier.fillMaxWidth()) {
@@ -109,13 +117,30 @@ fun LcdDisplay(
 }
 
 @Composable
-private fun MetaLine(label: String, value: String) {
+private fun BlinkStrip(compact: Boolean) {
+    Text(
+        text = "01   02   03",
+        style = TextStyle(
+            color = BeepWidgetColors.white,
+            fontSize = if (compact) 8.sp else 9.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        ),
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .background(BeepWidgetColors.ink)
+            .padding(vertical = if (compact) 7.dp else 9.dp),
+    )
+}
+
+@Composable
+private fun MetaLine(label: String, value: String, compact: Boolean = false) {
     Row(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
             text = label,
             style = TextStyle(
                 color = BeepWidgetColors.muted,
-                fontSize = 9.sp,
+                fontSize = if (compact) 7.sp else 9.sp,
                 fontWeight = FontWeight.Bold,
             ),
         )
@@ -124,7 +149,7 @@ private fun MetaLine(label: String, value: String) {
             text = value,
             style = TextStyle(
                 color = BeepWidgetColors.ink,
-                fontSize = 10.sp,
+                fontSize = if (compact) 8.sp else 10.sp,
                 fontWeight = FontWeight.Bold,
             ),
         )
@@ -150,14 +175,14 @@ private fun ActionChip(label: String, url: String, dark: Boolean = false) {
 }
 
 @Composable
-private fun Divider() {
+private fun Divider(gapAfterDp: Int = 5) {
     Spacer(
         modifier = GlanceModifier
             .fillMaxWidth()
             .height(1.dp)
             .background(BeepWidgetColors.rule)
     )
-    Spacer(modifier = GlanceModifier.height(5.dp))
+    Spacer(modifier = GlanceModifier.height(gapAfterDp.dp))
 }
 
 private fun openUrlAction(url: String) = openWidgetUrlAction(url)

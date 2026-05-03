@@ -52,10 +52,12 @@ private fun MediumWidgetContent(data: WidgetData?) {
             val msg = data?.latestMessage
             if (msg != null) {
                 LcdDisplay(
+                    kind = msg.kind ?: "beep",
                     fromName = msg.senderNickname,
                     code = msg.code,
                     time = formatTime(msg.receivedAt),
                     isNew = !msg.isRead,
+                    teaser = msg.teaser,
                     actions = msg.actions,
                     showActions = true,
                     modifier = GlanceModifier.fillMaxSize(),

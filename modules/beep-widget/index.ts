@@ -1,13 +1,21 @@
 import BeepWidgetModule from "./src/BeepWidgetModule";
 
 export interface WidgetMessage {
+  kind?: "beep" | "blink";
   code: string;
   senderNickname: string;
   senderBeepId: string;
   messageId: string;
   receivedAt: string;
   isRead: boolean;
+  teaser?: WidgetSignalTeaser;
   actions?: WidgetActionUrls;
+}
+
+export interface WidgetSignalTeaser {
+  durationMs: number;
+  thumbnailUri?: string;
+  stripFrameUris: string[];
 }
 
 export interface WidgetActionLink {

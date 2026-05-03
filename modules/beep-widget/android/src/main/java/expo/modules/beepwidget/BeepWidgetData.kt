@@ -5,13 +5,21 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 
 data class WidgetMessage(
+    val kind: String? = "beep",
     val code: String,
     @SerializedName("senderNickname") val senderNickname: String,
     @SerializedName("senderBeepId") val senderBeepId: String,
     @SerializedName("messageId") val messageId: String,
     @SerializedName("receivedAt") val receivedAt: String,
     @SerializedName("isRead") val isRead: Boolean,
+    val teaser: WidgetSignalTeaser? = null,
     val actions: WidgetActions? = null
+)
+
+data class WidgetSignalTeaser(
+    val durationMs: Int,
+    val thumbnailUri: String? = null,
+    val stripFrameUris: List<String>? = null
 )
 
 data class WidgetActionLink(
