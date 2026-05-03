@@ -3,8 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { HeaderBar } from '../components/HeaderBar';
-import { PagerFrame } from '../components/PagerFrame';
 import { StatusDot } from '../components/StatusDot';
 import { WidgetCard } from '../components/WidgetCard';
 
@@ -17,7 +17,7 @@ const statusRows = [
 
 export function StudioScreen() {
   return (
-    <PagerFrame variant="cream">
+    <AppSurface>
       <HeaderBar title="BEEP-GET STUDIO" right="⌘" showDot />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.panel}>
@@ -53,7 +53,7 @@ export function StudioScreen() {
         </View>
         <ActionButton label="테스트 Beep 보내기   ›" variant="dark" />
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

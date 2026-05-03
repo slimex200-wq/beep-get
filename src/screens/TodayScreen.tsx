@@ -3,15 +3,15 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { HeaderBar } from '../components/HeaderBar';
-import { PagerFrame } from '../components/PagerFrame';
 import { SignalSlip } from '../components/SignalSlip';
 import { StatusDot } from '../components/StatusDot';
 import { latestSignal, signalQueue } from '../data/mockSignals';
 
 export function TodayScreen() {
   return (
-    <PagerFrame>
+    <AppSurface>
       <HeaderBar title="BEEP-GET" right="⌘" showDot />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SignalSlip signal={latestSignal} title="도착한 Beep" />
@@ -39,7 +39,7 @@ export function TodayScreen() {
         </View>
         <Text style={[type.tinyMono, styles.pull]}>↓ PULL TO REFRESH</Text>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

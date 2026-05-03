@@ -2,15 +2,15 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { spacing } from '../design/tokens';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { BlinkStrip } from '../components/BlinkStrip';
 import { HeaderBar } from '../components/HeaderBar';
-import { PagerFrame } from '../components/PagerFrame';
 import { SignalSlip } from '../components/SignalSlip';
 import { latestSignal } from '../data/mockSignals';
 
 export function ReplyRoomScreen() {
   return (
-    <PagerFrame>
+    <AppSurface>
       <HeaderBar title="NO. 8282" left="‹" right="•••" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SignalSlip signal={latestSignal} title="도착한 Beep" />
@@ -23,7 +23,7 @@ export function ReplyRoomScreen() {
         <ActionButton label="✳  Blink로 답장" variant="ghost" />
         <ActionButton label="기록  ▱" variant="ghost" />
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

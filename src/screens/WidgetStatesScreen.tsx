@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
-import { PagerFrame } from '../components/PagerFrame';
+import { AppSurface } from '../components/AppSurface';
 import { WidgetCard, WidgetState } from '../components/WidgetCard';
 
 const states: Array<{ label: string; state: WidgetState }> = [
@@ -16,7 +16,7 @@ const states: Array<{ label: string; state: WidgetState }> = [
 
 export function WidgetStatesScreen() {
   return (
-    <PagerFrame>
+    <AppSurface>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.header}>WIDGET STATES</Text>
         <View style={styles.grid}>
@@ -28,7 +28,7 @@ export function WidgetStatesScreen() {
           ))}
         </View>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

@@ -3,9 +3,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { HeaderBar } from '../components/HeaderBar';
 import { MetaRow } from '../components/MetaRow';
-import { PagerFrame } from '../components/PagerFrame';
 import { SignalCode } from '../components/SignalCode';
 import { SlipFrame } from '../components/SlipFrame';
 
@@ -15,7 +15,7 @@ type Props = {
 
 export function SendBeepScreen({ modeSwitch }: Props = {}) {
   return (
-    <PagerFrame>
+    <AppSurface>
       <HeaderBar title="보낼 Beep" left="취소" right="기록" />
       {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -47,7 +47,7 @@ export function SendBeepScreen({ modeSwitch }: Props = {}) {
         </SlipFrame>
         <ActionButton label="비프 보내기   ›" variant="dark" />
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

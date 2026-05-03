@@ -2,15 +2,15 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { AppSurface } from '../components/AppSurface';
 import { HeaderBar } from '../components/HeaderBar';
-import { PagerFrame } from '../components/PagerFrame';
 import { StatusDot } from '../components/StatusDot';
 import { TicketLogRow } from '../components/TicketLogRow';
 import { logs } from '../data/mockSignals';
 
 export function LogsScreen() {
   return (
-    <PagerFrame variant="cream">
+    <AppSurface>
       <HeaderBar title="BEEP-GET LOG" right="•••" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
@@ -28,7 +28,7 @@ export function LogsScreen() {
         </View>
         <Text style={[type.tinyMono, styles.pull]}>↓ PULL TO REFRESH</Text>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

@@ -3,11 +3,11 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { BlinkStrip } from '../components/BlinkStrip';
 import { CameraLensPanel } from '../components/CameraLensPanel';
 import { HeaderBar } from '../components/HeaderBar';
 import { MetaRow } from '../components/MetaRow';
-import { PagerFrame } from '../components/PagerFrame';
 import { SlipFrame } from '../components/SlipFrame';
 
 type Props = {
@@ -16,7 +16,7 @@ type Props = {
 
 export function SendBlinkScreen({ modeSwitch }: Props = {}) {
   return (
-    <PagerFrame>
+    <AppSurface>
       <HeaderBar title="보낼 Blink" left="취소" right="기록" />
       {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -41,7 +41,7 @@ export function SendBlinkScreen({ modeSwitch }: Props = {}) {
           <ActionButton label="Blink 보내기   ›" variant="dark" flex />
         </View>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 
