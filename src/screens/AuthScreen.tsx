@@ -71,7 +71,7 @@ export function AuthScreen() {
 
         <View style={styles.slip}>
           <View style={styles.topNotch} />
-          <BeepyMascot size={112} style={styles.mascot} />
+          <BeepyMascot size={148} style={styles.mascot} />
           <Text style={styles.logo}>BEEP-GET</Text>
           <Text style={styles.subtitle}>친한 친구끼리 쓰는 작은 호출기</Text>
           <View style={styles.rule} />
