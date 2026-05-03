@@ -26,6 +26,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Blink send now has an app-side capture/send path: `SendScreen` can switch between Beep and Blink, records a 2-second muted camera clip through `expo-camera`, uploads through the signed Supabase Storage target, and finalizes media with `finalize_blink_upload`.
 - The `finalize_blink_upload` RPC has been pushed to `beep-get-prod`; it only lets the authenticated sender mark their own pending Blink media as `uploaded`.
 - The approved UX direction is now the Swiss Paper "slip" model: widget as `Incoming Slip`, Send screen as `Outgoing Slip`, and Reply Room as `Signal Detail + Quick Reply`.
+- `DESIGN.md` is now the implementation source of truth for the app UI redesign; the downloaded starter kit has been integrated into the app-level visual system, components, and mock-data screens without native widget implementation.
+- Main app navigation now opens the slip-first UI tabs: Today, People, Send, Studio, Logs, and Widget, with Reply Room and widget states available as modal/deep-link targets.
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - macOS/iOS availability may block iOS verification.
 
@@ -41,6 +43,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build, especially non-home tabs and real native Android widget placement.
+- Connect the integrated `DESIGN.md` screens to live v2 Supabase data and existing Beep/Blink services after visual approval; current starter screens intentionally use mock signals.
+- Add native widget direct-send actions only after app-side quick replies and idempotency are implemented.
 - Prefer Android/web/Jest checks when iOS cannot be verified locally.
 - Avoid broad app rewrites while platform verification is limited.
 
@@ -63,6 +67,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Blink media storage adapter and usage limit evaluator were added; `npm run typecheck` passed, `npm test -- --runInBand` passed 187 tests, `npx expo-doctor` passed 17/17, and `supabase db lint --linked` reported no schema errors after linking the worktree to `beep-get-prod`.
 - 2026-05-03: Blink Send UI and upload-finalize path added; `npm run typecheck` passed, `npm test -- --runInBand` passed 194 tests, `npx expo-doctor` passed 17/17, `supabase db push --dry-run --password ...` reported only `20260503050000_finalize_blink_upload.sql`, `supabase db push --password ...` applied it, a follow-up dry-run reported the remote database up to date, and `supabase db lint --linked` found no schema errors.
 - 2026-05-03: Android runtime smoke passed on `emulator-5554`: `npx expo prebuild --platform android --no-install` completed, `:app:assembleDebug` passed from short path `C:/bg-blink`, x86_64 debug APK installed after emulator space cleanup, Metro bundled successfully with `EXPO_PUBLIC_UI_PREVIEW=1`, UI Preview entered Home, and the Send screen showed the Beep/Blink switch plus Blink capture panel. Screenshots: `C:/Users/slime/AppData/Local/Temp/beep-get-ui-preview-home.png`, `C:/Users/slime/AppData/Local/Temp/beep-get-blink-send-screen.png`.
+- 2026-05-03: Downloaded `DESIGN.md` UI starter integrated into the existing Expo app navigation as Today/People/Send/Studio/Logs/Widget tabs plus slip Reply Room modal; `npx expo-doctor` passed 17/17, `npm run typecheck` passed, and `npm test -- --runInBand` passed 194 tests.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Real Android launcher widget placement and iOS verification were not performed.

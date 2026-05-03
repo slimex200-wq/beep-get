@@ -18,9 +18,20 @@ const linking = {
   prefixes: [Linking.createURL("/"), "beepget://"],
   config: {
     screens: {
-      Main: { screens: { Home: "home" } },
+      Main: {
+        screens: {
+          Today: "today",
+          People: "people",
+          Compose: "send",
+          Studio: "studio",
+          Logs: "logs",
+          Widgets: "widgets",
+        },
+      },
+      FirstRun: "first-run",
       Send: "message/reply/:friendId/:friendName",
       ReplyRoom: "reply/:signalId",
+      WidgetStates: "widget-states",
     },
   },
 };
