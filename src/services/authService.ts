@@ -22,9 +22,8 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithApple() {
-  const { data, error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "apple",
-    token: "", // Apple Sign In token from native
   });
   if (error) throw error;
   return data;

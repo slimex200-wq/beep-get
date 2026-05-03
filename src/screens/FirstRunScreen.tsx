@@ -1,13 +1,21 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { BeepyMascot } from '../components/BeepyMascot';
 import { PagerFrame } from '../components/PagerFrame';
 import { SignalSlip } from '../components/SignalSlip';
 import { latestSignal } from '../data/mockSignals';
+import {
+  getPlatformAuthLabel,
+  getPlatformAuthProvider,
+  getPlatformAuthVariant,
+} from '../lib/platformAuth';
 
 export function FirstRunScreen() {
+  const authProvider = getPlatformAuthProvider(Platform.OS);
+
   return (
     <PagerFrame>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -15,13 +23,15 @@ export function FirstRunScreen() {
           <Text style={type.tinyMono}>+</Text>
           <Text style={type.tinyMono}>BEEP-GET SYSTEM{`\n`}VER 1.0</Text>
         </View>
-        <Text style={styles.signalIcon}>⌾</Text>
+        <BeepyMascot size={94} style={styles.mascot} />
         <Text style={styles.logo}>BEEP-GET</Text>
         <Text style={styles.subtitle}>친한 친구끼리 쓰는 작은 호출기</Text>
         <SignalSlip signal={latestSignal} title="도착한 Beep" compact />
         <View style={styles.buttons}>
-          <ActionButton label="   Apple로 시작" variant="dark" />
-          <ActionButton label="G   Google로 시작" variant="light" />
+          <ActionButton
+            label={getPlatformAuthLabel(authProvider)}
+            variant={getPlatformAuthVariant(authProvider)}
+          />
         </View>
         <View style={styles.footerStamp}>
           <Text style={type.tinyMono}>PRIVATE PAGER{`\n`}FOR CLOSE FRIENDS</Text>
@@ -46,11 +56,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  signalIcon: {
-    textAlign: 'center',
-    color: colors.ink,
-    fontSize: 38,
-    lineHeight: 44,
+  mascot: {
+    marginTop: spacing[3],
+    marginBottom: -spacing[3],
   },
   logo: {
     fontFamily: 'monospace',
