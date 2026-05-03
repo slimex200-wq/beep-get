@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -59,6 +60,7 @@ export function AuthScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.stage}
     >
+      <StatusBar style="light" backgroundColor={colors.stage} />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

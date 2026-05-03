@@ -3,8 +3,8 @@ import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { BeepyMascot } from '../components/BeepyMascot';
-import { PagerFrame } from '../components/PagerFrame';
 import { SignalSlip } from '../components/SignalSlip';
 import { latestSignal } from '../data/mockSignals';
 import {
@@ -17,7 +17,7 @@ export function FirstRunScreen() {
   const authProvider = getPlatformAuthProvider(Platform.OS);
 
   return (
-    <PagerFrame>
+    <AppSurface>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.systemRow}>
           <Text style={type.tinyMono}>+</Text>
@@ -37,7 +37,7 @@ export function FirstRunScreen() {
           <Text style={type.tinyMono}>PRIVATE PAGER{`\n`}FOR CLOSE FRIENDS</Text>
         </View>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 

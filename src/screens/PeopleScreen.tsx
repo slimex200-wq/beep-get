@@ -3,15 +3,15 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
+import { AppSurface } from '../components/AppSurface';
 import { DotRadar } from '../components/DotRadar';
 import { FriendCard } from '../components/FriendCard';
 import { HeaderBar } from '../components/HeaderBar';
-import { PagerFrame } from '../components/PagerFrame';
 import { friends } from '../data/mockSignals';
 
 export function PeopleScreen() {
   return (
-    <PagerFrame>
+    <AppSurface>
       <HeaderBar title="친구" right="+" showDot />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.radarArea}>
@@ -33,7 +33,7 @@ export function PeopleScreen() {
           <ActionButton label="회로에 보내기   ›" variant="dark" flex />
         </View>
       </ScrollView>
-    </PagerFrame>
+    </AppSurface>
   );
 }
 
