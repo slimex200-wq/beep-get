@@ -23,7 +23,7 @@ export function FirstRunScreen() {
           <Text style={type.tinyMono}>+</Text>
           <Text style={type.tinyMono}>BEEP-GET SYSTEM{`\n`}VER 1.0</Text>
         </View>
-        <BeepyMascot size={94} style={styles.mascot} />
+        <BeepyMascot size={118} style={styles.mascot} />
         <Text style={styles.logo}>BEEP-GET</Text>
         <Text style={styles.subtitle}>친한 친구끼리 쓰는 작은 호출기</Text>
         <SignalSlip signal={latestSignal} title="도착한 Beep" compact />
