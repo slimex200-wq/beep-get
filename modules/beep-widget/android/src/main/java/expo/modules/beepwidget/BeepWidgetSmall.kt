@@ -13,7 +13,6 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -43,13 +42,15 @@ private fun SmallWidgetContent(data: WidgetData?) {
         val msg = data?.latestMessage
         if (msg != null) {
             LcdDisplay(
+                kind = msg.kind ?: "beep",
                 fromName = msg.senderNickname,
                 code = msg.code,
                 time = formatTime(msg.receivedAt),
                 isNew = !msg.isRead,
+                teaser = msg.teaser,
                 actions = msg.actions,
                 modifier = GlanceModifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .clickable(openWidgetUrlAction(msg.actions?.openReplyRoomUrl ?: "beepget://today")),
             )
         } else {

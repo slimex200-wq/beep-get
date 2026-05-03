@@ -77,6 +77,7 @@ describe("buildWidgetData", () => {
       messageId: "msg-1",
       receivedAt: "2026-04-02T10:00:00Z",
       isRead: false,
+      kind: "beep",
       actions: {
         openReplyRoomUrl: "beepget://reply/msg-1",
         confirmUrl: "beepget://signal/msg-1/confirm",
@@ -89,6 +90,35 @@ describe("buildWidgetData", () => {
         ],
       },
     });
+  });
+
+  it("includes three-frame Blink teaser data for the latest Blink", () => {
+    const data = buildWidgetData(
+      [
+        {
+          ...mockMessages[0],
+          kind: "blink",
+          media: {
+            durationMs: 2000,
+            status: "processed",
+            thumbnailUri: "thumb-1",
+            stripFrameUris: ["frame-1", "frame-2", "frame-3", "frame-4"],
+          },
+        },
+      ],
+      mockFriends
+    );
+
+    expect(data.latestMessage).toEqual(
+      expect.objectContaining({
+        kind: "blink",
+        teaser: {
+          durationMs: 2000,
+          thumbnailUri: "thumb-1",
+          stripFrameUris: ["frame-1", "frame-2", "frame-3"],
+        },
+      })
+    );
   });
 
   it("extracts up to 3 unique recent senders", () => {

@@ -1,15 +1,28 @@
 import { updateWidgetData, reloadWidgets } from "../../modules/beep-widget";
-import type { WidgetData, WidgetMessage, RecentSender } from "../../modules/beep-widget";
+import type {
+  WidgetData,
+  WidgetMessage,
+  WidgetSignalTeaser,
+  RecentSender,
+} from "../../modules/beep-widget";
 import { WIDGET_MAX_RECENT_SENDERS } from "@/lib/constants";
+import { BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import { buildWidgetActionUrls } from "@/lib/widgetActions";
 
 interface Message {
   id: string;
   from_user: string;
+  kind?: "beep" | "blink";
   number_code: string;
   is_read: boolean;
   created_at: string;
   from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
+  media?: {
+    durationMs?: number | null;
+    status?: string | null;
+    thumbnailUri?: string | null;
+    stripFrameUris?: string[] | null;
+  } | null;
 }
 
 interface Friend {
@@ -26,16 +39,20 @@ export function buildWidgetData(
   received: Message[],
   friends: Friend[]
 ): WidgetData {
+  const latest = received[0];
+  const latestTeaser = latest ? buildWidgetTeaser(latest) : undefined;
   const latestMessage: WidgetMessage | null =
-    received.length > 0
+    latest
       ? {
-          code: received[0].number_code,
-          senderNickname: received[0].from_user_profile?.nickname ?? "???",
-          senderBeepId: received[0].from_user_profile?.beep_id ?? "",
-          messageId: received[0].id,
-          receivedAt: received[0].created_at,
-          isRead: received[0].is_read,
-          actions: buildWidgetActionUrls(received[0].id),
+          code: latest.number_code,
+          senderNickname: latest.from_user_profile?.nickname ?? "???",
+          senderBeepId: latest.from_user_profile?.beep_id ?? "",
+          messageId: latest.id,
+          receivedAt: latest.created_at,
+          isRead: latest.is_read,
+          kind: latest.kind ?? "beep",
+          ...(latestTeaser ? { teaser: latestTeaser } : {}),
+          actions: buildWidgetActionUrls(latest.id),
         }
       : null;
 
@@ -61,6 +78,28 @@ export function buildWidgetData(
   }
 
   return { latestMessage, recentSenders };
+}
+
+function buildWidgetTeaser(message: Message): WidgetSignalTeaser | undefined {
+  if (message.kind !== "blink") return undefined;
+  if (
+    message.media?.status === "expired" ||
+    message.media?.status === "deleted" ||
+    message.media?.status === "failed"
+  ) {
+    return undefined;
+  }
+
+  const stripFrameUris = (message.media?.stripFrameUris ?? [])
+    .filter((uri): uri is string => Boolean(uri))
+    .slice(0, 3);
+  if (stripFrameUris.length === 0) return undefined;
+
+  return {
+    durationMs: Math.min(message.media?.durationMs ?? BLINK_MAX_DURATION_MS, BLINK_MAX_DURATION_MS),
+    ...(message.media?.thumbnailUri ? { thumbnailUri: message.media.thumbnailUri } : {}),
+    stripFrameUris,
+  };
 }
 
 export function syncWidgetData(received: Message[], friends: Friend[]): void {
