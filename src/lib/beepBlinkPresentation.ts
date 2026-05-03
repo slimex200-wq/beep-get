@@ -2,6 +2,7 @@ import {
   BLINK_MAX_DURATION_MS,
   WIDGET_MAX_QUICK_REPLY_CODES,
 } from "@/lib/beepBlinkLimits";
+import { buildWidgetActionUrls, type WidgetActionUrls } from "@/lib/widgetActions";
 
 export type SignalKind = "beep" | "blink";
 export type SignalStatus = "sent" | "delivered" | "read" | "dismissed";
@@ -68,12 +69,7 @@ export type WidgetSignalPayload = {
   receivedAt: string;
   isRead: boolean;
   teaser?: SignalTeaser;
-  actions: {
-    openReplyRoomUrl: string;
-    confirmUrl: string;
-    saveUrl: string;
-    quickReplyCodes: string[];
-  };
+  actions: WidgetActionUrls;
 };
 
 export function buildSignalPresentation(
@@ -122,15 +118,10 @@ export function buildWidgetSignalPayload(
     receivedAt: presentation.createdAt,
     isRead: presentation.status === "read",
     ...(presentation.teaser ? { teaser: presentation.teaser } : {}),
-    actions: {
-      openReplyRoomUrl: `beepget://reply/${presentation.id}`,
-      confirmUrl: `beepget://signal/${presentation.id}/confirm`,
-      saveUrl: `beepget://signal/${presentation.id}/save`,
-      quickReplyCodes: (options.quickReplyCodes ?? []).slice(
-        0,
-        WIDGET_MAX_QUICK_REPLY_CODES
-      ),
-    },
+    actions: buildWidgetActionUrls(
+      presentation.id,
+      (options.quickReplyCodes ?? []).slice(0, WIDGET_MAX_QUICK_REPLY_CODES)
+    ),
   };
 }
 

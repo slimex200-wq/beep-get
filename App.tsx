@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
+import { parseWidgetActionUrl } from "@/lib/widgetActions";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
@@ -37,21 +38,41 @@ const linking = {
 
 export default function App() {
   const { setSession, fetchProfile } = useAuthStore();
-  const { read } = useMessageStore();
+  const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [fontsLoaded] = useFonts(customFonts);
 
   // Handle widget deeplink actions
   useEffect(() => {
+    const handleWidgetUrl = async (url: string) => {
+      const action = parseWidgetActionUrl(url);
+      if (!action) return;
+
+      if (action.type === "confirm") {
+        await read(action.signalId);
+      } else if (action.type === "save") {
+        await save(action.signalId);
+      } else {
+        await quickReply(action.signalId, action.code);
+      }
+    };
+
     const handleUrl = ({ url }: { url: string }) => {
       const confirmMatch = url.match(/beepget:\/\/message\/confirm\/(.+)/);
       if (confirmMatch) {
         read(confirmMatch[1]);
+        return;
       }
+      void handleWidgetUrl(url);
     };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) void handleWidgetUrl(url);
+    });
+
     const sub = Linking.addEventListener("url", handleUrl);
     return () => sub.remove();
-  }, []);
+  }, [quickReply, read, save]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

@@ -7,6 +7,19 @@ export interface WidgetMessage {
   messageId: string;
   receivedAt: string;
   isRead: boolean;
+  actions?: WidgetActionUrls;
+}
+
+export interface WidgetActionLink {
+  code: string;
+  url: string;
+}
+
+export interface WidgetActionUrls {
+  openReplyRoomUrl: string;
+  confirmUrl: string;
+  saveUrl: string;
+  quickReplyUrls: WidgetActionLink[];
 }
 
 export interface RecentSender {

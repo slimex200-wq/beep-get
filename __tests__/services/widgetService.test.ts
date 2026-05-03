@@ -77,6 +77,17 @@ describe("buildWidgetData", () => {
       messageId: "msg-1",
       receivedAt: "2026-04-02T10:00:00Z",
       isRead: false,
+      actions: {
+        openReplyRoomUrl: "beepget://reply/msg-1",
+        confirmUrl: "beepget://signal/msg-1/confirm",
+        saveUrl: "beepget://signal/msg-1/save",
+        quickReplyUrls: [
+          {
+            code: "8282",
+            url: "beepget://signal/msg-1/quick-reply/8282",
+          },
+        ],
+      },
     });
   });
 

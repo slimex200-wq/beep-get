@@ -1,6 +1,7 @@
 import { updateWidgetData, reloadWidgets } from "../../modules/beep-widget";
 import type { WidgetData, WidgetMessage, RecentSender } from "../../modules/beep-widget";
 import { WIDGET_MAX_RECENT_SENDERS } from "@/lib/constants";
+import { buildWidgetActionUrls } from "@/lib/widgetActions";
 
 interface Message {
   id: string;
@@ -34,6 +35,7 @@ export function buildWidgetData(
           messageId: received[0].id,
           receivedAt: received[0].created_at,
           isRead: received[0].is_read,
+          actions: buildWidgetActionUrls(received[0].id),
         }
       : null;
 

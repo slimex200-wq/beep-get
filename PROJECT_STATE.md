@@ -34,11 +34,13 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Runtime app screens now use a frameless cream `AppSurface` instead of the black `PagerFrame` hardware shell; `PagerFrame` should stay reserved for non-runtime mockup/widget demonstration contexts.
 - Platform auth CTAs are split by runtime platform: iOS uses Apple, Android/web/other platforms use Google. Android UI preview should show Google plus UI Preview only.
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
+- Android widget action URLs now cover open reply room, confirm, save, and preset quick reply; the app handles these deep links and preview mode syncs native widget sample data after entering UI Preview.
+- Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
 
-- Perform real Android home-screen widget placement QA after the preview app review.
+- Perform real Android home-screen widget placement QA after the preview app review; see `docs/plans/2026-05-03-widget-quick-reply-actions.md` for the manual launcher flow.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
@@ -49,13 +51,13 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build, especially non-home tabs and real native Android widget placement.
 - Connect the integrated `DESIGN.md` screens to live v2 Supabase data and existing Beep/Blink services after visual approval; current starter screens intentionally use mock signals.
-- Add native widget direct-send actions only after app-side quick replies and idempotency are implemented.
+- Add native widget direct-send actions only after app-side quick replies, native auth/session sharing, and server-side idempotency are implemented.
 - Prefer Android/web/Jest checks when iOS cannot be verified locally.
 - Avoid broad app rewrites while platform verification is limited.
 
 ## Known Blockers
 
-- No Android emulator/device was connected during the latest check (`adb devices` returned empty), so install/runtime QA is still pending.
+- Android emulator QA is available, but the current Pixel Launcher path still needs manual home-screen widget placement because `adb shell cmd appwidget` reported `No shell command implementation.`
 - EAS production environment currently has no Supabase public variables, so a submitted build would not be runtime-ready until those are set.
 - Google Play service account credentials are not configured in the repo and must not be committed.
 - Collection/season/icon rewards are preview-only until a v2 rewards schema is designed.
@@ -78,6 +80,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Login mascot/platform-auth pass verified on `emulator-5554`; Android screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-login-mascot-android-v2.png`, visual verdict scored 92/pass in `.omx/state/login-mascot/ralph-progress.json`, `npm run typecheck` passed, `npm test -- --runInBand` passed 197 tests, and `npx --yes expo-doctor` passed 17/17. iOS Apple-only runtime verification is still pending on macOS.
 - 2026-05-03: Beepy mascot was revised from a clean code-vector drawing to a handdrawn ink-textured PNG asset to match mockup A more closely; Android screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-handdrawn-beepy-login-android.png`, and local visual verdict scored 94/pass in `.omx/state/login-mascot/ralph-progress.json`.
 - 2026-05-03: Runtime app screens were moved off the black `PagerFrame` hardware shell onto a cream `AppSurface`; Android UI preview screenshots saved at `C:/Users/slime/AppData/Local/Temp/beep-get-frameless-today-v3.png` and `C:/Users/slime/AppData/Local/Temp/beep-get-frameless-send.png`, with local visual verdict scored 94/pass in `.omx/state/remove-app-pager-frame/ralph-progress.json`.
+- 2026-05-03: Widget quick-reply app path and Android Glance slip styling added; `npm run typecheck` passed, `npm test -- --runInBand` passed 204 tests, `android/gradlew.bat -p android :app:assembleDebug --console=plain --no-daemon` passed, widget providers were visible in `dumpsys appwidget`, preview widget shared preferences included `beepget://signal/preview-message-1/quick-reply/8282`, and that deep link smoked on `emulator-5554` without AndroidRuntime crashes. Actual launcher widget placement still needs manual QA because programmatic widget binding was unavailable on the emulator.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Real Android launcher widget placement and iOS verification were not performed.
