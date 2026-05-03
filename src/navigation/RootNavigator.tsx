@@ -2,114 +2,115 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
-import { useTheme } from "@/theme/ThemeProvider";
+import { colors } from "@/design/tokens";
+import { type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { HomeScreen } from "@/screens/HomeScreen";
-import { SendScreen } from "@/screens/SendScreen";
-import { FriendsScreen } from "@/screens/FriendsScreen";
-import { DictionaryScreen } from "@/screens/DictionaryScreen";
-import { SkinShopScreen } from "@/screens/SkinShopScreen";
-import { CollectionScreen } from "@/screens/CollectionScreen";
-import { ProfileScreen } from "@/screens/ProfileScreen";
-import { ReplyRoomScreen } from "@/screens/ReplyRoomScreen";
 import { Text } from "react-native";
+import { FirstRunScreen } from "@/screens/FirstRunScreen";
+import { LogsScreen } from "@/screens/LogsScreen";
+import { PeopleScreen } from "@/screens/PeopleScreen";
+import { SendSignalScreen } from "@/screens/SendSignalScreen";
+import { ReplyRoomScreen as SlipReplyRoomScreen } from "@/screens/SlipReplyRoomScreen";
+import { StudioScreen } from "@/screens/StudioScreen";
+import { TodayScreen } from "@/screens/TodayScreen";
+import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  FirstRun: undefined;
   Send: { friendId: string; friendName: string };
   ReplyRoom: { signalId: string };
+  WidgetStates: undefined;
 };
 
 export type MainTabParamList = {
-  Home: undefined;
-  Friends: undefined;
-  Dictionary: undefined;
-  Skins: undefined;
-  Collection: undefined;
-  Profile: undefined;
+  Today: undefined;
+  People: undefined;
+  Compose: undefined;
+  Studio: undefined;
+  Logs: undefined;
+  Widgets: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabs() {
-  const theme = useTheme();
-
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
-          borderTopColor: theme.colors.border,
+          backgroundColor: colors.stage,
+          borderTopColor: "rgba(247,243,234,0.16)",
           paddingTop: 8,
         },
         tabBarShowLabel: false,
       }}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Today"
+        component={TodayScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              HOME
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              TODAY
             </Text>
           ),
         }}
       />
       <Tab.Screen
-        name="Friends"
-        component={FriendsScreen}
+        name="People"
+        component={PeopleScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              FRIEND
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              PEOPLE
             </Text>
           ),
         }}
       />
       <Tab.Screen
-        name="Dictionary"
-        component={DictionaryScreen}
+        name="Compose"
+        component={SendSignalScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              CODES
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              SEND
             </Text>
           ),
         }}
       />
       <Tab.Screen
-        name="Skins"
-        component={SkinShopScreen}
+        name="Studio"
+        component={StudioScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              SKIN
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              STUDIO
             </Text>
           ),
         }}
       />
       <Tab.Screen
-        name="Collection"
-        component={CollectionScreen}
+        name="Logs"
+        component={LogsScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              ICON
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              LOGS
             </Text>
           ),
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Widgets"
+        component={WidgetStatesScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <Text style={{ fontFamily: theme.fonts.pixel, fontSize: 9, color: focused ? theme.colors.primary : theme.colors.textSecondary }}>
-              MY
+            <Text style={[type.tinyMono, { color: focused ? colors.paperWarm : "rgba(247,243,234,0.45)" }]}>
+              WIDGET
             </Text>
           ),
         }}
@@ -128,14 +129,20 @@ export function RootNavigator() {
       ) : (
         <>
           <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="FirstRun" component={FirstRunScreen} />
           <Stack.Screen
             name="Send"
-            component={SendScreen}
+            component={SendSignalScreen}
             options={{ presentation: "modal" }}
           />
           <Stack.Screen
             name="ReplyRoom"
-            component={ReplyRoomScreen}
+            component={SlipReplyRoomScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="WidgetStates"
+            component={WidgetStatesScreen}
             options={{ presentation: "modal" }}
           />
         </>
