@@ -93,11 +93,12 @@ function buildWidgetTeaser(message: Message): WidgetSignalTeaser | undefined {
   const stripFrameUris = (message.media?.stripFrameUris ?? [])
     .filter((uri): uri is string => Boolean(uri))
     .slice(0, 3);
-  if (stripFrameUris.length === 0) return undefined;
+  const thumbnailUri = message.media?.thumbnailUri?.trim();
+  if (!thumbnailUri && stripFrameUris.length === 0) return undefined;
 
   return {
     durationMs: Math.min(message.media?.durationMs ?? BLINK_MAX_DURATION_MS, BLINK_MAX_DURATION_MS),
-    ...(message.media?.thumbnailUri ? { thumbnailUri: message.media.thumbnailUri } : {}),
+    ...(thumbnailUri ? { thumbnailUri } : {}),
     stripFrameUris,
   };
 }

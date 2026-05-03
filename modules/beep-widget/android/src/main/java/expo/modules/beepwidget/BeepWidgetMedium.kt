@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.ImageProvider
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -29,15 +30,16 @@ import java.util.TimeZone
 class BeepWidgetMedium : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val data = BeepWidgetData.parse(context)
+        val thumbnailImage = BlinkThumbnailResolver.resolve(context, data?.latestMessage?.teaser)
 
         provideContent {
-            MediumWidgetContent(data)
+            MediumWidgetContent(data, thumbnailImage)
         }
     }
 }
 
 @Composable
-private fun MediumWidgetContent(data: WidgetData?) {
+private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?) {
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -58,6 +60,7 @@ private fun MediumWidgetContent(data: WidgetData?) {
                     time = formatTime(msg.receivedAt),
                     isNew = !msg.isRead,
                     teaser = msg.teaser,
+                    thumbnailImage = thumbnailImage,
                     actions = msg.actions,
                     showActions = true,
                     modifier = GlanceModifier.fillMaxSize(),

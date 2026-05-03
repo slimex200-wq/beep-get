@@ -5,10 +5,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
@@ -40,12 +43,14 @@ fun LcdDisplay(
     time: String,
     isNew: Boolean,
     teaser: WidgetSignalTeaser? = null,
+    thumbnailImage: ImageProvider? = null,
     actions: WidgetActions? = null,
     showActions: Boolean = false,
     modifier: GlanceModifier = GlanceModifier
 ) {
     val hasTeaser = teaser?.stripFrameUris?.isNotEmpty() == true
-    val compactBlink = hasTeaser && !showActions
+    val hasThumbnail = thumbnailImage != null
+    val compactBlink = (hasThumbnail || hasTeaser) && !showActions
 
     Column(
         modifier = modifier
@@ -97,7 +102,9 @@ fun LcdDisplay(
         Divider(gapAfterDp = if (compactBlink) 3 else 5)
         MetaLine(label = "FROM.", value = fromName, compact = compactBlink)
         MetaLine(label = "TIME.", value = time, compact = compactBlink)
-        if (hasTeaser && !showActions) {
+        if (thumbnailImage != null && !showActions) {
+            BlinkThumbnail(thumbnailImage, compact = compactBlink)
+        } else if (hasTeaser && !showActions) {
             BlinkStrip(compact = compactBlink)
         }
         if (showActions && actions != null) {
@@ -114,6 +121,19 @@ fun LcdDisplay(
             }
         }
     }
+}
+
+@Composable
+private fun BlinkThumbnail(thumbnailImage: ImageProvider, compact: Boolean) {
+    Image(
+        provider = thumbnailImage,
+        contentDescription = "Blink preview",
+        contentScale = ContentScale.Crop,
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .height(if (compact) 42.dp else 52.dp)
+            .background(BeepWidgetColors.ink),
+    )
 }
 
 @Composable
