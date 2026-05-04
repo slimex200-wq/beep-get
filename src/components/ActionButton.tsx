@@ -11,18 +11,21 @@ type Props = {
   mono?: boolean;
   flex?: boolean;
   onPress?: () => void;
+  disabled?: boolean;
   style?: ViewStyle;
 };
 
-export function ActionButton({ label, variant = 'light', mono = false, flex = false, onPress, style }: Props) {
+export function ActionButton({ label, variant = 'light', mono = false, flex = false, onPress, disabled = false, style }: Props) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.base,
         flex && styles.flex,
         styles[variant],
-        pressed && styles.pressed,
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabled,
         style,
       ]}
     >
@@ -67,6 +70,9 @@ const styles = StyleSheet.create({
   pressed: {
     transform: [{ translateY: 1 }],
     opacity: 0.86,
+  },
+  disabled: {
+    opacity: 0.44,
   },
   darkText: {
     color: colors.paperWarm,

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import {
   type LegacyMessage,
   getReceivedMessages,
+  getMessageById,
   getSavedMessages,
   markAsRead,
   saveMessage,
@@ -81,7 +82,17 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   quickReply: async (messageId, code) => {
-    const sourceMessage = get().received.find((m) => m.id === messageId);
+    let sourceMessage =
+      get().received.find((m) => m.id === messageId) ??
+      uiPreviewMessages.find((m) => m.id === messageId);
+    if (!sourceMessage) {
+      sourceMessage = await getMessageById(messageId);
+      set((state) => ({
+        received: state.received.some((m) => m.id === sourceMessage!.id)
+          ? state.received
+          : [sourceMessage!, ...state.received],
+      }));
+    }
     if (!sourceMessage) throw new Error("Signal is not available for quick reply");
 
     const actionKey = buildQuickReplyActionKey(messageId, code);

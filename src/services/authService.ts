@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { BEEP_ID_LENGTH, MAX_BEEP_ID_RETRIES } from "@/lib/constants";
+import * as Linking from "expo-linking";
 
 export function generateBeepId(): string {
   const first = Math.floor(Math.random() * 9) + 1; // 1-9
@@ -14,18 +15,41 @@ export function isValidBeepId(id: string): boolean {
 }
 
 export async function signInWithGoogle() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-  });
-  if (error) throw error;
-  return data;
+  return signInWithOAuthProvider("google");
 }
 
 export async function signInWithApple() {
+  return signInWithOAuthProvider("apple");
+}
+
+export async function exchangeOAuthCodeFromUrl(url: string): Promise<boolean> {
+  const parsed = Linking.parse(url);
+  const error =
+    readQueryParam(parsed.queryParams?.error_description) ??
+    readQueryParam(parsed.queryParams?.error);
+  if (error) throw new Error(error);
+
+  const code = readQueryParam(parsed.queryParams?.code);
+  if (!code) return false;
+
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeError) throw exchangeError;
+  return true;
+}
+
+async function signInWithOAuthProvider(provider: "google" | "apple") {
+  const redirectTo = Linking.createURL("auth/callback");
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "apple",
+    provider,
+    options: {
+      redirectTo,
+      skipBrowserRedirect: true,
+    },
   });
   if (error) throw error;
+  if (data?.url) {
+    await Linking.openURL(data.url);
+  }
   return data;
 }
 
@@ -66,4 +90,9 @@ function readBeepId(data: unknown): string | null {
     return typeof beepId === "string" ? beepId : null;
   }
   return null;
+}
+
+function readQueryParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }

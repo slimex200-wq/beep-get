@@ -1,6 +1,7 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
   getReceivedMessages,
+  getMessageById,
   getSavedMessages,
   markAsRead,
   saveMessage,
@@ -108,7 +109,7 @@ describe("sendMessage", () => {
 });
 
 describe("sendQuickReplyToMessage", () => {
-  it("sends a Beep back to the source sender", async () => {
+  it("sends an idempotent preset reply through the v2 reply RPC", async () => {
     supabase.rpc.mockResolvedValue({
       data: { ...signal, sender_id: "u2", receiver_id: "u1", code: "8282" },
       error: null,
@@ -130,10 +131,12 @@ describe("sendQuickReplyToMessage", () => {
       "8282"
     );
 
-    expect(supabase.rpc).toHaveBeenCalledWith("send_beep", {
-      p_receiver_id: "u1",
+    expect(supabase.rpc).toHaveBeenCalledWith("reply_with_preset_once", {
+      p_signal_id: "source-1",
       p_code: "8282",
-      p_memo: null,
+      p_client_action_id: expect.stringMatching(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      ),
     });
   });
 
@@ -222,6 +225,20 @@ describe("getReceivedMessages", () => {
     supabase.from.mockReturnValue(chain);
 
     await expect(getReceivedMessages("u1")).rejects.toEqual({ message: "fail" });
+  });
+});
+
+describe("getMessageById", () => {
+  it("returns one signal by id in the legacy UI shape", async () => {
+    const chain = createMockChain({ data: signal, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    const result = await getMessageById("m1");
+
+    expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.eq).toHaveBeenCalledWith("id", "m1");
+    expect(chain.single).toHaveBeenCalled();
+    expect(result.id).toBe("m1");
   });
 });
 

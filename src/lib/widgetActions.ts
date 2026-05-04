@@ -44,6 +44,26 @@ export function buildQuickReplyActionKey(signalId: string, code: string): string
   return `quick-reply:${signalId}:${code}`;
 }
 
+export function buildQuickReplyClientActionId(signalId: string, code: string): string {
+  const hex = [
+    fnv1aHex(`${signalId}:${code}`, 0x811c9dc5),
+    fnv1aHex(`${code}:${signalId}`, 0x9e3779b9),
+    fnv1aHex(`quick:${signalId}:${code}`, 0x85ebca6b),
+    fnv1aHex(`reply:${code}:${signalId}`, 0xc2b2ae35),
+  ].join("");
+  const versioned = `${hex.slice(0, 12)}5${hex.slice(13)}`;
+  const variantNibble = ((parseInt(versioned[16], 16) & 0x3) | 0x8).toString(16);
+  const uuidHex = `${versioned.slice(0, 16)}${variantNibble}${versioned.slice(17, 32)}`;
+
+  return [
+    uuidHex.slice(0, 8),
+    uuidHex.slice(8, 12),
+    uuidHex.slice(12, 16),
+    uuidHex.slice(16, 20),
+    uuidHex.slice(20, 32),
+  ].join("-");
+}
+
 export function parseWidgetActionUrl(url: string): WidgetAction | null {
   const normalized = url.trim();
 
@@ -69,4 +89,13 @@ export function parseWidgetActionUrl(url: string): WidgetAction | null {
   }
 
   return null;
+}
+
+function fnv1aHex(input: string, seed: number): string {
+  let hash = seed >>> 0;
+  for (let index = 0; index < input.length; index++) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
 }

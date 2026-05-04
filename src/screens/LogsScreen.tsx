@@ -1,35 +1,68 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '../design/tokens';
-import { type } from '../design/typography';
-import { AppSurface } from '../components/AppSurface';
-import { HeaderBar } from '../components/HeaderBar';
-import { StatusDot } from '../components/StatusDot';
-import { TicketLogRow } from '../components/TicketLogRow';
-import { logs } from '../data/mockSignals';
+import React, { useEffect, useMemo } from "react";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors, radius, spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
+import { ActionButton } from "@/components/ActionButton";
+import { AppSurface } from "@/components/AppSurface";
+import { HeaderBar } from "@/components/HeaderBar";
+import { StatusDot } from "@/components/StatusDot";
+import { TicketLogRow } from "@/components/TicketLogRow";
+import { useAuthStore } from "@/stores/authStore";
+import { useMessageStore } from "@/stores/messageStore";
+import { messageToSlipSignal } from "@/lib/slipUiModels";
 
 export function LogsScreen() {
+  const { profile } = useAuthStore();
+  const { saved, fetchSaved } = useMessageStore();
+
+  useEffect(() => {
+    if (!profile) return;
+    fetchSaved(profile.id).catch(reportError);
+  }, [profile?.id, fetchSaved]);
+
+  const logs = useMemo(
+    () => saved.map((message, index) => messageToSlipSignal(message, { index })),
+    [saved]
+  );
+
+  const refresh = () => {
+    if (!profile) return;
+    fetchSaved(profile.id).catch(reportError);
+  };
+
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET LOG" right="•••" />
+      <HeaderBar title="BEEP-GET LOG" right="SAVED" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
-          <Text style={type.metaValue}>기록 목록</Text>
+          <Text style={type.metaValue}>SLIP LEDGER</Text>
           <StatusDot size={7} />
         </View>
         <View style={styles.list}>
-          {logs.map((item) => (
-            <TicketLogRow key={item.id} item={item} />
-          ))}
+          {logs.length > 0 ? (
+            logs.map((item) => <TicketLogRow key={item.id} item={item} />)
+          ) : (
+            <View style={styles.empty}>
+              <Text style={type.metaValue}>NO SAVED SLIPS</Text>
+              <Text style={type.bodyMuted}>Use SAVE LOG in Today or Reply Room.</Text>
+            </View>
+          )}
         </View>
         <View style={styles.note}>
           <Text style={type.tinyMono}>NOTE.</Text>
-          <Text style={type.bodyMuted}>만료된 Blink는 슬립 메타데이터만 기록되며, 3 프레임 이미지는 보관되지 않습니다.</Text>
+          <Text style={type.bodyMuted}>
+            Expired unsaved Blinks keep only metadata. Saved slips remain in this private ledger.
+          </Text>
         </View>
-        <Text style={[type.tinyMono, styles.pull]}>↓ PULL TO REFRESH</Text>
+        <ActionButton label="REFRESH LOG" variant="ghost" mono onPress={refresh} />
       </ScrollView>
     </AppSurface>
   );
+}
+
+function reportError(err: unknown) {
+  const message = err instanceof Error ? err.message : "Unexpected error";
+  Alert.alert("BEEP-GET", message);
 }
 
 const styles = StyleSheet.create({
@@ -39,9 +72,9 @@ const styles = StyleSheet.create({
     gap: spacing[4],
   },
   titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   list: {
     gap: spacing[3],
@@ -53,7 +86,14 @@ const styles = StyleSheet.create({
     padding: spacing[5],
     gap: spacing[2],
   },
-  pull: {
-    textAlign: 'center',
+  empty: {
+    minHeight: 112,
+    justifyContent: "center",
+    gap: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.control,
+    padding: spacing[5],
+    backgroundColor: colors.paperWarm,
   },
 });

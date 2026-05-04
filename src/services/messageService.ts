@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { MAX_CODE_LENGTH, MAX_MEMO_LENGTH } from "@/lib/constants";
+import { buildQuickReplyClientActionId } from "@/lib/widgetActions";
 
 interface ValidationResult {
   valid: boolean;
@@ -95,7 +96,8 @@ export async function sendMessage(
 export async function sendQuickReplyToMessage(
   currentUserId: string,
   sourceMessage: LegacyMessage,
-  numberCode: string
+  numberCode: string,
+  clientActionId = buildQuickReplyClientActionId(sourceMessage.id, numberCode)
 ) {
   if (sourceMessage.to_user !== currentUserId) {
     throw new Error("Cannot reply to a signal that was not received by this user");
@@ -104,7 +106,14 @@ export async function sendQuickReplyToMessage(
   const validation = validateMessage(numberCode);
   if (!validation.valid) throw new Error(validation.error);
 
-  return sendMessage(currentUserId, sourceMessage.from_user, numberCode);
+  const { data, error } = await supabase.rpc("reply_with_preset_once", {
+    p_signal_id: sourceMessage.id,
+    p_code: numberCode,
+    p_client_action_id: clientActionId,
+  });
+
+  if (error) throw error;
+  return mapSignalToLegacyMessage(data as SignalRow);
 }
 
 export async function getReceivedMessages(userId: string) {
@@ -119,6 +128,19 @@ export async function getReceivedMessages(userId: string) {
 
   if (error) throw error;
   return mapSignalsToLegacyMessages(data as SignalRow[] | null);
+}
+
+export async function getMessageById(messageId: string) {
+  const { data, error } = await supabase
+    .from("signals")
+    .select(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+    )
+    .eq("id", messageId)
+    .single();
+
+  if (error) throw error;
+  return mapSignalToLegacyMessage(data as SignalRow);
 }
 
 export async function markAsRead(messageId: string) {

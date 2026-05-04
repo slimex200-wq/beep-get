@@ -18,7 +18,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   FirstRun: undefined;
-  Send: { friendId: string; friendName: string };
+  Send: { friendId: string; friendName: string; friendNo?: string };
   ReplyRoom: { signalId: string };
   WidgetStates: undefined;
 };

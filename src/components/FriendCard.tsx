@@ -1,23 +1,24 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
-import { Friend } from '../data/mockSignals';
+import type { SlipFriend } from '@/lib/slipUiModels';
 import { StatusDot } from './StatusDot';
 
 type Props = {
-  friend: Friend;
+  friend: SlipFriend;
+  onPress?: () => void;
 };
 
-export function FriendCard({ friend }: Props) {
+export function FriendCard({ friend, onPress }: Props) {
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress} disabled={!onPress}>
       {friend.isClose ? <StatusDot size={7} style={styles.dot} /> : null}
       <Text style={type.tinyMono}>NO.</Text>
       <Text style={type.codeSmall}>{friend.no}</Text>
       <Text style={type.metaValue}>{friend.name}</Text>
       <Text style={styles.relation}>{friend.relation}</Text>
-    </View>
+    </Pressable>
   );
 }
 
