@@ -7,6 +7,7 @@ module.exports = {
     "^../../modules/beep-widget$": "<rootDir>/__mocks__/beep-widget.js",
     "^expo-contacts$": "<rootDir>/__mocks__/expo-contacts.js",
     "^expo-haptics$": "<rootDir>/__mocks__/expo-haptics.js",
+    "^expo-linking$": "<rootDir>/__mocks__/expo-linking.js",
     "^expo-secure-store$": "<rootDir>/__mocks__/expo-secure-store.js",
   },
   testPathIgnorePatterns: ["/node_modules/", "/ios/", "/android/"],

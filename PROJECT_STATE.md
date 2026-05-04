@@ -35,6 +35,10 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Platform auth CTAs are split by runtime platform: iOS uses Apple, Android/web/other platforms use Google. Android UI preview should show Google plus UI Preview only.
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - Android widget action URLs now cover open reply room, confirm, save, and preset quick reply; the app handles these deep links and preview mode syncs native widget sample data after entering UI Preview.
+- The `DESIGN.md` slip screens are now wired to live app state instead of mock-only starter data: Today reads received Beep/Blink signals, People reads and adds relationships, Send uses the Beep/Blink send services, Reply Room fetches cold deep-link signals and sends quick replies, Logs reads saved signals, and Studio syncs widget data plus live reply slots.
+- App-side widget/reply quick replies are idempotent end-to-end through the remote `reply_with_preset_once` RPC on `beep-get-prod`; duplicate widget/app taps reuse the same actor/client-action reservation instead of creating duplicate Beeps.
+- OAuth is implemented at the app-code level with Supabase PKCE callback exchange through `expo-linking`; Google/Apple provider dashboard settings and production EAS public env values remain external configuration, not commit-safe repo changes.
+- `package-lock.json` has been security-refreshed with `npm audit fix`; the remaining audit findings are low/moderate Expo/Jest transitive issues whose suggested fix requires breaking major-version force changes.
 - Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
 - Android Glance widget colors must use Compose `Color(...)` values inside `ColorProvider`; Android `Color.parseColor(...)` ints are treated as resource IDs by RemoteViews hosts and can show `Can't load widget`.
 - Android small Glance widget now renders latest Blink payloads as `Incoming Blink` with an image thumbnail/strip preview and updates through `GlanceAppWidget.updateAll(...)` instead of shell-blocked/stale app-widget broadcasts.
@@ -42,18 +46,15 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 
 ## Next Work Queue
 
-- Perform real Android medium-widget placement/action-chip QA after the small widget smoke; see `docs/plans/2026-05-03-widget-quick-reply-actions.md` for the manual launcher flow.
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
 - Add production thumbnail/3-frame extraction for real Blink captures; Android widget rendering already supports preview resource thumbnails plus local `file://`, `content://`, and `data:image` thumbnail payloads.
-- Implement the approved slip UX spec in `docs/superpowers/specs/2026-05-03-slip-reply-widget-design.md`: redesign Send, redesign Reply Room, add app-side quick replies, then add idempotent widget direct reply.
 - Decide whether v2 should reintroduce collection/season/icon rewards; production collection/season services currently return empty safe fallbacks because those tables are intentionally absent from the v2 migration.
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
-- Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build, especially non-home tabs and real native Android widget placement.
-- Connect the integrated `DESIGN.md` screens to live v2 Supabase data and existing Beep/Blink services after visual approval; current starter screens intentionally use mock signals.
-- Add native widget direct-send actions only after app-side quick replies, native auth/session sharing, and server-side idempotency are implemented.
+- Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build for real-device pacing and medium-widget placement.
+- Add native background widget direct-send actions only after native auth/session sharing and retry UX are deliberately designed; the current safe implementation routes widget taps through app-owned deep links backed by server idempotency.
 - Prefer Android/web/Jest checks when iOS cannot be verified locally.
 - Avoid broad app rewrites while platform verification is limited.
 
@@ -66,6 +67,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Status labels are UI-only for now; v2 persists `profiles.status_icon`, not separate `status_broadcasts.label`.
 - Blink upload adapter and SendScreen preview UI are verified, but real authenticated Android camera/file upload and Supabase Storage policy behavior still need runtime QA.
 - iOS verification may require macOS.
+- OAuth provider dashboard setup cannot be completed from repo code alone; keep provider client IDs, Apple service IDs, and redirect allow-lists out of git.
 
 ## Last Verified
 
@@ -86,6 +88,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-03: Actual Android launcher small-widget placement smoke passed after fixing Glance `ColorProvider` values to use Compose colors; x86_64 debug APK installed on `emulator-5554`, UI Preview synced widget data, Pixel Launcher placed the `BeepWidgetReceiver`, screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-widget-visible-fixed.png`, and logcat no longer reported the previous `Resource ID #0xfff4efe5` RemoteViews color failure.
 - 2026-05-04: Android launcher small-widget Blink teaser strip verified on `emulator-5554`; `npm run typecheck` passed, `npm test -- --runInBand` passed 205 tests, `npx --yes expo-doctor` passed 17/17, `:app:assembleDebug -PreactNativeArchitectures=x86_64` passed, UI Preview synced `kind:"blink"` with 3 strip frame URIs, Pixel Launcher showed `Incoming Blink` plus `01   02   03`, screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-widget-three-frame-strip.png`, and post-sync logcat showed no Glance/RemoteViews truncation errors.
 - 2026-05-04: Android launcher small-widget Blink thumbnail preview verified on `emulator-5554`; `npm run typecheck` passed, `npm test -- --runInBand` passed 206 tests, `:beep-widget:compileDebugKotlin` passed, `:app:assembleDebug -PreactNativeArchitectures=x86_64` passed, Pixel Launcher showed `Incoming Blink` with an actual preview image, screenshot saved at `C:/Users/slime/AppData/Local/Temp/beep-get-widget-thumbnail-home.png`, and UI tree exposed `Blink preview` as an ImageView.
+- 2026-05-04: Slip functional completion pass wired the `DESIGN.md` app screens to live v2 services/stores, added PKCE OAuth callback exchange, added idempotent quick-reply RPC migration `20260504013000_idempotent_preset_replies.sql`, pushed that migration to `beep-get-prod`, and completed code/design/security review. Verification: `npm run typecheck` passed, `npm test -- --runInBand` passed 214 tests, `npx --yes expo-doctor` passed 17/17, `npm audit --audit-level=high` passed with only low/moderate remaining, `supabase db lint --linked` found no schema errors, `supabase db push --dry-run --linked` reported remote database up to date, `git diff --check` passed aside from CRLF warnings, and `C:/bg-slip/android/gradlew.bat -p C:/bg-slip/android :app:assembleDebug -PreactNativeArchitectures=x86_64 --console=plain --no-daemon` built successfully.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
 - Known gap: Medium Android launcher widget action-chip placement and iOS verification were not performed.

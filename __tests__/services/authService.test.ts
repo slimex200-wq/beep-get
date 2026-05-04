@@ -1,6 +1,8 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
+const Linking = require("expo-linking");
 import {
   createUserProfile,
+  exchangeOAuthCodeFromUrl,
   generateBeepId,
   getUserProfile,
   isValidBeepId,
@@ -8,6 +10,18 @@ import {
   signInWithGoogle,
   signOut,
 } from "@/services/authService";
+
+jest.mock("expo-linking", () => ({
+  createURL: jest.fn(() => "beepget://auth/callback"),
+  openURL: jest.fn().mockResolvedValue(true),
+  parse: jest.fn((url: string) => {
+    const query = url.split("?")[1] ?? "";
+    const params = new URLSearchParams(query);
+    return {
+      queryParams: Object.fromEntries(params.entries()),
+    };
+  }),
+}));
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -43,7 +57,14 @@ describe("signInWithGoogle", () => {
     supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
 
     await expect(signInWithGoogle()).resolves.toEqual(mockData);
-    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({ provider: "google" });
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: {
+        redirectTo: "beepget://auth/callback",
+        skipBrowserRedirect: true,
+      },
+    });
+    expect(Linking.openURL).toHaveBeenCalledWith("https://google.com/auth");
   });
 
   it("throws on error", async () => {
@@ -60,7 +81,14 @@ describe("signInWithApple", () => {
     supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
 
     await expect(signInWithApple()).resolves.toEqual(mockData);
-    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({ provider: "apple" });
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "apple",
+      options: {
+        redirectTo: "beepget://auth/callback",
+        skipBrowserRedirect: true,
+      },
+    });
+    expect(Linking.openURL).toHaveBeenCalledWith("https://appleid.apple.com/auth");
   });
 
   it("throws on error", async () => {
@@ -68,6 +96,20 @@ describe("signInWithApple", () => {
     supabase.auth.signInWithOAuth.mockResolvedValue({ data: null, error: err });
 
     await expect(signInWithApple()).rejects.toEqual(err);
+  });
+});
+
+describe("exchangeOAuthCodeFromUrl", () => {
+  it("exchanges a PKCE callback code for a session", async () => {
+    await expect(exchangeOAuthCodeFromUrl("beepget://auth/callback?code=abc")).resolves.toBe(true);
+
+    expect(supabase.auth.exchangeCodeForSession).toHaveBeenCalledWith("abc");
+  });
+
+  it("ignores non-auth callback URLs", async () => {
+    await expect(exchangeOAuthCodeFromUrl("beepget://reply/signal-1")).resolves.toBe(false);
+
+    expect(supabase.auth.exchangeCodeForSession).not.toHaveBeenCalled();
   });
 });
 

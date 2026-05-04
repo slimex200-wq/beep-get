@@ -1,4 +1,5 @@
 import {
+  buildQuickReplyClientActionId,
   buildQuickReplyActionKey,
   buildWidgetActionUrls,
   parseWidgetActionUrl,
@@ -56,5 +57,18 @@ describe("parseWidgetActionUrl", () => {
 describe("buildQuickReplyActionKey", () => {
   it("creates a stable duplicate-tap guard key", () => {
     expect(buildQuickReplyActionKey("signal-1", "8282")).toBe("quick-reply:signal-1:8282");
+  });
+});
+
+describe("buildQuickReplyClientActionId", () => {
+  it("creates a stable UUID-shaped idempotency key", () => {
+    const first = buildQuickReplyClientActionId("signal-1", "8282");
+    const second = buildQuickReplyClientActionId("signal-1", "8282");
+
+    expect(first).toBe(second);
+    expect(first).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
+    expect(buildQuickReplyClientActionId("signal-1", "486")).not.toBe(first);
   });
 });

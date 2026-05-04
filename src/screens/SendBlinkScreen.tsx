@@ -1,44 +1,139 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../design/tokens';
-import { type } from '../design/typography';
-import { ActionButton } from '../components/ActionButton';
-import { AppSurface } from '../components/AppSurface';
-import { BlinkStrip } from '../components/BlinkStrip';
-import { CameraLensPanel } from '../components/CameraLensPanel';
-import { HeaderBar } from '../components/HeaderBar';
-import { MetaRow } from '../components/MetaRow';
-import { SlipFrame } from '../components/SlipFrame';
+import React from "react";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { CameraView } from "expo-camera";
+import { colors, spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
+import { ActionButton } from "@/components/ActionButton";
+import { AppSurface } from "@/components/AppSurface";
+import { BlinkStrip } from "@/components/BlinkStrip";
+import { CameraLensPanel } from "@/components/CameraLensPanel";
+import { HeaderBar } from "@/components/HeaderBar";
+import { MetaRow } from "@/components/MetaRow";
+import { SlipFrame } from "@/components/SlipFrame";
 
 type Props = {
   modeSwitch?: React.ReactNode;
+  recipientName: string;
+  recipientNo: string;
+  code: string;
+  memo: string;
+  sending: boolean;
+  recording: boolean;
+  cameraPermissionGranted: boolean;
+  cameraRef: React.RefObject<CameraView | null>;
+  onCodeChange: (code: string) => void;
+  onMemoChange: (memo: string) => void;
+  onPreset: (code: string) => void;
+  onRequestPermission: () => void;
+  onRetake: () => void;
+  onSend: () => void;
 };
 
-export function SendBlinkScreen({ modeSwitch }: Props = {}) {
+export function SendBlinkScreen({
+  modeSwitch,
+  recipientName,
+  recipientNo,
+  code,
+  memo,
+  sending,
+  recording,
+  cameraPermissionGranted,
+  cameraRef,
+  onCodeChange,
+  onMemoChange,
+  onPreset,
+  onRequestPermission,
+  onRetake,
+  onSend,
+}: Props) {
   return (
     <AppSurface>
-      <HeaderBar title="보낼 Blink" left="취소" right="기록" />
+      <HeaderBar title="SEND BLINK" left="CLOSE" right="LOG" />
       {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="보낼 Blink" accent={false}>
+        <SlipFrame title="Outgoing Blink" accent={false}>
           <View style={styles.recipientRow}>
             <View style={styles.recipientText}>
-              <MetaRow label="TO." value="민아 - NO 04" />
+              <MetaRow label="TO." value={`${recipientName} - NO ${recipientNo}`} />
             </View>
             <View style={styles.stamp}>
               <Text style={type.tinyMono}>CODE</Text>
-              <Text style={type.codeSmall}>04</Text>
+              <Text style={type.codeSmall}>{recipientNo}</Text>
             </View>
           </View>
+
           <View style={styles.cameraBlock}>
-            <CameraLensPanel />
+            {cameraPermissionGranted ? (
+              <View style={styles.cameraFrame}>
+                <CameraView
+                  ref={cameraRef}
+                  active
+                  facing="front"
+                  mirror
+                  mode="video"
+                  mute
+                  style={styles.camera}
+                  videoBitrate={2500000}
+                  videoQuality="480p"
+                />
+              </View>
+            ) : (
+              <View>
+                <CameraLensPanel />
+                <ActionButton
+                  label="ALLOW CAMERA"
+                  variant="dark"
+                  style={styles.permissionButton}
+                  onPress={onRequestPermission}
+                />
+              </View>
+            )}
           </View>
+
+          <Text style={type.tinyMono}>CODE / PRESET</Text>
+          <View style={styles.presets}>
+            {["8282", "486", "000"].map((preset) => (
+              <ActionButton
+                key={preset}
+                label={preset}
+                mono
+                flex
+                variant={code === preset ? "dark" : "light"}
+                onPress={() => onPreset(preset)}
+              />
+            ))}
+          </View>
+          <TextInput
+            value={code}
+            onChangeText={(value) => onCodeChange(value.replace(/[^0-9]/g, ""))}
+            keyboardType="number-pad"
+            maxLength={20}
+            placeholder="8282"
+            placeholderTextColor={colors.muted2}
+            style={styles.input}
+          />
+
+          <TextInput
+            value={memo}
+            onChangeText={onMemoChange}
+            placeholder="tiny note"
+            placeholderTextColor={colors.muted2}
+            maxLength={30}
+            style={styles.memoInput}
+          />
+
           <Text style={type.tinyMono}>PREVIEW  3 FRAMES</Text>
           <BlinkStrip compact />
         </SlipFrame>
         <View style={styles.actions}>
-          <ActionButton label="다시 찍기" flex />
-          <ActionButton label="Blink 보내기   ›" variant="dark" flex />
+          <ActionButton label="RETAKE" flex onPress={onRetake} disabled={sending || recording} />
+          <ActionButton
+            label={recording ? "RECORDING 2 SEC" : sending ? "SENDING" : "SEND BLINK"}
+            variant="dark"
+            flex
+            onPress={onSend}
+            disabled={!code || sending || recording}
+          />
         </View>
       </ScrollView>
     </AppSurface>
@@ -52,9 +147,9 @@ const styles = StyleSheet.create({
     gap: spacing[5],
   },
   recipientRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing[5],
-    alignItems: 'center',
+    alignItems: "center",
   },
   recipientText: {
     flex: 1,
@@ -65,15 +160,52 @@ const styles = StyleSheet.create({
     borderRadius: 29,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ rotate: '-8deg' }],
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ rotate: "-8deg" }],
   },
   cameraBlock: {
     marginVertical: spacing[5],
   },
+  cameraFrame: {
+    minHeight: 220,
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: colors.ink,
+  },
+  camera: {
+    flex: 1,
+  },
+  permissionButton: {
+    marginTop: spacing[3],
+  },
+  presets: {
+    flexDirection: "row",
+    gap: spacing[3],
+    marginTop: spacing[3],
+  },
+  input: {
+    minHeight: 40,
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 8,
+    paddingHorizontal: spacing[4],
+    textAlign: "center",
+    backgroundColor: "rgba(255,255,255,0.24)",
+    ...type.body,
+    color: colors.ink,
+  },
+  memoInput: {
+    minHeight: 38,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+    ...type.body,
+    color: colors.ink,
+  },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing[3],
   },
 });

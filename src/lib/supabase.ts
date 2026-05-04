@@ -45,6 +45,7 @@ function createMissingSupabaseClient(): SupabaseClient {
       }),
       signInWithOAuth: async () => result,
       signInWithIdToken: async () => result,
+      exchangeCodeForSession: async () => result,
       signOut: async () => ({ error: null }),
     },
     from: () => chain,

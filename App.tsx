@@ -10,6 +10,7 @@ import { parseWidgetActionUrl } from "@/lib/widgetActions";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
+import { exchangeOAuthCodeFromUrl } from "@/services/authService";
 import { customFonts } from "@/theme/fonts";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
@@ -57,17 +58,33 @@ export default function App() {
       }
     };
 
-    const handleUrl = ({ url }: { url: string }) => {
-      const confirmMatch = url.match(/beepget:\/\/message\/confirm\/(.+)/);
-      if (confirmMatch) {
-        read(confirmMatch[1]);
-        return;
+    const handleOAuthUrl = async (url: string) => {
+      try {
+        return await exchangeOAuthCodeFromUrl(url);
+      } catch (err: any) {
+        console.warn("OAuth callback failed", err?.message ?? err);
+        return false;
       }
-      void handleWidgetUrl(url);
+    };
+
+    const handleUrl = ({ url }: { url: string }) => {
+      handleOAuthUrl(url).then((handled) => {
+        if (handled) return;
+
+        const confirmMatch = url.match(/beepget:\/\/message\/confirm\/(.+)/);
+        if (confirmMatch) {
+          read(confirmMatch[1]);
+          return;
+        }
+        void handleWidgetUrl(url);
+      });
     };
 
     Linking.getInitialURL().then((url) => {
-      if (url) void handleWidgetUrl(url);
+      if (!url) return;
+      handleOAuthUrl(url).then((handled) => {
+        if (!handled) void handleWidgetUrl(url);
+      });
     });
 
     const sub = Linking.addEventListener("url", handleUrl);
