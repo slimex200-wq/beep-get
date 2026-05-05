@@ -20,10 +20,17 @@ const states: Array<{ label: string; state: WidgetState }> = [
 
 export function WidgetStatesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const closeToStudio = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "Studio" });
+  };
 
   return (
     <AppSurface>
-      <HeaderBar title="WIDGET STATES" left="CLOSE" right="" onLeftPress={() => navigation.goBack()} />
+      <HeaderBar title="WIDGET STATES" left="CLOSE" right="" onLeftPress={closeToStudio} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
           {states.map((item) => (
