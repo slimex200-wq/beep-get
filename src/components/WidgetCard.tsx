@@ -7,15 +7,28 @@ import { DotRadar } from './DotRadar';
 import { MetaRow } from './MetaRow';
 import { SignalCode } from './SignalCode';
 import { SlipFrame } from './SlipFrame';
-import { StatusDot } from './StatusDot';
 
 export type WidgetState = 'empty' | 'incoming-beep' | 'incoming-blink' | 'sending' | 'sent' | 'failed';
+export type WidgetPreviewSize = 'small' | 'medium';
 
 type Props = {
   state: WidgetState;
+  signal?: {
+    code: string;
+    sender: string;
+    senderNo: string;
+    time: string;
+  } | null;
+  stripFrameUris?: string[] | null;
+  size?: WidgetPreviewSize;
 };
 
-export function WidgetCard({ state }: Props) {
+export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Props) {
+  const senderLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : '민아 - NO 04';
+  const code = signal?.code ?? '8282';
+  const time = signal?.time ?? '14:56';
+  const isMedium = size === 'medium';
+
   if (state === 'sent') {
     return (
       <SlipFrame title="보냄" variant="success" compact accent={false}>
@@ -69,13 +82,26 @@ export function WidgetCard({ state }: Props) {
       ) : (
         <>
           <Text style={type.tinyMono}>NO.</Text>
-          <SignalCode code="8282" size="medium" />
-          {isBlink ? <BlinkStrip compact /> : null}
-          <MetaRow label="FROM." value="민아 - NO 04" />
-          <MetaRow label="TIME." value="14:56" mono />
+          <SignalCode code={code} size="medium" />
+          {isBlink ? <BlinkStrip compact frameUris={stripFrameUris} /> : null}
+          <MetaRow label="FROM." value={senderLabel} />
+          <MetaRow label="TIME." value={time} mono />
+          {isMedium ? <MediumWidgetActions /> : null}
         </>
       )}
     </SlipFrame>
+  );
+}
+
+function MediumWidgetActions() {
+  return (
+    <View style={styles.mediumActions}>
+      {['OK', '8282', 'OPEN'].map((label) => (
+        <View key={label} style={styles.mediumActionChip}>
+          <Text style={styles.mediumActionText}>{label}</Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -116,5 +142,22 @@ const styles = StyleSheet.create({
   },
   redButtonText: {
     color: colors.white,
+  },
+  mediumActions: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginTop: spacing[2],
+  },
+  mediumActionChip: {
+    flex: 1,
+    minHeight: 26,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.ink,
+  },
+  mediumActionText: {
+    ...type.tinyMono,
+    color: colors.paperWarm,
   },
 });

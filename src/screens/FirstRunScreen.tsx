@@ -1,5 +1,7 @@
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { ActionButton } from '../components/ActionButton';
@@ -7,14 +9,10 @@ import { AppSurface } from '../components/AppSurface';
 import { BeepyMascot } from '../components/BeepyMascot';
 import { SignalSlip } from '../components/SignalSlip';
 import { latestSignal } from '../data/mockSignals';
-import {
-  getPlatformAuthLabel,
-  getPlatformAuthProvider,
-  getPlatformAuthVariant,
-} from '../lib/platformAuth';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 export function FirstRunScreen() {
-  const authProvider = getPlatformAuthProvider(Platform.OS);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <AppSurface>
@@ -29,8 +27,9 @@ export function FirstRunScreen() {
         <SignalSlip signal={latestSignal} title="도착한 Beep" compact />
         <View style={styles.buttons}>
           <ActionButton
-            label={getPlatformAuthLabel(authProvider)}
-            variant={getPlatformAuthVariant(authProvider)}
+            label="ENTER BEEP-GET"
+            variant="dark"
+            onPress={() => navigation.navigate('Main')}
           />
         </View>
         <View style={styles.footerStamp}>

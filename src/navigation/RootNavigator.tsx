@@ -22,7 +22,7 @@ export type RootStackParamList = {
   FirstRun: undefined;
   Send: { friendId: string; friendName: string; friendNo?: string };
   ReplyRoom: { signalId: string };
-  WidgetStates: undefined;
+  WidgetStates: { size?: "small" | "medium" } | undefined;
 };
 
 export type MainTabParamList = {

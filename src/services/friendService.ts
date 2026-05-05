@@ -25,13 +25,19 @@ export async function findUserByBeepId(beepId: string) {
   return data[0];
 }
 
-export async function addFriend(userId: string, friendId: string, nickname?: string) {
+export async function addFriend(
+  userId: string,
+  friendId: string,
+  nickname?: string,
+  relationshipPreset?: string
+) {
   if (userId === friendId) throw new Error("자기 자신을 친구로 추가할 수 없습니다");
 
   const { error } = await supabase.from("relationships").insert({
     owner_id: userId,
     friend_id: friendId,
     nickname: nickname || null,
+    vibration_pattern: relationshipPreset || null,
   });
 
   if (error) {
