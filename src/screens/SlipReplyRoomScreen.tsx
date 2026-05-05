@@ -82,7 +82,7 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SignalSlip signal={signal} title={signal.hasBlink ? "Incoming Blink" : "Incoming Beep"} />
-        {signal.hasBlink ? <BlinkStrip /> : null}
+        {signal.hasBlink ? <BlinkStrip frameUris={message.media?.stripFrameUris} /> : null}
         <View style={styles.replyRow}>
           <ActionButton label="OK" mono flex onPress={() => read(message.id).catch(reportError)} />
           <ActionButton label="8282" mono flex onPress={() => sendQuickReply("8282")} />

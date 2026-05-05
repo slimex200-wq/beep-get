@@ -27,7 +27,12 @@ interface FriendState {
   friends: Friend[];
   loading: boolean;
   fetch: (userId: string) => Promise<void>;
-  add: (userId: string, friendBeepId: string, nickname?: string) => Promise<void>;
+  add: (
+    userId: string,
+    friendBeepId: string,
+    nickname?: string,
+    relationshipPreset?: string
+  ) => Promise<void>;
   remove: (userId: string, friendId: string) => Promise<void>;
   updateNickname: (userId: string, friendId: string, nickname: string) => Promise<void>;
   updateVibration: (userId: string, friendId: string, pattern: string) => Promise<void>;
@@ -47,14 +52,14 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     set({ friends, loading: false });
   },
 
-  add: async (userId, friendBeepId, nickname) => {
+  add: async (userId, friendBeepId, nickname, relationshipPreset) => {
     if (isUiPreviewUser(userId)) {
       const friend = {
         id: `preview-friendship-${Date.now()}`,
         user_id: userId,
         friend_id: `preview-friend-${friendBeepId}`,
         nickname: nickname ?? null,
-        vibration_pattern: "short",
+        vibration_pattern: relationshipPreset ?? "CLOSE FRIEND",
         friend: {
           id: `preview-friend-${friendBeepId}`,
           beep_id: friendBeepId,
@@ -67,7 +72,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     }
     const found = await findUserByBeepId(friendBeepId);
     if (!found) throw new Error("존재하지 않는 삐삐 번호입니다");
-    await addFriend(userId, found.id, nickname);
+    await addFriend(userId, found.id, nickname, relationshipPreset);
     await get().fetch(userId);
   },
 

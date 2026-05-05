@@ -32,7 +32,7 @@ export function LogsScreen() {
 
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET LOG" right="SAVED" />
+      <HeaderBar title="BEEP-GET LOG" right="SAVED" onRightPress={refresh} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
           <Text style={type.metaValue}>SLIP LEDGER</Text>

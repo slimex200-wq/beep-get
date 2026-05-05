@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing } from "@/design/tokens";
@@ -11,6 +11,7 @@ import { StatusDot } from "@/components/StatusDot";
 import { WidgetCard, type WidgetState } from "@/components/WidgetCard";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { messageToSlipSignal } from "@/lib/slipUiModels";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
@@ -32,6 +33,10 @@ export function StudioScreen() {
   }, [profile?.id, friends.length, fetchFriends, fetchDictionary, fetchReceived]);
 
   const latest = received[0];
+  const latestSignal = useMemo(
+    () => (latest ? messageToSlipSignal(latest, { index: 0 }) : null),
+    [latest]
+  );
   const widgetState: WidgetState = latest
     ? latest.kind === "blink" || latest.media
       ? "incoming-blink"
@@ -64,24 +69,58 @@ export function StudioScreen() {
 
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET STUDIO" right="SYNC" showDot />
+      <HeaderBar title="BEEP-GET STUDIO" right="SYNC" showDot onRightPress={syncNow} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.panel}>
           <Text style={type.metaValue}>RUNTIME CHECKLIST</Text>
-          <StatusRow label="Supabase env" ok={isSupabaseConfigured} />
-          <StatusRow label="Signed in" ok={Boolean(profile)} />
-          <StatusRow label="Widget payload" ok={Boolean(latest)} />
-          <StatusRow label="Direct reply slots" ok={slots.length > 0} />
+          <StatusRow
+            label="Supabase env"
+            ok={isSupabaseConfigured}
+            onOpen={() =>
+              Alert.alert(
+                "Supabase env",
+                "Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY before production QA."
+              )
+            }
+          />
+          <StatusRow
+            label="Signed in"
+            ok={Boolean(profile)}
+            onOpen={() => Alert.alert("Signed in", "Sign in from the first screen, then reopen Studio.")}
+          />
+          <StatusRow
+            label="Widget payload"
+            ok={Boolean(latest)}
+            onOpen={() => navigation.navigate("Main", { screen: "Today" })}
+          />
+          <StatusRow
+            label="Direct reply slots"
+            ok={slots.length > 0}
+            onOpen={() => Alert.alert("Reply slots", "Add code presets or use the default 8282 / 486 slots.")}
+          />
         </View>
 
         <Text style={type.metaValue}>WIDGET PREVIEW</Text>
         <View style={styles.previewRow}>
           <View style={styles.previewCard}>
-            <WidgetCard state={widgetState} />
+            <WidgetCard
+              state={widgetState}
+              signal={latestSignal}
+              stripFrameUris={latest?.media?.stripFrameUris}
+            />
           </View>
           <View style={styles.sizeColumn}>
-            <ActionButton label="SMALL" mono onPress={() => navigation.navigate("WidgetStates")} />
-            <ActionButton label="MEDIUM" mono variant="dark" onPress={syncNow} />
+            <ActionButton
+              label="SMALL"
+              mono
+              onPress={() => navigation.navigate("WidgetStates", { size: "small" })}
+            />
+            <ActionButton
+              label="MEDIUM"
+              mono
+              variant="dark"
+              onPress={() => navigation.navigate("WidgetStates", { size: "medium" })}
+            />
           </View>
         </View>
 
@@ -104,11 +143,23 @@ export function StudioScreen() {
   );
 }
 
-function StatusRow({ label, ok }: { label: string; ok: boolean }) {
+function StatusRow({ label, ok, onOpen }: { label: string; ok: boolean; onOpen?: () => void }) {
   return (
     <View style={styles.statusRow}>
       <Text style={type.bodyMuted}>{label}</Text>
-      {ok ? <StatusDot color={colors.greenDot} size={8} /> : <Text style={type.monoValue}>OPEN</Text>}
+      {ok ? (
+        <StatusDot color={colors.greenDot} size={8} />
+      ) : onOpen ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpen}
+          style={({ pressed }) => [pressed && styles.pressed]}
+        >
+          <Text style={type.monoValue}>OPEN</Text>
+        </Pressable>
+      ) : (
+        <Text style={type.monoValue}>OPEN</Text>
+      )}
     </View>
   );
 }
@@ -139,6 +190,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: colors.rule,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   previewRow: {
     flexDirection: "row",

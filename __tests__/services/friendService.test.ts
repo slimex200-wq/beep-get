@@ -55,6 +55,21 @@ describe("addFriend", () => {
       owner_id: "user-1",
       friend_id: "user-2",
       nickname: "best",
+      vibration_pattern: null,
+    });
+  });
+
+  it("persists the selected relationship preset", async () => {
+    const chain = createMockChain({ data: null, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    await addFriend("user-1", "user-2", undefined, "CLOSE FRIEND");
+
+    expect(chain.insert).toHaveBeenCalledWith({
+      owner_id: "user-1",
+      friend_id: "user-2",
+      nickname: null,
+      vibration_pattern: "CLOSE FRIEND",
     });
   });
 
@@ -68,6 +83,7 @@ describe("addFriend", () => {
       owner_id: "user-1",
       friend_id: "user-2",
       nickname: null,
+      vibration_pattern: null,
     });
   });
 

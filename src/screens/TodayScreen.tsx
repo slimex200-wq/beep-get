@@ -76,7 +76,12 @@ export function TodayScreen() {
 
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET" right={loading ? "SYNC" : "LIVE"} showDot />
+      <HeaderBar
+        title="BEEP-GET"
+        right={loading ? "SYNC" : "LIVE"}
+        showDot
+        onRightPress={refresh}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {latestSignal ? (
           <SignalSlip

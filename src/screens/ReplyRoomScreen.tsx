@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import type { RouteProp } from "@react-navigation/native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { buildSignalPresentation } from "@/lib/beepBlinkPresentation";
 import { legacyMessageToSignalInput, type LegacySignalMessage } from "@/lib/messageSignalAdapter";
@@ -16,7 +16,7 @@ const ACCENT = "#D8361E";
 
 export function ReplyRoomScreen({ route }: { route: ReplyRoomRoute }) {
   const { signalId } = route.params;
-  const { received, read, save } = useMessageStore();
+  const { received, quickReply, read, save } = useMessageStore();
   const message = (received.find((item) => item.id === signalId) ?? received[0]) as
     | LegacySignalMessage
     | undefined;
@@ -74,7 +74,10 @@ export function ReplyRoomScreen({ route }: { route: ReplyRoomRoute }) {
         <View style={styles.actions}>
           <RoomAction label="CONFIRM" onPress={() => read(message.id)} />
           <RoomAction label="SAVE LOG" onPress={() => save(message.id)} />
-          <RoomAction label="REPLY 8282" onPress={() => undefined} />
+          <RoomAction
+            label="REPLY 8282"
+            onPress={() => quickReply(message.id, "8282").catch(reportError)}
+          />
         </View>
       </View>
 
@@ -83,6 +86,11 @@ export function ReplyRoomScreen({ route }: { route: ReplyRoomRoute }) {
       </Text>
     </ScrollView>
   );
+}
+
+function reportError(err: unknown) {
+  const message = err instanceof Error ? err.message : "Unexpected error";
+  Alert.alert("BEEP-GET", message);
 }
 
 function RoomAction({ label, onPress }: { label: string; onPress: () => void }) {

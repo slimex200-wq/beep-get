@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,11 +14,16 @@ import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { relationshipToSlipFriend } from "@/lib/slipUiModels";
 
+const relationshipPresets = ["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"] as const;
+type RelationshipPreset = (typeof relationshipPresets)[number];
+
 export function PeopleScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { friends, loading, fetch, add } = useFriendStore();
   const [beepId, setBeepId] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
+  const inviteInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -33,17 +38,31 @@ export function PeopleScreen() {
   const addByBeepId = async () => {
     if (!profile || !beepId.trim()) return;
     try {
-      await add(profile.id, beepId.trim());
+      await add(profile.id, beepId.trim(), undefined, selectedPreset);
       setBeepId("");
-      Alert.alert("Friend added", "Close-circuit contact is ready.");
+      Alert.alert("Friend added", `${selectedPreset} contact is ready.`);
     } catch (err: any) {
       Alert.alert("Add failed", err?.message ?? "Try again.");
     }
   };
 
+  const refreshPeople = () => {
+    if (!profile) return;
+    fetch(profile.id).catch(reportError);
+  };
+
+  const focusInvite = () => {
+    inviteInputRef.current?.focus();
+  };
+
   return (
     <AppSurface>
-      <HeaderBar title="PEOPLE" right={loading ? "SYNC" : "+"} showDot />
+      <HeaderBar
+        title="PEOPLE"
+        right={loading ? "SYNC" : "+"}
+        showDot
+        onRightPress={loading ? refreshPeople : focusInvite}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.radarArea}>
           <DotRadar size={210} />
@@ -53,6 +72,7 @@ export function PeopleScreen() {
           <Text style={type.tinyMono}>INVITE BY BEEP ID</Text>
           <View style={styles.inviteRow}>
             <TextInput
+              ref={inviteInputRef}
               value={beepId}
               onChangeText={(value) => setBeepId(value.replace(/[^0-9]/g, ""))}
               keyboardType="number-pad"
@@ -90,8 +110,13 @@ export function PeopleScreen() {
 
         <Text style={type.tinyMono}>RELATIONSHIP PRESETS</Text>
         <View style={styles.chips}>
-          {["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"].map((label, index) => (
-            <ActionButton key={label} label={label} variant={index === 0 ? "dark" : "light"} />
+          {relationshipPresets.map((label) => (
+            <ActionButton
+              key={label}
+              label={label}
+              variant={selectedPreset === label ? "dark" : "light"}
+              onPress={() => setSelectedPreset(label)}
+            />
           ))}
         </View>
       </ScrollView>
