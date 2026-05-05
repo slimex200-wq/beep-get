@@ -36,6 +36,14 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
   );
   const signal = useMemo(() => (message ? messageToSlipSignal(message) : null), [message]);
 
+  const returnToToday = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "Today" });
+  };
+
   useEffect(() => {
     if (!profile || message) return;
     getMessageById(signalId)
@@ -56,9 +64,9 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
   if (!message || !signal) {
     return (
       <AppSurface>
-        <HeaderBar title="NO SIGNAL" left="BACK" right="--" />
+        <HeaderBar title="NO SIGNAL" left="BACK" right="--" onLeftPress={returnToToday} />
         <View style={styles.empty}>
-          <ActionButton label="BACK TO TODAY" variant="dark" onPress={() => navigation.goBack()} />
+          <ActionButton label="BACK TO TODAY" variant="dark" onPress={returnToToday} />
         </View>
       </AppSurface>
     );
@@ -66,7 +74,12 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
 
   return (
     <AppSurface>
-      <HeaderBar title={`NO. ${signal.code}`} left="BACK" right={(signal.status ?? "active").toUpperCase()} />
+      <HeaderBar
+        title={`NO. ${signal.code}`}
+        left="BACK"
+        right={(signal.status ?? "active").toUpperCase()}
+        onLeftPress={returnToToday}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SignalSlip signal={signal} title={signal.hasBlink ? "Incoming Blink" : "Incoming Beep"} />
         {signal.hasBlink ? <BlinkStrip /> : null}

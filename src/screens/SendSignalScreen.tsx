@@ -34,6 +34,7 @@ export function SendSignalScreen() {
   const [memo, setMemo] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
+  const previewMode = Boolean(profile && isUiPreviewUser(profile.id));
 
   useEffect(() => {
     if (!profile) return;
@@ -62,6 +63,18 @@ export function SendSignalScreen() {
     </View>
   );
 
+  const goBackToFlow = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "People" });
+  };
+
+  const openLogs = () => {
+    navigation.navigate("Main", { screen: "Logs" });
+  };
+
   const sendBeep = async () => {
     if (!profile || !recipient || !code || sending) return;
     setSending(true);
@@ -79,7 +92,7 @@ export function SendSignalScreen() {
   const sendBlink = async () => {
     if (!profile || !recipient || !code || sending || recording) return;
 
-    if (isUiPreviewUser(profile.id)) {
+    if (previewMode) {
       Alert.alert("Blink preview", `2 sec Blink previewed to ${recipient.name}`);
       return;
     }
@@ -150,6 +163,8 @@ export function SendSignalScreen() {
       onMemoChange={setMemo}
       onPreset={setCode}
       onSend={sendBeep}
+      onBack={goBackToFlow}
+      onOpenLogs={openLogs}
     />
   ) : (
     <SendBlinkScreen
@@ -168,6 +183,9 @@ export function SendSignalScreen() {
       onRequestPermission={() => requestCameraPermission()}
       onSend={sendBlink}
       onRetake={() => setMemo("")}
+      onBack={goBackToFlow}
+      onOpenLogs={openLogs}
+      previewMode={previewMode}
     />
   );
 }

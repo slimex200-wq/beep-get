@@ -90,7 +90,7 @@ export function PeopleScreen() {
 
         <Text style={type.tinyMono}>RELATIONSHIP PRESETS</Text>
         <View style={styles.chips}>
-          {["CLOSE", "BEST", "ROOMMATE", "FAMILY"].map((label, index) => (
+          {["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"].map((label, index) => (
             <ActionButton key={label} label={label} variant={index === 0 ? "dark" : "light"} />
           ))}
         </View>
