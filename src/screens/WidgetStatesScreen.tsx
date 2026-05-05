@@ -1,9 +1,13 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 import { AppSurface } from '../components/AppSurface';
+import { HeaderBar } from '../components/HeaderBar';
 import { WidgetCard, WidgetState } from '../components/WidgetCard';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 const states: Array<{ label: string; state: WidgetState }> = [
   { label: '01 비어 있음', state: 'empty' },
@@ -15,10 +19,12 @@ const states: Array<{ label: string; state: WidgetState }> = [
 ];
 
 export function WidgetStatesScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <AppSurface>
+      <HeaderBar title="WIDGET STATES" left="CLOSE" right="" onLeftPress={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.header}>WIDGET STATES</Text>
         <View style={styles.grid}>
           {states.map((item) => (
             <View key={item.state} style={styles.cell}>
@@ -37,11 +43,6 @@ const styles = StyleSheet.create({
     padding: spacing[5],
     paddingBottom: spacing[8],
     gap: spacing[5],
-  },
-  header: {
-    ...type.appTitle,
-    color: colors.ink,
-    textAlign: 'center',
   },
   grid: {
     gap: spacing[5],
