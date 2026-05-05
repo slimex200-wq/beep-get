@@ -2,11 +2,61 @@ import "react-native-url-polyfill/auto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 
+const SECURE_STORE_CHUNK_SIZE = 1800;
+const SECURE_STORE_CHUNK_MARKER = "__beepget_chunked_v1__:";
+
 const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+  getItem: async (key: string) => {
+    const value = await SecureStore.getItemAsync(key);
+    const chunkCount = readChunkCount(value);
+    if (!chunkCount) return value;
+
+    const chunks = await Promise.all(
+      Array.from({ length: chunkCount }, (_, index) =>
+        SecureStore.getItemAsync(getChunkKey(key, index)),
+      ),
+    );
+    if (chunks.some((chunk) => chunk == null)) return null;
+    return chunks.join("");
+  },
+  setItem: async (key: string, value: string) => {
+    await removeChunkedItem(key);
+    if (value.length <= SECURE_STORE_CHUNK_SIZE) {
+      await SecureStore.setItemAsync(key, value);
+      return;
+    }
+
+    const chunks = value.match(new RegExp(`.{1,${SECURE_STORE_CHUNK_SIZE}}`, "g")) ?? [];
+    await Promise.all(
+      chunks.map((chunk, index) => SecureStore.setItemAsync(getChunkKey(key, index), chunk)),
+    );
+    await SecureStore.setItemAsync(key, `${SECURE_STORE_CHUNK_MARKER}${chunks.length}`);
+  },
+  removeItem: (key: string) => removeChunkedItem(key),
 };
+
+function getChunkKey(key: string, index: number) {
+  return `${key}.__chunk.${index}`;
+}
+
+function readChunkCount(value: string | null): number | null {
+  if (!value?.startsWith(SECURE_STORE_CHUNK_MARKER)) return null;
+  const count = Number(value.slice(SECURE_STORE_CHUNK_MARKER.length));
+  return Number.isInteger(count) && count > 0 ? count : null;
+}
+
+async function removeChunkedItem(key: string) {
+  const value = await SecureStore.getItemAsync(key);
+  const chunkCount = readChunkCount(value);
+  if (chunkCount) {
+    await Promise.all(
+      Array.from({ length: chunkCount }, (_, index) =>
+        SecureStore.deleteItemAsync(getChunkKey(key, index)),
+      ),
+    );
+  }
+  await SecureStore.deleteItemAsync(key);
+}
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -77,6 +127,7 @@ export const supabase = isSupabaseConfigured
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
+        flowType: "pkce",
       },
     })
   : createMissingSupabaseClient();

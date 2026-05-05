@@ -37,7 +37,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Android widget action URLs now cover open reply room, confirm, save, and preset quick reply; the app handles these deep links and preview mode syncs native widget sample data after entering UI Preview.
 - The `DESIGN.md` slip screens are now wired to live app state instead of mock-only starter data: Today reads received Beep/Blink signals, People reads and adds relationships, Send uses the Beep/Blink send services, Reply Room fetches cold deep-link signals and sends quick replies, Logs reads saved signals, and Studio syncs widget data plus live reply slots.
 - App-side widget/reply quick replies are idempotent end-to-end through the remote `reply_with_preset_once` RPC on `beep-get-prod`; duplicate widget/app taps reuse the same actor/client-action reservation instead of creating duplicate Beeps.
-- OAuth is implemented at the app-code level with Supabase PKCE callback exchange through `expo-linking`; Google/Apple provider dashboard settings and production EAS public env values remain external configuration, not commit-safe repo changes.
+- OAuth is implemented with Supabase PKCE callback exchange through `expo-linking`; Google provider dashboard settings are configured for `beep-get-prod`, while Apple provider settings and production EAS public env values remain external configuration, not commit-safe repo changes.
 - `package-lock.json` has been security-refreshed with `npm audit fix`; the remaining audit findings are low/moderate Expo/Jest transitive issues whose suggested fix requires breaking major-version force changes.
 - Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
 - Android Glance widget colors must use Compose `Color(...)` values inside `ColorProvider`; Android `Color.parseColor(...)` ints are treated as resource IDs by RemoteViews hosts and can show `Can't load widget`.
@@ -49,7 +49,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 ## Next Work Queue
 
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
-- Add Google/Apple OAuth provider settings in Supabase for `beep-get-prod`.
+- Add Apple OAuth provider settings in Supabase for `beep-get-prod` if/when iOS ships.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
 - Add production thumbnail/3-frame extraction for real Blink captures; Android widget rendering already supports preview resource thumbnails plus local `file://`, `content://`, and `data:image` thumbnail payloads.
 - Decide whether v2 should reintroduce collection/season/icon rewards; production collection/season services currently return empty safe fallbacks because those tables are intentionally absent from the v2 migration.
@@ -69,7 +69,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Status labels are UI-only for now; v2 persists `profiles.status_icon`, not separate `status_broadcasts.label`.
 - Blink upload adapter and SendScreen preview UI are verified, but real authenticated Android camera/file upload and Supabase Storage policy behavior still need runtime QA.
 - iOS verification may require macOS.
-- OAuth provider dashboard setup cannot be completed from repo code alone; keep provider client IDs, Apple service IDs, and redirect allow-lists out of git.
+- Apple OAuth provider dashboard setup cannot be completed from repo code alone; keep provider secrets, Apple service IDs, and redirect allow-lists out of git.
 
 ## Last Verified
 
@@ -97,7 +97,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-05: UI/UX polish code pass verified with `npm.cmd run typecheck`, `npm.cmd test -- --runInBand` (214 tests), `npx.cmd --yes expo-doctor` (17/17), and `git diff --check` (CRLF warnings only). Android latest-JS screenshot QA on `emulator-5554` was attempted but blocked in this sandbox by Expo CLI `spawn EPERM`/Gradle timeout while producing an embedded QA APK; the emulator was restored to an installed release APK instead of leaving the red dev error screen.
 - 2026-05-05: Latest-JS Android UI Preview QA resumed on `emulator-5554` after removing the stale release APK. A signed debug APK with the generated JS bundle installed successfully, the current frameless cream login opened, UI Preview entered Today, Reply Room `BACK` returned to Today, Send `BACK` returned to Today, Send `LOGS` opened Logs, Blink preview showed `MOCK CAMERA / PREVIEW BLINK`, People showed `CLOSE FRIEND`, Studio `SMALL` opened `WIDGET STATES`, and `CLOSE` returned to Studio. Screenshots and UI dumps are under `C:/Users/slime/AppData/Local/Temp/beepget-goal-qa/`.
 - 2026-05-05: Verification rerun for the iOS-excluded Android/code QA goal: `npm.cmd run typecheck` passed, `npm.cmd test -- --runInBand` passed 214 tests, `npx.cmd --yes expo-doctor` exited 0, `npm.cmd audit --audit-level=high` exited 0 with only low/moderate Expo/Jest transitive findings that require breaking `--force` fixes, `git diff --check` passed, and Android logcat crash buffer stayed empty after the emulator flow. Full `:app:assembleDebug -PreactNativeArchitectures=x86_64` still timed out in this sandbox at `:app:buildCMakeDebug[x86_64]`, so the installed QA artifact used the already-built debug APK plus freshly generated bundle.
-- Known gap: Medium Android launcher widget action-chip placement, real authenticated Android camera/file upload against Supabase Storage, production thumbnail/3-frame extraction for real Blink captures, external OAuth/EAS/Play Console configuration, and iOS verification were not performed in this pass. The current goal explicitly excludes iOS.
+- 2026-05-06: Google OAuth callback was configured and verified against `beep-get-prod` on `emulator-5554`. Supabase authorize returned Google with client ID `887531606879-5onh1rqqq0dongjp4ci1eg0do8r6gnt5.apps.googleusercontent.com`, Google consent redirected back to `beepget://auth/callback`, the app exchanged the PKCE code into a Supabase session, and the Auth screen advanced to the `NICKNAME` profile creation state. The installed QA APK was patched from the existing debug APK with a freshly embedded JS bundle because Gradle `:app:assembleDebug` still stalls at `:app:buildCMakeDebug[x86_64]` in this sandbox. Verification: `npm.cmd run typecheck` passed, targeted auth/Supabase client tests passed, full `npm.cmd test -- --runInBand` passed 217 tests, `npx.cmd --yes expo-doctor` passed 17/17, `git diff --check` passed with CRLF warnings only, and screenshot evidence is at `C:/Users/slime/AppData/Local/Temp/beepget-oauth-pkce-verified-nickname.png`.
+- Known gap: Medium Android launcher widget action-chip placement, real authenticated Android camera/file upload against Supabase Storage, production thumbnail/3-frame extraction for real Blink captures, Apple OAuth/EAS/Play Console configuration, and iOS verification were not performed in this pass. The current goal explicitly excludes iOS.
 
 ## Related Vault Notes
 
