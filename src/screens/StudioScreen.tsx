@@ -39,7 +39,7 @@ export function StudioScreen() {
     : "empty";
   const slots = useMemo(() => {
     const codes = entries.map((entry) => entry.code).filter(Boolean);
-    return [...codes, "8282", "486", "1004"].slice(0, 4);
+    return Array.from(new Set([...codes, "8282", "486", "1004", "000"])).slice(0, 4);
   }, [entries]);
 
   const syncNow = () => {
