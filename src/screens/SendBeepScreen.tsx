@@ -20,6 +20,8 @@ type Props = {
   onMemoChange: (memo: string) => void;
   onPreset: (code: string) => void;
   onSend: () => void;
+  onBack: () => void;
+  onOpenLogs: () => void;
 };
 
 export function SendBeepScreen({
@@ -33,12 +35,14 @@ export function SendBeepScreen({
   onMemoChange,
   onPreset,
   onSend,
+  onBack,
+  onOpenLogs,
 }: Props) {
   const cleanCode = code || "____";
 
   return (
     <AppSurface>
-      <HeaderBar title="SEND BEEP" left="CLOSE" right="LOG" />
+      <HeaderBar title="SEND BEEP" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
       {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SlipFrame title="Outgoing Beep" accent={false}>

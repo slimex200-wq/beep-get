@@ -27,6 +27,9 @@ type Props = {
   onRequestPermission: () => void;
   onRetake: () => void;
   onSend: () => void;
+  onBack: () => void;
+  onOpenLogs: () => void;
+  previewMode?: boolean;
 };
 
 export function SendBlinkScreen({
@@ -45,10 +48,13 @@ export function SendBlinkScreen({
   onRequestPermission,
   onRetake,
   onSend,
+  onBack,
+  onOpenLogs,
+  previewMode = false,
 }: Props) {
   return (
     <AppSurface>
-      <HeaderBar title="SEND BLINK" left="CLOSE" right="LOG" />
+      <HeaderBar title="SEND BLINK" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
       {modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SlipFrame title="Outgoing Blink" accent={false}>
@@ -80,12 +86,19 @@ export function SendBlinkScreen({
             ) : (
               <View>
                 <CameraLensPanel />
-                <ActionButton
-                  label="ALLOW CAMERA"
-                  variant="dark"
-                  style={styles.permissionButton}
-                  onPress={onRequestPermission}
-                />
+                {previewMode ? (
+                  <View style={styles.previewCameraBadge}>
+                    <Text style={type.tinyMono}>MOCK CAMERA</Text>
+                    <Text style={styles.previewCameraText}>PREVIEW BLINK</Text>
+                  </View>
+                ) : (
+                  <ActionButton
+                    label="ALLOW CAMERA"
+                    variant="dark"
+                    style={styles.permissionButton}
+                    onPress={onRequestPermission}
+                  />
+                )}
               </View>
             )}
           </View>
@@ -180,6 +193,21 @@ const styles = StyleSheet.create({
   },
   permissionButton: {
     marginTop: spacing[3],
+  },
+  previewCameraBadge: {
+    marginTop: spacing[3],
+    minHeight: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.green,
+    backgroundColor: colors.lcd,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[1],
+  },
+  previewCameraText: {
+    ...type.buttonMono,
+    color: colors.ink,
   },
   presets: {
     flexDirection: "row",

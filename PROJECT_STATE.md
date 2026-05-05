@@ -42,6 +42,8 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
 - Android Glance widget colors must use Compose `Color(...)` values inside `ColorProvider`; Android `Color.parseColor(...)` ints are treated as resource IDs by RemoteViews hosts and can show `Can't load widget`.
 - Android small Glance widget now renders latest Blink payloads as `Incoming Blink` with an image thumbnail/strip preview and updates through `GlanceAppWidget.updateAll(...)` instead of shell-blocked/stale app-widget broadcasts.
+- The approved before/after UI/UX polish pass is implemented in app code: HeaderBar no longer exposes inert side controls, Send Beep/Blink use real `BACK` and `LOGS` actions, bottom tabs are larger with an active indicator, People uses `CLOSE FRIEND`, and UI Preview Blink shows `MOCK CAMERA / PREVIEW BLINK` instead of implying camera permission is mandatory.
+- Metro can now honor `METRO_MAX_WORKERS` from `metro.config.js` so Windows/sandbox QA can force single-worker bundling when child-process spawning hits `EPERM`.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -92,6 +94,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - 2026-05-05: Widget States modal escape path verified on `emulator-5554`; `npm.cmd run typecheck` passed, `npm.cmd test -- --runInBand` passed 214 tests, `agent-device` UI Preview opened Studio, `SMALL` opened `WIDGET STATES`, the new `CLOSE` header control returned to Studio, and screenshots were saved under `C:/Users/slime/AppData/Local/Temp/beepget-agent-device-qa/5554-widgetstates-*.png`.
 - 2026-05-02: PR #6 merged after CI `validate` passed; `EXPO_PUBLIC_UI_PREVIEW=1` Android release installed on `emulator-5554`, UI preview entered successfully, and screenshot QA confirmed the Swiss Paper home preview is foreground at `C:/Users/slime/AppData/Local/Temp/beep-get-swiss-home-v3.png`.
 - 2026-04-30: `npm test -- --runInBand` passed.
+- 2026-05-05: UI/UX polish code pass verified with `npm.cmd run typecheck`, `npm.cmd test -- --runInBand` (214 tests), `npx.cmd --yes expo-doctor` (17/17), and `git diff --check` (CRLF warnings only). Android latest-JS screenshot QA on `emulator-5554` was attempted but blocked in this sandbox by Expo CLI `spawn EPERM`/Gradle timeout while producing an embedded QA APK; the emulator was restored to an installed release APK instead of leaving the red dev error screen.
 - Known gap: Medium Android launcher widget action-chip placement and iOS verification were not performed.
 
 ## Related Vault Notes

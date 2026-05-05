@@ -1,4 +1,6 @@
 import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
@@ -16,7 +18,7 @@ import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 
 export type RootStackParamList = {
   Auth: undefined;
-  Main: undefined;
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
   FirstRun: undefined;
   Send: { friendId: string; friendName: string; friendNo?: string };
   ReplyRoom: { signalId: string };
@@ -34,56 +36,49 @@ export type MainTabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const tabLabels: Record<keyof MainTabParamList, string> = {
+  Today: "TODAY",
+  People: "PEOPLE",
+  Compose: "SEND",
+  Studio: "STUDIO",
+  Logs: "LOGS",
+};
+
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.stage,
           borderTopColor: "rgba(247,243,234,0.16)",
           paddingTop: 8,
+          minHeight: 62,
         },
         tabBarActiveTintColor: colors.paperWarm,
         tabBarInactiveTintColor: "rgba(247,243,234,0.45)",
         tabBarIcon: () => null,
         tabBarIconStyle: { height: 0 },
-        tabBarItemStyle: { paddingBottom: 8 },
-        tabBarLabelStyle: {
-          fontFamily: type.tinyMono.fontFamily,
-          fontSize: 9,
-          lineHeight: 11,
-          letterSpacing: 0.4,
-        },
+        tabBarItemStyle: { paddingBottom: 7 },
+        tabBarLabel: ({ focused, color }) => <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />,
         tabBarShowLabel: true,
-      }}
+      })}
     >
-      <Tab.Screen
-        name="Today"
-        component={TodayScreen}
-        options={{ tabBarLabel: "TODAY" }}
-      />
-      <Tab.Screen
-        name="People"
-        component={PeopleScreen}
-        options={{ tabBarLabel: "PEOPLE" }}
-      />
-      <Tab.Screen
-        name="Compose"
-        component={SendSignalScreen}
-        options={{ tabBarLabel: "SEND" }}
-      />
-      <Tab.Screen
-        name="Studio"
-        component={StudioScreen}
-        options={{ tabBarLabel: "STUDIO" }}
-      />
-      <Tab.Screen
-        name="Logs"
-        component={LogsScreen}
-        options={{ tabBarLabel: "LOGS" }}
-      />
+      <Tab.Screen name="Today" component={TodayScreen} />
+      <Tab.Screen name="People" component={PeopleScreen} />
+      <Tab.Screen name="Compose" component={SendSignalScreen} />
+      <Tab.Screen name="Studio" component={StudioScreen} />
+      <Tab.Screen name="Logs" component={LogsScreen} />
     </Tab.Navigator>
+  );
+}
+
+function TabLabel({ label, focused, color }: { label: string; focused: boolean; color: string }) {
+  return (
+    <View style={styles.tabLabelWrap}>
+      <Text style={[styles.tabLabel, { color }, focused && styles.tabLabelActive]}>{label}</Text>
+      <View style={[styles.tabIndicator, focused && styles.tabIndicatorActive]} />
+    </View>
   );
 }
 
@@ -118,3 +113,31 @@ export function RootNavigator() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  tabLabelWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 54,
+  },
+  tabLabel: {
+    fontFamily: type.tinyMono.fontFamily,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.65,
+    fontWeight: "700",
+  },
+  tabLabelActive: {
+    opacity: 1,
+  },
+  tabIndicator: {
+    width: 14,
+    height: 2,
+    marginTop: 3,
+    borderRadius: 2,
+    backgroundColor: colors.transparent,
+  },
+  tabIndicatorActive: {
+    backgroundColor: colors.paperWarm,
+  },
+});
