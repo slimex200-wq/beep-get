@@ -27,6 +27,7 @@ const linking = {
           Compose: "send",
           Studio: "studio",
           Logs: "logs",
+          Settings: "settings",
         },
       },
       FirstRun: "first-run",

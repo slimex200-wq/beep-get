@@ -29,7 +29,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
 
   setSession: (session) => {
-    set({ session, user: session?.user ?? null, loading: false });
+    set({
+      session,
+      user: session?.user ?? null,
+      profile: session ? get().profile : null,
+      loading: false,
+    });
   },
 
   enterPreviewMode: () => {

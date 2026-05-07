@@ -12,6 +12,7 @@ import { LogsScreen } from "@/screens/LogsScreen";
 import { PeopleScreen } from "@/screens/PeopleScreen";
 import { SendSignalScreen } from "@/screens/SendSignalScreen";
 import { ReplyRoomScreen as SlipReplyRoomScreen } from "@/screens/SlipReplyRoomScreen";
+import { SettingsScreen } from "@/screens/SettingsScreen";
 import { StudioScreen } from "@/screens/StudioScreen";
 import { TodayScreen } from "@/screens/TodayScreen";
 import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
@@ -31,6 +32,7 @@ export type MainTabParamList = {
   Compose: undefined;
   Studio: undefined;
   Logs: undefined;
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +44,7 @@ const tabLabels: Record<keyof MainTabParamList, string> = {
   Compose: "SEND",
   Studio: "STUDIO",
   Logs: "LOGS",
+  Settings: "ME",
 };
 
 function MainTabs() {
@@ -69,6 +72,7 @@ function MainTabs() {
       <Tab.Screen name="Compose" component={SendSignalScreen} />
       <Tab.Screen name="Studio" component={StudioScreen} />
       <Tab.Screen name="Logs" component={LogsScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
