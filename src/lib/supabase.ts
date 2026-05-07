@@ -98,6 +98,9 @@ function createMissingSupabaseClient(): SupabaseClient {
       exchangeCodeForSession: async () => result,
       signOut: async () => ({ error: null }),
     },
+    functions: {
+      invoke: async () => result,
+    },
     from: () => chain,
     rpc: async () => result,
     storage: {

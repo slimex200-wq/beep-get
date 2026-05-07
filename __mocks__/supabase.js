@@ -53,6 +53,9 @@ module.exports = {
       }),
       onAuthStateChange: jest.fn(),
     },
+    functions: {
+      invoke: jest.fn().mockResolvedValue({ data: { deleted: true }, error: null }),
+    },
     channel: jest.fn(() => ({
       on: jest.fn().mockReturnThis(),
       subscribe: jest.fn(),
