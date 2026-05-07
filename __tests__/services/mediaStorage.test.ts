@@ -96,6 +96,7 @@ describe("Supabase blink media storage", () => {
       p_byte_size: 700000,
       p_object_key: "sender-1/2026/05/03/receiver-1-abc123.mp4",
       p_thumbnail_key: null,
+      p_strip_keys: [],
     });
     expect(supabase.storage.from).toHaveBeenCalledWith("blink-originals");
     expect(target).toEqual({
@@ -119,6 +120,62 @@ describe("Supabase blink media storage", () => {
     await expect(
       storage.requestUploadTarget({ ...validRequest, durationMs: 3000 })
     ).rejects.toThrow("Blink video must be 2 seconds or shorter.");
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
+
+  it("persists thumbnail and strip keys when preparing a real Blink teaser", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: [{ signal_id: "signal-1", media_id: "media-1", object_key: "object.mp4" }],
+      error: null,
+    });
+    supabase.storage.from.mockReturnValue({
+      createSignedUploadUrl: jest.fn().mockResolvedValue({
+        data: { signedUrl: "https://upload.example", token: "upload-token" },
+        error: null,
+      }),
+    });
+
+    const storage = createSupabaseBlinkMediaStorage({
+      senderId: "sender-1",
+      randomId: () => "abc123",
+      now: () => new Date("2026-05-03T12:34:56.789Z"),
+    });
+
+    await storage.requestUploadTarget({
+      ...validRequest,
+      thumbnailKey: "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+      stripKeys: [
+        "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+        "sender-1/2026/05/03/receiver-1-strip-2.jpg",
+        "sender-1/2026/05/03/receiver-1-strip-3.jpg",
+      ],
+    });
+
+    expect(supabase.rpc).toHaveBeenCalledWith("create_blink_metadata", {
+      p_receiver_id: "receiver-1",
+      p_code: "8282",
+      p_memo: "blink",
+      p_duration_ms: 2000,
+      p_byte_size: 700000,
+      p_object_key: "sender-1/2026/05/03/receiver-1-abc123.mp4",
+      p_thumbnail_key: "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+      p_strip_keys: [
+        "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+        "sender-1/2026/05/03/receiver-1-strip-2.jpg",
+        "sender-1/2026/05/03/receiver-1-strip-3.jpg",
+      ],
+    });
+  });
+
+  it("rejects teaser metadata with more than three strip frames", async () => {
+    const storage = createSupabaseBlinkMediaStorage({ senderId: "sender-1" });
+
+    await expect(
+      storage.requestUploadTarget({
+        ...validRequest,
+        stripKeys: ["1.jpg", "2.jpg", "3.jpg", "4.jpg"],
+      })
+    ).rejects.toThrow("Blink strip can include at most 3 frames.");
     expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
@@ -156,9 +213,6 @@ describe("Supabase blink media storage", () => {
 
     const result = await storage.uploadToTarget(
       {
-        signalId: "signal-1",
-        mediaId: "media-1",
-        provider: "supabase_storage",
         bucket: "blink-originals",
         objectKey: "object.mp4",
         uploadUrl: "https://upload.example",
@@ -179,6 +233,31 @@ describe("Supabase blink media storage", () => {
       objectKey: "object.mp4",
       path: "object.mp4",
       fullPath: "blink-originals/object.mp4",
+    });
+  });
+
+  it("creates signed upload targets for thumbnail assets", async () => {
+    const createSignedUploadUrl = jest.fn().mockResolvedValue({
+      data: { signedUrl: "https://upload-thumb.example", token: "thumb-token" },
+      error: null,
+    });
+    supabase.storage.from.mockReturnValue({ createSignedUploadUrl });
+    const storage = createSupabaseBlinkMediaStorage({ senderId: "sender-1" });
+
+    const target = await storage.createSignedUploadTarget({
+      bucket: "blink-thumbs",
+      objectKey: "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+    });
+
+    expect(supabase.storage.from).toHaveBeenCalledWith("blink-thumbs");
+    expect(createSignedUploadUrl).toHaveBeenCalledWith(
+      "sender-1/2026/05/03/receiver-1-strip-1.jpg"
+    );
+    expect(target).toEqual({
+      bucket: "blink-thumbs",
+      objectKey: "sender-1/2026/05/03/receiver-1-strip-1.jpg",
+      uploadUrl: "https://upload-thumb.example",
+      uploadToken: "thumb-token",
     });
   });
 

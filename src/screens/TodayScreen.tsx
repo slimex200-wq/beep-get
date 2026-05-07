@@ -152,7 +152,12 @@ export function TodayScreen() {
 }
 
 function reportError(err: unknown) {
-  const message = err instanceof Error ? err.message : "Unexpected error";
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === "object" && "message" in err
+        ? String((err as { message?: unknown }).message)
+        : "Unexpected error";
   Alert.alert("BEEP-GET", message);
 }
 

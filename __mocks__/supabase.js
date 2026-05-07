@@ -25,7 +25,7 @@ const createMockStorageBucket = () => ({
     error: null,
   }),
   createSignedUrl: jest.fn().mockResolvedValue({
-    data: { signedUrl: "https://signed.example" },
+    data: { signedUrl: "https://signed.example/object.mp4" },
     error: null,
   }),
   uploadToSignedUrl: jest.fn().mockResolvedValue({

@@ -9,6 +9,7 @@ module.exports = {
     "^expo-haptics$": "<rootDir>/__mocks__/expo-haptics.js",
     "^expo-linking$": "<rootDir>/__mocks__/expo-linking.js",
     "^expo-secure-store$": "<rootDir>/__mocks__/expo-secure-store.js",
+    "^expo-video-thumbnails$": "<rootDir>/__mocks__/expo-video-thumbnails.js",
   },
   testPathIgnorePatterns: ["/node_modules/", "/ios/", "/android/"],
   transformIgnorePatterns: [

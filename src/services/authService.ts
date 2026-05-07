@@ -2,6 +2,14 @@ import { supabase } from "@/lib/supabase";
 import { BEEP_ID_LENGTH, MAX_BEEP_ID_RETRIES } from "@/lib/constants";
 import * as Linking from "expo-linking";
 
+export type UserProfile = {
+  id: string;
+  beep_id: string;
+  nickname: string;
+  status_icon: string;
+  active_skin_id: string | null;
+};
+
 export function generateBeepId(): string {
   const first = Math.floor(Math.random() * 9) + 1; // 1-9
   const rest = Array.from({ length: BEEP_ID_LENGTH - 1 }, () =>
@@ -53,29 +61,33 @@ async function signInWithOAuthProvider(provider: "google" | "apple") {
   return data;
 }
 
-export async function createUserProfile(userId: string, nickname: string) {
-  void userId;
-
+export async function createUserProfile(
+  userId: string,
+  nickname: string
+): Promise<UserProfile> {
   for (let attempt = 0; attempt < MAX_BEEP_ID_RETRIES; attempt++) {
     const beepId = generateBeepId();
     const { data, error } = await supabase.rpc("create_profile", {
       p_nickname: nickname,
       p_beep_id: beepId,
     });
-    if (!error) return readBeepId(data) ?? beepId;
+    if (!error) {
+      return readProfile(data) ?? getUserProfile(userId);
+    }
     if (error.code !== "23505") throw error;
   }
   throw new Error("beep_id 생성 실패: 최대 재시도 횟수 초과");
 }
 
-export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
+export async function getUserProfile(userId: string): Promise<UserProfile> {
+  const { data, error } = await supabase.rpc("get_own_profile");
   if (error) throw error;
-  return data;
+
+  const profile = readProfile(data);
+  if (!profile || profile.id !== userId) {
+    throw new Error("Profile not found");
+  }
+  return profile;
 }
 
 export async function signOut() {
@@ -83,12 +95,22 @@ export async function signOut() {
   if (error) throw error;
 }
 
-function readBeepId(data: unknown): string | null {
-  if (typeof data === "string") return data;
-  if (data && typeof data === "object" && "beep_id" in data) {
-    const beepId = (data as { beep_id?: unknown }).beep_id;
-    return typeof beepId === "string" ? beepId : null;
+function readProfile(data: unknown): UserProfile | null {
+  if (data && typeof data === "object") {
+    const row = data as Partial<UserProfile>;
+    if (typeof row.beep_id === "string") {
+      return {
+        id: typeof row.id === "string" ? row.id : "",
+        beep_id: row.beep_id,
+        nickname: typeof row.nickname === "string" ? row.nickname : "",
+        status_icon:
+          typeof row.status_icon === "string" ? row.status_icon : "online",
+        active_skin_id:
+          typeof row.active_skin_id === "string" ? row.active_skin_id : null,
+      };
+    }
   }
+
   return null;
 }
 

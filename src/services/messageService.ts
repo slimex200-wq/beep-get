@@ -1,6 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import { MAX_CODE_LENGTH, MAX_MEMO_LENGTH } from "@/lib/constants";
 import { buildQuickReplyClientActionId } from "@/lib/widgetActions";
+import {
+  BLINK_ORIGINALS_BUCKET,
+  BLINK_THUMBS_BUCKET,
+} from "@/services/mediaStorage";
 
 interface ValidationResult {
   valid: boolean;
@@ -127,7 +131,9 @@ export async function getReceivedMessages(userId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return mapSignalsToLegacyMessages(data as SignalRow[] | null);
+  return resolveSignedBlinkMediaUrls(
+    mapSignalsToLegacyMessages(data as SignalRow[] | null)
+  );
 }
 
 export async function getMessageById(messageId: string) {
@@ -140,7 +146,7 @@ export async function getMessageById(messageId: string) {
     .single();
 
   if (error) throw error;
-  return mapSignalToLegacyMessage(data as SignalRow);
+  return resolveSignedBlinkMediaUrl(mapSignalToLegacyMessage(data as SignalRow));
 }
 
 export async function markAsRead(messageId: string) {
@@ -168,7 +174,55 @@ export async function getSavedMessages(userId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return mapSignalsToLegacyMessages(data as SignalRow[] | null);
+  return resolveSignedBlinkMediaUrls(
+    mapSignalsToLegacyMessages(data as SignalRow[] | null)
+  );
+}
+
+async function resolveSignedBlinkMediaUrls(messages: LegacyMessage[]) {
+  return Promise.all(messages.map(resolveSignedBlinkMediaUrl));
+}
+
+async function resolveSignedBlinkMediaUrl(message: LegacyMessage) {
+  const media = message.media;
+  if (!media) return message;
+
+  const [thumbnailUri, signedStripFrameUris, playbackUri] = await Promise.all([
+    signStorageKey(BLINK_THUMBS_BUCKET, media.thumbnailUri),
+    Promise.all(
+      (media.stripFrameUris ?? []).map((uri) =>
+        signStorageKey(BLINK_THUMBS_BUCKET, uri)
+      )
+    ),
+    signStorageKey(BLINK_ORIGINALS_BUCKET, media.playbackUri),
+  ]);
+
+  return {
+    ...message,
+    media: {
+      ...media,
+      thumbnailUri,
+      stripFrameUris: signedStripFrameUris.filter(
+        (uri): uri is string => Boolean(uri)
+      ),
+      playbackUri,
+    },
+  };
+}
+
+async function signStorageKey(bucket: string, value?: string | null) {
+  if (!value || !shouldSignStorageKey(value)) return value ?? null;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(value, 60);
+
+  if (error) throw error;
+  return data?.signedUrl ?? value;
+}
+
+function shouldSignStorageKey(value: string) {
+  return !/^(https?:|file:|content:|data:|asset:|preview-)/i.test(value);
 }
 
 function mapSignalsToLegacyMessages(signals: SignalRow[] | null): LegacyMessage[] {
