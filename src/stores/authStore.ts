@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import { createUserProfile, getUserProfile } from "@/services/authService";
+import type { UserProfile } from "@/services/authService";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   createUiPreviewSession,
@@ -9,14 +10,6 @@ import {
   uiPreviewProfile,
 } from "@/lib/uiPreview";
 import { syncWidgetData } from "@/services/widgetService";
-
-interface UserProfile {
-  id: string;
-  beep_id: string;
-  nickname: string;
-  status_icon: string;
-  active_skin_id: string | null;
-}
 
 interface AuthState {
   session: Session | null;
@@ -64,8 +57,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initProfile: async (nickname: string) => {
     const user = get().user;
     if (!user) throw new Error("Not authenticated");
-    const beepId = await createUserProfile(user.id, nickname);
-    await get().fetchProfile();
-    return beepId;
+    const profile = await createUserProfile(user.id, nickname);
+    set({ profile });
+    return profile.beep_id;
   },
 }));

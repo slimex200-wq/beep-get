@@ -182,6 +182,13 @@ describe("getReceivedMessages", () => {
   });
 
   it("maps blink media teaser fields", async () => {
+    const createSignedUrl = jest.fn((path: string) =>
+      Promise.resolve({
+        data: { signedUrl: `https://signed.example/${path}` },
+        error: null,
+      })
+    );
+    supabase.storage.from.mockReturnValue({ createSignedUrl });
     const chain = createMockChain({
       data: [
         {
@@ -207,10 +214,15 @@ describe("getReceivedMessages", () => {
     expect(result[0].media).toEqual({
       durationMs: 2000,
       status: "processed",
-      thumbnailUri: "thumb.jpg",
-      stripFrameUris: ["a.jpg", "b.jpg"],
-      playbackUri: "video.mp4",
+      thumbnailUri: "https://signed.example/thumb.jpg",
+      stripFrameUris: [
+        "https://signed.example/a.jpg",
+        "https://signed.example/b.jpg",
+      ],
+      playbackUri: "https://signed.example/video.mp4",
     });
+    expect(supabase.storage.from).toHaveBeenCalledWith("blink-thumbs");
+    expect(supabase.storage.from).toHaveBeenCalledWith("blink-originals");
   });
 
   it("returns empty array when data is null", async () => {

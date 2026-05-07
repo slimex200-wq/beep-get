@@ -1,4 +1,4 @@
-const { supabase, createMockChain } = require("@/lib/supabase");
+const { supabase } = require("@/lib/supabase");
 const Linking = require("expo-linking");
 import {
   createUserProfile,
@@ -114,9 +114,15 @@ describe("exchangeOAuthCodeFromUrl", () => {
 });
 
 describe("createUserProfile", () => {
-  it("creates profile through the v2 RPC and returns beep_id", async () => {
+  it("creates profile through the v2 RPC and returns the profile row", async () => {
     supabase.rpc.mockResolvedValue({
-      data: { id: "u1", beep_id: "12345678", nickname: "nick" },
+      data: {
+        id: "u1",
+        beep_id: "12345678",
+        nickname: "nick",
+        status_icon: "online",
+        active_skin_id: null,
+      },
       error: null,
     });
 
@@ -126,7 +132,13 @@ describe("createUserProfile", () => {
       p_nickname: "nick",
       p_beep_id: expect.stringMatching(/^\d{8}$/),
     });
-    expect(result).toBe("12345678");
+    expect(result).toEqual({
+      id: "u1",
+      beep_id: "12345678",
+      nickname: "nick",
+      status_icon: "online",
+      active_skin_id: null,
+    });
   });
 
   it("retries on duplicate beep_id (23505) and succeeds", async () => {
@@ -134,14 +146,33 @@ describe("createUserProfile", () => {
       .mockResolvedValueOnce({ data: null, error: { code: "23505", message: "dup" } })
       .mockResolvedValueOnce({ data: { beep_id: "99999999" }, error: null });
 
-    await expect(createUserProfile("u1", "nick")).resolves.toBe("99999999");
+    await expect(createUserProfile("u1", "nick")).resolves.toEqual(
+      expect.objectContaining({ beep_id: "99999999" })
+    );
     expect(supabase.rpc).toHaveBeenCalledTimes(2);
   });
 
-  it("returns the generated beep_id when the RPC returns no object", async () => {
-    supabase.rpc.mockResolvedValue({ data: null, error: null });
+  it("returns a fallback profile when the RPC returns no object", async () => {
+    supabase.rpc
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: {
+          id: "u1",
+          beep_id: "12345678",
+          nickname: "nick",
+          status_icon: "online",
+          active_skin_id: null,
+        },
+        error: null,
+      });
 
-    await expect(createUserProfile("u1", "nick")).resolves.toMatch(/^\d{8}$/);
+    await expect(createUserProfile("u1", "nick")).resolves.toEqual(
+      expect.objectContaining({
+        id: "u1",
+        beep_id: "12345678",
+        nickname: "nick",
+      })
+    );
   });
 
   it("throws after max retries exceeded", async () => {
@@ -161,24 +192,32 @@ describe("createUserProfile", () => {
 });
 
 describe("getUserProfile", () => {
-  it("returns profile from the v2 profiles table", async () => {
-    const profile = { id: "u1", nickname: "test", beep_id: "12345678" };
-    const chain = createMockChain({ data: profile, error: null });
-    supabase.from.mockReturnValue(chain);
+  it("returns profile from the own-profile RPC", async () => {
+    const profile = {
+      id: "u1",
+      nickname: "test",
+      beep_id: "12345678",
+      status_icon: "online",
+      active_skin_id: null,
+    };
+    supabase.rpc.mockResolvedValue({ data: profile, error: null });
 
     const result = await getUserProfile("u1");
 
-    expect(supabase.from).toHaveBeenCalledWith("profiles");
-    expect(chain.eq).toHaveBeenCalledWith("id", "u1");
-    expect(chain.single).toHaveBeenCalled();
+    expect(supabase.rpc).toHaveBeenCalledWith("get_own_profile");
     expect(result).toEqual(profile);
   });
 
   it("throws on error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "not found" } });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "not found" } });
 
     await expect(getUserProfile("u1")).rejects.toEqual({ message: "not found" });
+  });
+
+  it("throws when no profile row is returned", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
+
+    await expect(getUserProfile("u1")).rejects.toThrow("Profile not found");
   });
 });
 

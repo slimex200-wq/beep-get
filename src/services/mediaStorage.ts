@@ -1,10 +1,12 @@
 import {
+  BLINK_STRIP_FRAME_COUNT,
   validateBlinkUpload,
   type BlinkUploadValidation,
 } from "@/lib/beepBlinkLimits";
 import { supabase } from "@/lib/supabase";
 
 export const BLINK_ORIGINALS_BUCKET = "blink-originals";
+export const BLINK_THUMBS_BUCKET = "blink-thumbs";
 
 export type MediaProvider = "supabase_storage";
 
@@ -16,17 +18,21 @@ export type BlinkUploadRequest = {
   byteSize: number;
   mimeType?: string | null;
   thumbnailKey?: string | null;
+  stripKeys?: string[] | null;
   extension?: string | null;
 };
 
-export type BlinkUploadTarget = {
-  signalId: string;
-  mediaId: string;
-  provider: MediaProvider;
+export type BlinkSignedUploadTarget = {
   bucket: string;
   objectKey: string;
   uploadUrl: string;
   uploadToken: string;
+};
+
+export type BlinkUploadTarget = BlinkSignedUploadTarget & {
+  signalId: string;
+  mediaId: string;
+  provider: MediaProvider;
 };
 
 export type BlinkPlaybackReference = {
@@ -70,8 +76,12 @@ type CreateBlinkMetadataRow = {
 
 export interface BlinkMediaStorage {
   requestUploadTarget(request: BlinkUploadRequest): Promise<BlinkUploadTarget>;
+  createSignedUploadTarget(input: {
+    bucket: string;
+    objectKey: string;
+  }): Promise<BlinkSignedUploadTarget>;
   uploadToTarget(
-    target: BlinkUploadTarget,
+    target: BlinkSignedUploadTarget,
     body: Blob,
     options?: BlinkUploadOptions
   ): Promise<BlinkUploadResult>;
@@ -126,6 +136,11 @@ export function createSupabaseBlinkMediaStorage(
       }
 
       const bucket = options.bucket ?? BLINK_ORIGINALS_BUCKET;
+      const stripKeys = normalizeStripKeys(request.stripKeys);
+      const thumbnailKey = normalizeOptionalObjectKey(
+        request.thumbnailKey ?? stripKeys[0] ?? null,
+        "thumbnail key"
+      );
       const objectKey = createBlinkObjectKey({
         senderId: options.senderId,
         receiverId: request.receiverId,
@@ -141,17 +156,17 @@ export function createSupabaseBlinkMediaStorage(
         p_duration_ms: request.durationMs,
         p_byte_size: request.byteSize,
         p_object_key: objectKey,
-        p_thumbnail_key: request.thumbnailKey ?? null,
+        p_thumbnail_key: thumbnailKey,
+        p_strip_keys: stripKeys,
       });
 
       if (error) throw error;
 
       const metadata = readCreateBlinkMetadata(data);
-      const storage = supabase.storage.from(bucket);
-      const { data: uploadData, error: uploadError } =
-        await storage.createSignedUploadUrl(metadata.object_key);
-
-      if (uploadError) throw uploadError;
+      const uploadTarget = await createSignedUploadTargetFor({
+        bucket,
+        objectKey: metadata.object_key,
+      });
 
       return {
         signalId: metadata.signal_id,
@@ -159,10 +174,12 @@ export function createSupabaseBlinkMediaStorage(
         provider: "supabase_storage",
         bucket,
         objectKey: metadata.object_key,
-        uploadUrl: uploadData?.signedUrl ?? "",
-        uploadToken: uploadData?.token ?? "",
+        uploadUrl: uploadTarget.uploadUrl,
+        uploadToken: uploadTarget.uploadToken,
       };
     },
+
+    createSignedUploadTarget: createSignedUploadTargetFor,
 
     uploadToTarget: async (target, body, uploadOptions) => {
       const { data, error } = await supabase.storage
@@ -212,6 +229,28 @@ export function createSupabaseBlinkMediaStorage(
   };
 }
 
+async function createSignedUploadTargetFor({
+  bucket,
+  objectKey,
+}: {
+  bucket: string;
+  objectKey: string;
+}): Promise<BlinkSignedUploadTarget> {
+  const normalizedObjectKey = normalizeObjectKey(objectKey, "object key");
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUploadUrl(normalizedObjectKey);
+
+  if (error) throw error;
+
+  return {
+    bucket,
+    objectKey: normalizedObjectKey,
+    uploadUrl: data?.signedUrl ?? "",
+    uploadToken: data?.token ?? "",
+  };
+}
+
 function readCreateBlinkMetadata(data: unknown): CreateBlinkMetadataRow {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row || typeof row !== "object") {
@@ -257,6 +296,37 @@ function extensionFromMimeType(mimeType?: string | null): string {
 function normalizeExtension(extension?: string | null): string {
   const normalized = (extension ?? "mp4").replace(/^\./, "").toLowerCase();
   return sanitizePathPart(normalized) || "mp4";
+}
+
+function normalizeStripKeys(keys?: string[] | null): string[] {
+  if (!keys) return [];
+  if (keys.length > BLINK_STRIP_FRAME_COUNT) {
+    throw new Error("Blink strip can include at most 3 frames.");
+  }
+
+  return keys.map((key) => normalizeObjectKey(key, "strip key"));
+}
+
+function normalizeOptionalObjectKey(
+  key: string | null | undefined,
+  label: string
+): string | null {
+  if (key === null || key === undefined) return null;
+  return normalizeObjectKey(key, label);
+}
+
+function normalizeObjectKey(key: string, label: string): string {
+  const normalized = key.trim();
+  if (
+    !normalized ||
+    normalized.startsWith("/") ||
+    normalized.includes("..") ||
+    normalized.includes("\\")
+  ) {
+    throw new Error(`Invalid Blink ${label}.`);
+  }
+
+  return normalized;
 }
 
 function sanitizePathPart(value: string): string {
