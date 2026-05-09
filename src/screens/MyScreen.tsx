@@ -252,7 +252,7 @@ function PackDetail({
         {pack.shortCopy} 스킨은 앱 화면을 바꾸는 장식이 아니라, 친구 홈 위젯에 도착하는 신호의 표정입니다.
       </Text>
 
-      <View style={styles.detailGrid}>
+      <View style={styles.detailSlotGrid}>
         <View style={styles.detailBlock}>
           <Text style={[styles.blockLabel, dark && styles.glowText]}>REPLY SLOTS</Text>
           <View style={styles.slotRow}>
@@ -276,8 +276,8 @@ function PackDetail({
         </View>
       </View>
 
-      <View style={styles.detailGrid}>
-        <View style={styles.detailBlock}>
+      <View style={styles.detailMediaStack}>
+        <View style={styles.detailBlockFull}>
           <Text style={[styles.blockLabel, dark && styles.glowText]}>BEEPY EMOTE</Text>
           <View style={styles.emoteRow}>
             {pack.emotes.map((emote, index) => (
@@ -295,7 +295,7 @@ function PackDetail({
           </View>
         </View>
 
-        <View style={styles.detailBlock}>
+        <View style={styles.detailBlockFull}>
           <Text style={[styles.blockLabel, dark && styles.glowText]}>BLINK 3-CUT</Text>
           <MiniFilmStrip tone={pack.tone} />
         </View>
@@ -1005,13 +1005,21 @@ const styles = StyleSheet.create({
     ...type.body,
     color: colors.muted,
   },
-  detailGrid: {
+  detailSlotGrid: {
     flexDirection: "row",
     gap: spacing[5],
+    alignItems: "flex-start",
   },
   detailBlock: {
     flex: 1,
+    minWidth: 0,
     gap: spacing[4],
+  },
+  detailBlockFull: {
+    gap: spacing[4],
+  },
+  detailMediaStack: {
+    gap: spacing[5],
   },
   blockLabel: {
     ...type.tinyMono,
@@ -1048,7 +1056,8 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   emoteBox: {
-    width: 58,
+    flex: 1,
+    minWidth: 0,
     height: 38,
     borderWidth: 1,
     borderStyle: "dashed",
@@ -1066,6 +1075,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   filmStrip: {
+    width: "100%",
     minHeight: 48,
     borderRadius: radius.control,
     backgroundColor: colors.ink,
