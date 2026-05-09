@@ -18,7 +18,7 @@ export function BlinkStrip({ compact = false, frameUris }: Props) {
         <Text style={type.tinyMono}>Blink  2.0s</Text>
         <Text style={type.tinyMono}>{displayFrames.length} / 3</Text>
       </View>
-      <View style={styles.frames}>
+      <View style={[styles.frames, compact && styles.compactFrames]}>
         {displayFrames.map((frame, index) => (
           <View key={`${frame}-${index}`} style={[styles.frame, compact && styles.compactFrame]}>
             {isDisplayableUri(frame) ? (
@@ -68,12 +68,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   frames: {
+    height: 86,
     flexDirection: 'row',
     gap: spacing[3],
   },
+  compactFrames: {
+    height: 64,
+  },
   frame: {
     flex: 1,
-    minHeight: 76,
     borderRadius: radius.control,
     backgroundColor: colors.ink,
     borderWidth: 1,
@@ -87,7 +90,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   compactFrame: {
-    minHeight: 44,
+    borderRadius: radius.control - 2,
   },
   fakePhoto: {
     width: '100%',
@@ -106,8 +109,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#55524C',
   },
   fakePhotoHeadCompact: {
-    width: 15,
-    height: 15,
+    width: 25,
+    height: 25,
   },
   fakePhotoBody: {
     width: 112,
@@ -120,9 +123,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(247,243,234,0.56)',
   },
   fakePhotoBodyCompact: {
-    width: 28,
-    height: 12,
+    width: 48,
+    height: 22,
     marginTop: -2,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   fakePhotoFlash: {
     position: 'absolute',
