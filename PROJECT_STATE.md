@@ -50,6 +50,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Account controls are now visible in the app under the `ME` tab: share Beep ID, log out, privacy policy, web deletion request, and in-app account deletion.
 - Account deletion is implemented through the deployed Supabase Edge Function `delete-account`; it verifies the authenticated user, removes Blink Storage objects, deletes the Supabase Auth user, and records a hashed deletion request audit row without retaining raw user ID after completion.
 - Remote `beep-get-prod` migrations are deployed through `20260507123000_account_deletion_requests.sql`; the remote database dry-run reports up to date.
+- Approved next product direction is captured in `docs/plans/2026-05-08-four-tab-identity-shop.md`: reduce primary navigation to `TODAY / SEND / PEOPLE / MY`, make `MY` the widget/personalization/account room, support short text reply slots, and frame monetization as official identity packs rather than seasonal scarcity.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -62,6 +63,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build for real-device pacing and medium-widget placement.
+- Implement the four-tab IA and `MY` identity room from `docs/plans/2026-05-08-four-tab-identity-shop.md`; keep the first pass to locked/mock identity packs and editable short reply slots before adding real IAP.
 - Add native background widget direct-send actions only after native auth/session sharing and retry UX are deliberately designed; the current safe implementation routes widget taps through app-owned deep links backed by server idempotency.
 - Prefer Android/web/Jest checks when iOS cannot be verified locally.
 - Avoid broad app rewrites while platform verification is limited.
