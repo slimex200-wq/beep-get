@@ -53,6 +53,14 @@ export function StudioScreen() {
     Alert.alert("Widget synced", "Latest slip data was pushed to the native widget.");
   };
 
+  const closeToMy = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "My" });
+  };
+
   const sendSlotReply = async (code: string) => {
     if (!latest) {
       Alert.alert("No incoming slip", "Receive a Beep or Blink before testing reply slots.");
@@ -69,7 +77,14 @@ export function StudioScreen() {
 
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET STUDIO" right="SYNC" showDot onRightPress={syncNow} />
+      <HeaderBar
+        title="BEEP-GET STUDIO"
+        left="CLOSE"
+        right="SYNC"
+        showDot
+        onLeftPress={closeToMy}
+        onRightPress={syncNow}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.panel}>
           <Text style={type.metaValue}>RUNTIME CHECKLIST</Text>
