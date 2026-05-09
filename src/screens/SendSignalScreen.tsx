@@ -7,6 +7,7 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { HeaderBar } from "@/components/HeaderBar";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import { isUiPreviewUser } from "@/lib/uiPreview";
@@ -142,14 +143,26 @@ export function SendSignalScreen() {
   if (!recipient) {
     return (
       <AppSurface>
+        <HeaderBar
+          title="SEND SIGNAL"
+          left="BACK"
+          right="PEOPLE"
+          onLeftPress={goBackToFlow}
+          onRightPress={() => navigation.navigate("Main", { screen: "People" })}
+        />
         <View style={styles.empty}>
-          <Text style={type.metaValue}>NO RECIPIENT</Text>
-          <Text style={type.bodyMuted}>Add a close-circuit friend before sending a slip.</Text>
-          <ActionButton
-            label="OPEN PEOPLE"
-            variant="dark"
-            onPress={() => navigation.navigate("Main", { screen: "People" })}
-          />
+          <View style={styles.emptyPanel}>
+            <Text style={type.metaValue}>NO RECIPIENT</Text>
+            <Text style={type.bodyMuted}>
+              Add a close-circuit friend first. Pick someone from People, then send a Beep or
+              2-second Blink.
+            </Text>
+            <ActionButton
+              label="OPEN PEOPLE"
+              variant="dark"
+              onPress={() => navigation.navigate("Main", { screen: "People" })}
+            />
+          </View>
         </View>
       </AppSurface>
     );
@@ -235,8 +248,17 @@ const styles = StyleSheet.create({
   },
   empty: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     gap: spacing[4],
     padding: spacing[6],
+    paddingTop: spacing[20] * 4,
+  },
+  emptyPanel: {
+    gap: spacing[4],
+    padding: spacing[5],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.control,
+    backgroundColor: colors.paperWarm,
   },
 });

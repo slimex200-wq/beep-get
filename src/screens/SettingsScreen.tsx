@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { HeaderBar } from "@/components/HeaderBar";
 import { StatusDot } from "@/components/StatusDot";
 import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
 import { signOut } from "@/services/authService";
@@ -17,8 +20,17 @@ const ACCOUNT_DELETION_URL =
   process.env.EXPO_PUBLIC_ACCOUNT_DELETION_URL ?? "https://hypeboyo.com/beep-get/delete-account";
 
 export function SettingsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, setSession } = useAuthStore();
   const [busy, setBusy] = useState(false);
+
+  const closeToMy = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "My" });
+  };
 
   const shareBeepId = async () => {
     if (!profile) return;
@@ -75,7 +87,13 @@ export function SettingsScreen() {
 
   return (
     <AppSurface>
-      <HeaderBar title="ACCOUNT" right={busy ? "..." : "ME"} showDot />
+      <HeaderBar
+        title="ACCOUNT"
+        left="CLOSE"
+        right={busy ? "..." : "ME"}
+        showDot
+        onLeftPress={closeToMy}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.slip}>
           <View style={styles.slipHeader}>

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
@@ -7,11 +9,13 @@ import { AppSurface } from "@/components/AppSurface";
 import { HeaderBar } from "@/components/HeaderBar";
 import { StatusDot } from "@/components/StatusDot";
 import { TicketLogRow } from "@/components/TicketLogRow";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 
 export function LogsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { saved, fetchSaved } = useMessageStore();
 
@@ -30,9 +34,23 @@ export function LogsScreen() {
     fetchSaved(profile.id).catch(reportError);
   };
 
+  const closeToMy = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "My" });
+  };
+
   return (
     <AppSurface>
-      <HeaderBar title="BEEP-GET LOG" right="SAVED" onRightPress={refresh} />
+      <HeaderBar
+        title="BEEP-GET LOG"
+        left="CLOSE"
+        right="SAVED"
+        onLeftPress={closeToMy}
+        onRightPress={refresh}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
           <Text style={type.metaValue}>SLIP LEDGER</Text>
