@@ -20,4 +20,17 @@ describe("identityPacks", () => {
     expect(photoBooth?.slots).toEqual(["3 CUTS", "OPEN", "REPLY"]);
     expect(identityPacks.every((pack) => pack.slots.length === 3)).toBe(true);
   });
+
+  it("keeps every purchasable pack structurally distinct, not just recolored", () => {
+    const layouts = identityPacks.map((pack) => pack.layout);
+
+    expect(new Set(layouts).size).toBe(identityPacks.length);
+    expect(layouts).toEqual([
+      "classic-slip",
+      "school-note",
+      "cherry-sticker",
+      "photo-booth",
+      "night-signal",
+    ]);
+  });
 });

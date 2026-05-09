@@ -145,7 +145,11 @@ export function SendSignalScreen() {
         <View style={styles.empty}>
           <Text style={type.metaValue}>NO RECIPIENT</Text>
           <Text style={type.bodyMuted}>Add a close-circuit friend before sending a slip.</Text>
-          <ActionButton label="OPEN PEOPLE" variant="dark" onPress={() => navigation.navigate("Main")} />
+          <ActionButton
+            label="OPEN PEOPLE"
+            variant="dark"
+            onPress={() => navigation.navigate("Main", { screen: "People" })}
+          />
         </View>
       </AppSurface>
     );
