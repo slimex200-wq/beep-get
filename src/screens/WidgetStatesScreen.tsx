@@ -27,7 +27,7 @@ export function WidgetStatesScreen() {
       navigation.goBack();
       return;
     }
-    navigation.navigate("Main", { screen: "Studio" });
+    navigation.navigate("StudioTools");
   };
 
   return (

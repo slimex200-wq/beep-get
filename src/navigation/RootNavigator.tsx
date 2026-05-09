@@ -9,6 +9,7 @@ import { type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
 import { FirstRunScreen } from "@/screens/FirstRunScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
+import { MyScreen } from "@/screens/MyScreen";
 import { PeopleScreen } from "@/screens/PeopleScreen";
 import { SendSignalScreen } from "@/screens/SendSignalScreen";
 import { ReplyRoomScreen as SlipReplyRoomScreen } from "@/screens/SlipReplyRoomScreen";
@@ -24,15 +25,16 @@ export type RootStackParamList = {
   Send: { friendId: string; friendName: string; friendNo?: string };
   ReplyRoom: { signalId: string };
   WidgetStates: { size?: "small" | "medium" } | undefined;
+  Logs: undefined;
+  StudioTools: undefined;
+  Account: undefined;
 };
 
 export type MainTabParamList = {
   Today: undefined;
-  People: undefined;
   Compose: undefined;
-  Studio: undefined;
-  Logs: undefined;
-  Settings: undefined;
+  People: undefined;
+  My: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,11 +42,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const tabLabels: Record<keyof MainTabParamList, string> = {
   Today: "TODAY",
-  People: "PEOPLE",
   Compose: "SEND",
-  Studio: "STUDIO",
-  Logs: "LOGS",
-  Settings: "ME",
+  People: "PEOPLE",
+  My: "MY",
 };
 
 function MainTabs() {
@@ -68,11 +68,9 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Today" component={TodayScreen} />
-      <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Compose" component={SendSignalScreen} />
-      <Tab.Screen name="Studio" component={StudioScreen} />
-      <Tab.Screen name="Logs" component={LogsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="People" component={PeopleScreen} />
+      <Tab.Screen name="My" component={MyScreen} />
     </Tab.Navigator>
   );
 }
@@ -110,6 +108,21 @@ export function RootNavigator() {
           <Stack.Screen
             name="WidgetStates"
             component={WidgetStatesScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="Logs"
+            component={LogsScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="StudioTools"
+            component={StudioScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="Account"
+            component={SettingsScreen}
             options={{ presentation: "modal" }}
           />
         </>

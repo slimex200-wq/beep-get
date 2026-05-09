@@ -72,7 +72,7 @@ export function SendSignalScreen() {
   };
 
   const openLogs = () => {
-    navigation.navigate("Main", { screen: "Logs" });
+    navigation.navigate("Logs");
   };
 
   const sendBeep = async () => {
