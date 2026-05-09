@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,6 +21,8 @@ export function MyScreen() {
   const { profile } = useAuthStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const [selectedSlug, setSelectedSlug] = useState(DEFAULT_PACK);
+  const scrollRef = useRef<ScrollView>(null);
+  const detailYRef = useRef(0);
 
   useEffect(() => {
     if (!profile) return;
@@ -54,9 +56,16 @@ export function MyScreen() {
     );
   };
 
+  const handleSelectPack = (slug: string) => {
+    setSelectedSlug(slug);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(detailYRef.current - spacing[6], 0), animated: true });
+    });
+  };
+
   return (
     <AppSurface backgroundColor={colors.paper} statusBarStyle="dark">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.headerText}>
             <View style={styles.headerKickerRow}>
@@ -89,19 +98,26 @@ export function MyScreen() {
               key={pack.slug}
               pack={pack}
               selected={pack.slug === selectedPack.slug}
-              onPress={() => setSelectedSlug(pack.slug)}
+              onPress={() => handleSelectPack(pack.slug)}
             />
           ))}
         </View>
 
-        <PackDetail pack={selectedPack} replySlots={replySlots} onApply={handleApply} />
+        <View onLayout={(event) => (detailYRef.current = event.nativeEvent.layout.y)}>
+          <PackDetail pack={selectedPack} replySlots={replySlots} onApply={handleApply} />
+        </View>
 
         <View style={styles.toolPanel}>
-          <Text style={styles.toolTitle}>ROOM TOOLS</Text>
-          <ToolButton label="WIDGET PREVIEWS" onPress={() => navigation.navigate("WidgetStates", { size: "medium" })} />
-          <ToolButton label="ARCHIVE LOGS" onPress={() => navigation.navigate("Logs")} />
-          <ToolButton label="STUDIO TOOLS" onPress={() => navigation.navigate("StudioTools")} />
-          <ToolButton label="ACCOUNT / DELETE" onPress={() => navigation.navigate("Account")} />
+          <View style={styles.toolHeaderRow}>
+            <Text style={styles.toolTitle}>ROOM TOOLS</Text>
+            <Text style={styles.toolHint}>OPTIONAL</Text>
+          </View>
+          <View style={styles.toolGrid}>
+            <ToolButton label="WIDGET" onPress={() => navigation.navigate("WidgetStates", { size: "medium" })} />
+            <ToolButton label="LOGS" onPress={() => navigation.navigate("Logs")} />
+            <ToolButton label="STUDIO" onPress={() => navigation.navigate("StudioTools")} />
+            <ToolButton label="ACCOUNT" onPress={() => navigation.navigate("Account")} />
+          </View>
         </View>
       </ScrollView>
     </AppSurface>
@@ -239,75 +255,80 @@ function PackDetail({
   const dark = pack.tone === "night";
 
   return (
-    <View style={[styles.detailPanel, pack.tone === "night" && styles.detailPanelDark]}>
-      <View style={styles.detailHeader}>
-        <View>
-          <Text style={[styles.detailKicker, dark && styles.glowText]}>PACK DETAIL</Text>
-          <Text style={[styles.detailTitle, dark && styles.darkText]}>{pack.name}</Text>
-        </View>
-        <Text style={[styles.detailPrice, dark && styles.glowText]}>{pack.priceLabel}</Text>
+    <View style={[styles.detailPanel, detailToneStyle[pack.tone], pack.tone === "night" && styles.detailPanelDark]}>
+      <View pointerEvents="none" style={styles.detailDecor}>
+        <PackSurfaceDecor tone={pack.tone} />
       </View>
+      <View style={styles.detailContent}>
+        <View style={styles.detailHeader}>
+          <View>
+            <Text style={[styles.detailKicker, dark && styles.glowText]}>PACK DETAIL</Text>
+            <Text style={[styles.detailTitle, dark && styles.darkText]}>{pack.name}</Text>
+          </View>
+          <Text style={[styles.detailPrice, dark && styles.glowText]}>{pack.priceLabel}</Text>
+        </View>
 
-      <Text style={[styles.detailCopy, dark && styles.darkBody]}>
-        {pack.shortCopy} 스킨은 앱 화면을 바꾸는 장식이 아니라, 친구 홈 위젯에 도착하는 신호의 표정입니다.
-      </Text>
+        <Text style={[styles.detailCopy, dark && styles.darkBody]}>
+          {pack.shortCopy} 스킨은 앱 화면을 바꾸는 장식이 아니라, 친구 홈 위젯에 도착하는 신호의 표정입니다.
+        </Text>
 
-      <View style={styles.detailSlotGrid}>
-        <View style={styles.detailBlock}>
-          <Text style={[styles.blockLabel, dark && styles.glowText]}>REPLY SLOTS</Text>
-          <View style={styles.slotRow}>
-            {pack.slots.map((slot) => (
-              <View key={slot} style={[styles.slotChip, dark && styles.slotChipDark]}>
-                <Text style={[styles.slotText, dark && styles.slotTextDark]}>{slot}</Text>
-              </View>
-            ))}
+        <View style={styles.detailSlotGrid}>
+          <View style={styles.detailBlock}>
+            <Text style={[styles.blockLabel, dark && styles.glowText]}>REPLY SLOTS</Text>
+            <View style={styles.slotRow}>
+              {pack.slots.map((slot) => (
+                <View key={slot} style={[styles.slotChip, dark && styles.slotChipDark]}>
+                  <Text style={[styles.slotText, dark && styles.slotTextDark]}>{slot}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.detailBlock}>
+            <Text style={[styles.blockLabel, dark && styles.glowText]}>MY SLOTS</Text>
+            <View style={styles.slotRow}>
+              {replySlots.map((slot) => (
+                <View key={slot} style={[styles.slotChip, dark && styles.slotChipDark]}>
+                  <Text style={[styles.slotText, dark && styles.slotTextDark]}>{slot}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         </View>
 
-        <View style={styles.detailBlock}>
-          <Text style={[styles.blockLabel, dark && styles.glowText]}>MY SLOTS</Text>
-          <View style={styles.slotRow}>
-            {replySlots.map((slot) => (
-              <View key={slot} style={[styles.slotChip, dark && styles.slotChipDark]}>
-                <Text style={[styles.slotText, dark && styles.slotTextDark]}>{slot}</Text>
-              </View>
-            ))}
+        <View style={styles.detailMediaStack}>
+          <View style={styles.detailBlockFull}>
+            <Text style={[styles.blockLabel, dark && styles.glowText]}>BEEPY EMOTE</Text>
+            <View style={styles.emoteRow}>
+              {pack.emotes.map((emote, index) => (
+                <View key={`${pack.slug}-${index}`} style={[styles.emoteBox, dark && styles.emoteBoxDark]}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.65}
+                    style={[styles.emoteText, dark && styles.glowText]}
+                  >
+                    {emote}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
-      </View>
 
-      <View style={styles.detailMediaStack}>
-        <View style={styles.detailBlockFull}>
-          <Text style={[styles.blockLabel, dark && styles.glowText]}>BEEPY EMOTE</Text>
-          <View style={styles.emoteRow}>
-            {pack.emotes.map((emote, index) => (
-              <View key={`${pack.slug}-${index}`} style={[styles.emoteBox, dark && styles.emoteBoxDark]}>
-                <Text
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.65}
-                  style={[styles.emoteText, dark && styles.glowText]}
-                >
-                  {emote}
-                </Text>
-              </View>
-            ))}
+          <View style={styles.detailBlockFull}>
+            <Text style={[styles.blockLabel, dark && styles.glowText]}>BLINK 3-CUT</Text>
+            <MiniFilmStrip tone={pack.tone} />
           </View>
         </View>
 
-        <View style={styles.detailBlockFull}>
-          <Text style={[styles.blockLabel, dark && styles.glowText]}>BLINK 3-CUT</Text>
-          <MiniFilmStrip tone={pack.tone} />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onApply}
+          style={({ pressed }) => [styles.applyButton, dark && styles.applyButtonDark, pressed && styles.pressed]}
+        >
+          <Text style={[styles.applyText, dark && styles.glowText]}>{pack.isFree ? "EQUIPPED" : "PREVIEW LOCKED PACK"}</Text>
+        </Pressable>
       </View>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={onApply}
-        style={({ pressed }) => [styles.applyButton, dark && styles.applyButtonDark, pressed && styles.pressed]}
-      >
-        <Text style={[styles.applyText, dark && styles.glowText]}>{pack.isFree ? "EQUIPPED" : "PREVIEW LOCKED PACK"}</Text>
-      </Pressable>
     </View>
   );
 }
@@ -435,7 +456,7 @@ function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; comp
   return (
     <View style={[styles.filmStrip, compact && styles.filmStripCompact, dark && styles.filmStripDark]}>
       {[1, 2, 3].map((frame) => (
-        <View key={frame} style={[styles.filmFrame, dark && styles.filmFrameDark]}>
+        <View key={frame} style={[styles.filmFrame, compact && styles.filmFrameCompact, dark && styles.filmFrameDark]}>
           <Text style={[styles.frameNum, dark && styles.glowText]}>0{frame}</Text>
           <View style={[styles.frameSilhouette, compact && styles.frameSilhouetteCompact]} />
           <Text style={[styles.frameMark, dark && styles.glowText, compact && styles.frameMarkCompact]}>
@@ -502,6 +523,29 @@ const widgetToneStyle = StyleSheet.create({
   night: {
     backgroundColor: "#12190B",
     borderColor: "#9ED85B",
+  },
+});
+
+const detailToneStyle = StyleSheet.create({
+  paper: {
+    backgroundColor: colors.paperWarm,
+    borderColor: colors.ink,
+  },
+  school: {
+    backgroundColor: "#FFE6B9",
+    borderColor: "#C7A06A",
+  },
+  cherry: {
+    backgroundColor: "#F8D6D9",
+    borderColor: "#D9868A",
+  },
+  photo: {
+    backgroundColor: "#E6F0FF",
+    borderColor: "#8AA8D7",
+  },
+  night: {
+    backgroundColor: "#10160A",
+    borderColor: "rgba(182, 239, 101, 0.62)",
   },
 });
 
@@ -976,7 +1020,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.slip,
     backgroundColor: colors.paperWarm,
     padding: spacing[7],
+    position: "relative",
+    overflow: "hidden",
+  },
+  detailContent: {
     gap: spacing[6],
+  },
+  detailDecor: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.48,
   },
   detailPanelDark: {
     backgroundColor: "#10160A",
@@ -1092,6 +1144,7 @@ const styles = StyleSheet.create({
   },
   filmFrame: {
     flex: 1,
+    minHeight: 48,
     borderRightWidth: 1,
     borderRightColor: "rgba(244,239,229,0.25)",
     alignItems: "center",
@@ -1100,6 +1153,9 @@ const styles = StyleSheet.create({
   },
   filmFrameDark: {
     borderRightColor: "rgba(182, 239, 101, 0.18)",
+  },
+  filmFrameCompact: {
+    minHeight: 34,
   },
   frameNum: {
     ...type.tinyMono,
@@ -1147,20 +1203,35 @@ const styles = StyleSheet.create({
     borderRadius: radius.slip,
     backgroundColor: colors.paperWarm,
     padding: spacing[6],
-    gap: spacing[3],
+    gap: spacing[4],
+  },
+  toolHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[4],
   },
   toolTitle: {
     ...type.tinyMono,
     color: colors.muted,
     letterSpacing: 1,
-    marginBottom: spacing[2],
+  },
+  toolHint: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  toolGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[3],
   },
   toolButton: {
-    minHeight: 48,
+    width: "48%",
+    minHeight: 50,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
     borderRadius: radius.button,
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: spacing[4],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -1168,11 +1239,12 @@ const styles = StyleSheet.create({
   },
   toolButtonText: {
     ...type.buttonMono,
+    fontSize: 12,
   },
   toolArrow: {
     fontFamily: font.mono,
-    fontSize: 24,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 20,
     color: colors.ink,
   },
   darkText: {
