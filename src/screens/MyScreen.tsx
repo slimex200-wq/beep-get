@@ -148,16 +148,19 @@ function WidgetPreview({ pack, replySlots }: { pack: IdentityPack; replySlots: s
     <View style={styles.previewShell}>
       <View style={styles.previewStage}>
         <View style={[styles.widgetCard, widgetToneStyle[pack.tone], dark && styles.widgetCardDark]}>
+          <PackSurfaceDecor tone={pack.tone} />
           <WidgetHeader title={pack.title} dark={dark} />
           <Text style={[styles.widgetLabel, dark && styles.glowText]}>NO.</Text>
           <Text style={[styles.widgetCode, pack.tone === "school" && styles.textCode, dark && styles.glowCode]}>
             {pack.code}
           </Text>
+          {pack.tone === "photo" ? <MiniFilmStrip tone={pack.tone} compact /> : null}
           <MetaRow label="FROM." value={pack.from} dark={dark} />
           <MetaRow label="TIME." value={pack.time} dark={dark} />
         </View>
 
-        <View style={[styles.blinkCard, pack.tone === "night" && styles.blinkCardDark]}>
+        <View style={[styles.blinkCard, widgetToneStyle[pack.tone], pack.tone === "night" && styles.blinkCardDark]}>
+          <PackSurfaceDecor tone={pack.tone} />
           <View style={styles.slipTopLine}>
             <Text style={[styles.blinkTitle, dark && styles.glowText]}>Blink preview</Text>
             <StatusDot size={7} color={dark ? colors.greenDot : colors.red} />
@@ -208,10 +211,12 @@ function PackTile({
         <Text style={[styles.packBadge, pack.badge === "RARE" && styles.rareBadge]}>{pack.badge}</Text>
       </View>
       <View style={[styles.tileSlip, widgetToneStyle[pack.tone], dark && styles.tileSlipDark]}>
+        <PackSurfaceDecor tone={pack.tone} compact />
         <WidgetHeader title={pack.title} dark={dark} dotColor={dark ? colors.greenDot : colors.red} />
         <Text style={[styles.tileCode, pack.tone === "school" && styles.tileTextCode, dark && styles.glowCode]}>
           {pack.code}
         </Text>
+        {pack.tone === "photo" ? <MiniFilmStrip tone={pack.tone} compact /> : null}
         <MetaRow label="FROM." value={pack.from} dark={dark} compact />
       </View>
       <View style={styles.packBottom}>
@@ -244,7 +249,7 @@ function PackDetail({
       </View>
 
       <Text style={[styles.detailCopy, dark && styles.darkBody]}>
-        스킨은 앱 화면을 바꾸는 장식이 아니라, 친구 홈 위젯에 도착하는 신호의 표정입니다.
+        {pack.shortCopy} 스킨은 앱 화면을 바꾸는 장식이 아니라, 친구 홈 위젯에 도착하는 신호의 표정입니다.
       </Text>
 
       <View style={styles.detailGrid}>
@@ -277,7 +282,14 @@ function PackDetail({
           <View style={styles.emoteRow}>
             {pack.emotes.map((emote, index) => (
               <View key={`${pack.slug}-${index}`} style={[styles.emoteBox, dark && styles.emoteBoxDark]}>
-                <Text style={[styles.emoteText, dark && styles.glowText]}>{emote}</Text>
+                <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.65}
+                  style={[styles.emoteText, dark && styles.glowText]}
+                >
+                  {emote}
+                </Text>
               </View>
             ))}
           </View>
@@ -327,6 +339,74 @@ function WidgetHeader({
   );
 }
 
+function PackSurfaceDecor({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
+  if (tone === "school") {
+    return (
+      <View pointerEvents="none" style={styles.surfaceDecor}>
+        <View style={[styles.schoolMargin, compact && styles.schoolMarginCompact]} />
+        {[0, 1, 2, 3, 4].map((line) => (
+          <View
+            key={`school-${line}`}
+            style={[
+              styles.schoolRule,
+              compact && styles.schoolRuleCompact,
+              { top: (compact ? 24 : 34) + line * (compact ? 17 : 23) },
+            ]}
+          />
+        ))}
+        {[0, 1, 2].map((hole) => (
+          <View key={`hole-${hole}`} style={[styles.binderHole, { top: 30 + hole * 34 }]} />
+        ))}
+      </View>
+    );
+  }
+
+  if (tone === "cherry") {
+    return (
+      <View pointerEvents="none" style={styles.surfaceDecor}>
+        <View style={[styles.cherryDot, styles.cherryDotLarge]} />
+        <View style={[styles.cherryDot, styles.cherryDotSmall]} />
+        <Text style={[styles.handDoodle, compact && styles.handDoodleCompact]}>B:</Text>
+        <Text style={[styles.cherryMark, compact && styles.cherryMarkCompact]}>cherry</Text>
+      </View>
+    );
+  }
+
+  if (tone === "photo") {
+    return (
+      <View pointerEvents="none" style={styles.surfaceDecor}>
+        {[0, 1, 2, 3].map((line) => (
+          <View key={`grid-v-${line}`} style={[styles.photoGridV, { left: `${18 + line * 20}%` }]} />
+        ))}
+        {[0, 1, 2, 3].map((line) => (
+          <View key={`grid-h-${line}`} style={[styles.photoGridH, { top: `${24 + line * 18}%` }]} />
+        ))}
+        <View style={styles.tapeTop} />
+        <View style={styles.tapeBottom} />
+      </View>
+    );
+  }
+
+  if (tone === "night") {
+    return (
+      <View pointerEvents="none" style={styles.surfaceDecor}>
+        {[0, 1, 2, 3, 4].map((line) => (
+          <View key={`scan-${line}`} style={[styles.scanLine, { top: 24 + line * 21 }]} />
+        ))}
+        <View style={styles.signalGlow} />
+        <Text style={styles.nightBeepy}>B</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View pointerEvents="none" style={styles.surfaceDecor}>
+      <View style={styles.paperStamp} />
+      <Text style={[styles.handDoodle, compact && styles.handDoodleCompact]}>B</Text>
+    </View>
+  );
+}
+
 function MetaRow({
   label,
   value,
@@ -348,15 +428,19 @@ function MetaRow({
   );
 }
 
-function MiniFilmStrip({ tone }: { tone: IdentityPackTone }) {
+function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
   const dark = tone === "night";
+  const mark = tone === "photo" ? "IMG" : tone === "school" ? "NOTE" : tone === "cherry" ? "B:" : "B";
 
   return (
-    <View style={[styles.filmStrip, dark && styles.filmStripDark]}>
+    <View style={[styles.filmStrip, compact && styles.filmStripCompact, dark && styles.filmStripDark]}>
       {[1, 2, 3].map((frame) => (
         <View key={frame} style={[styles.filmFrame, dark && styles.filmFrameDark]}>
           <Text style={[styles.frameNum, dark && styles.glowText]}>0{frame}</Text>
-          <Text style={[styles.frameMark, dark && styles.glowText]}>{tone === "photo" ? "✌" : "♥"}</Text>
+          <View style={[styles.frameSilhouette, compact && styles.frameSilhouetteCompact]} />
+          <Text style={[styles.frameMark, dark && styles.glowText, compact && styles.frameMarkCompact]}>
+            {mark}
+          </Text>
         </View>
       ))}
     </View>
@@ -559,6 +643,8 @@ const styles = StyleSheet.create({
     padding: spacing[6],
     gap: spacing[3],
     alignSelf: "flex-start",
+    overflow: "hidden",
+    position: "relative",
   },
   widgetCardDark: {
     borderColor: "rgba(158, 216, 91, 0.58)",
@@ -572,6 +658,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.paperWarm,
     padding: spacing[6],
     gap: spacing[4],
+    overflow: "hidden",
+    position: "relative",
   },
   blinkCardDark: {
     backgroundColor: "#12190B",
@@ -594,6 +682,152 @@ const styles = StyleSheet.create({
     ...type.slipTitleSmall,
     fontSize: 15,
     lineHeight: 19,
+  },
+  surfaceDecor: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.88,
+  },
+  schoolMargin: {
+    position: "absolute",
+    left: 24,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: "rgba(208, 68, 46, 0.5)",
+  },
+  schoolMarginCompact: {
+    left: 18,
+  },
+  schoolRule: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(78, 142, 180, 0.34)",
+  },
+  schoolRuleCompact: {
+    opacity: 0.72,
+  },
+  binderHole: {
+    position: "absolute",
+    left: 7,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(10, 10, 10, 0.16)",
+  },
+  cherryDot: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "rgba(216, 54, 30, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(216, 54, 30, 0.18)",
+  },
+  cherryDotLarge: {
+    width: 92,
+    height: 92,
+    right: -28,
+    bottom: -22,
+  },
+  cherryDotSmall: {
+    width: 42,
+    height: 42,
+    left: 18,
+    top: 44,
+  },
+  cherryMark: {
+    position: "absolute",
+    right: 12,
+    bottom: 10,
+    ...type.tinyMono,
+    color: "rgba(158, 33, 21, 0.58)",
+    transform: [{ rotate: "-12deg" }],
+  },
+  cherryMarkCompact: {
+    fontSize: 7,
+  },
+  photoGridV: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: "rgba(85, 126, 179, 0.22)",
+  },
+  photoGridH: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(85, 126, 179, 0.22)",
+  },
+  tapeTop: {
+    position: "absolute",
+    top: 8,
+    right: 18,
+    width: 46,
+    height: 16,
+    backgroundColor: "rgba(196, 158, 95, 0.42)",
+    transform: [{ rotate: "-9deg" }],
+  },
+  tapeBottom: {
+    position: "absolute",
+    bottom: 8,
+    left: 22,
+    width: 40,
+    height: 14,
+    backgroundColor: "rgba(196, 158, 95, 0.34)",
+    transform: [{ rotate: "7deg" }],
+  },
+  scanLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(182, 239, 101, 0.18)",
+  },
+  signalGlow: {
+    position: "absolute",
+    right: 16,
+    top: 18,
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.32)",
+    backgroundColor: "rgba(126, 160, 94, 0.1)",
+  },
+  nightBeepy: {
+    position: "absolute",
+    right: 32,
+    bottom: 12,
+    fontFamily: font.mono,
+    fontSize: 22,
+    color: "rgba(182, 239, 101, 0.48)",
+  },
+  paperStamp: {
+    position: "absolute",
+    right: 15,
+    bottom: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(10, 10, 10, 0.28)",
+  },
+  handDoodle: {
+    position: "absolute",
+    right: 20,
+    bottom: 12,
+    fontFamily: font.mono,
+    fontSize: 23,
+    color: "rgba(10, 10, 10, 0.42)",
+    transform: [{ rotate: "8deg" }],
+  },
+  handDoodleCompact: {
+    right: 14,
+    bottom: 8,
+    fontSize: 15,
   },
   widgetLabel: {
     ...type.metaLabel,
@@ -702,6 +936,8 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     gap: spacing[2],
     minHeight: 104,
+    overflow: "hidden",
+    position: "relative",
   },
   tileSlipDark: {
     borderColor: "rgba(158, 216, 91, 0.58)",
@@ -812,7 +1048,7 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   emoteBox: {
-    width: 42,
+    width: 58,
     height: 38,
     borderWidth: 1,
     borderStyle: "dashed",
@@ -827,7 +1063,7 @@ const styles = StyleSheet.create({
   emoteText: {
     ...type.slipTitle,
     fontFamily: font.mono,
-    fontSize: 18,
+    fontSize: 14,
   },
   filmStrip: {
     minHeight: 48,
@@ -835,6 +1071,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     flexDirection: "row",
     overflow: "hidden",
+  },
+  filmStripCompact: {
+    minHeight: 34,
   },
   filmStripDark: {
     backgroundColor: "#040604",
@@ -856,10 +1095,24 @@ const styles = StyleSheet.create({
     ...type.tinyMono,
     color: colors.white,
   },
+  frameSilhouette: {
+    width: 20,
+    height: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    backgroundColor: "rgba(247,243,234,0.2)",
+  },
+  frameSilhouetteCompact: {
+    width: 14,
+    height: 10,
+  },
   frameMark: {
     color: colors.white,
-    fontSize: 15,
+    fontSize: 10,
     fontWeight: "700",
+  },
+  frameMarkCompact: {
+    fontSize: 7,
   },
   applyButton: {
     minHeight: 48,

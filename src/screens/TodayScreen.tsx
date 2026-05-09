@@ -92,6 +92,13 @@ export function TodayScreen() {
           <View style={styles.empty}>
             <Text style={type.metaValue}>WAITING FOR SIGNAL</Text>
             <Text style={type.bodyMuted}>New Beeps and Blinks land here first.</Text>
+            <ActionButton
+              label={friends.length > 0 ? "SEND FIRST BEEP" : "ADD FRIEND"}
+              variant="dark"
+              onPress={() =>
+                navigation.navigate("Main", { screen: friends.length > 0 ? "Compose" : "People" })
+              }
+            />
           </View>
         )}
 
