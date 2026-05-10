@@ -350,16 +350,7 @@ function PackDetail({
             <Text style={[styles.blockLabel, dark && styles.glowText]}>BEEPY EMOTE</Text>
             <View style={styles.emoteRow}>
               {pack.emotes.map((emote, index) => (
-                <View key={`${pack.slug}-${index}`} style={[styles.emoteBox, dark && styles.emoteBoxDark]}>
-                  <Text
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.65}
-                    style={[styles.emoteText, dark && styles.glowText]}
-                  >
-                    {emote}
-                  </Text>
-                </View>
+                <PackEmote key={`${pack.slug}-${index}`} tone={pack.tone} index={index} label={emote} dark={dark} />
               ))}
             </View>
           </View>
@@ -498,6 +489,160 @@ function MetaRow({
   );
 }
 
+function PackEmote({
+  tone,
+  index,
+  label,
+  dark,
+}: {
+  tone: IdentityPackTone;
+  index: number;
+  label: string;
+  dark: boolean;
+}) {
+  return (
+    <View
+      accessibilityLabel={`${label} emote`}
+      style={[
+        styles.emoteBox,
+        tone === "school" && styles.emoteBoxSchool,
+        tone === "cherry" && styles.emoteBoxCherry,
+        tone === "photo" && styles.emoteBoxPhoto,
+        dark && styles.emoteBoxDark,
+      ]}
+    >
+      <EmoteArt tone={tone} index={index} dark={dark} />
+    </View>
+  );
+}
+
+function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number; dark: boolean }) {
+  if (tone === "photo") {
+    if (index === 0) {
+      return (
+        <View style={styles.emoteCamera}>
+          <View style={styles.emoteCameraTop} />
+          <View style={styles.emoteCameraLens} />
+          <View style={styles.emoteCameraFlash} />
+        </View>
+      );
+    }
+
+    if (index === 1) {
+      return <BeepyMini dark={dark} blush />;
+    }
+
+    return (
+      <View style={styles.emotePhotoSpark}>
+        <View style={styles.emotePhotoCard} />
+        <Text style={styles.emoteSparkText}>V</Text>
+      </View>
+    );
+  }
+
+  if (tone === "cherry") {
+    return (
+      <View style={styles.emoteCherryArt}>
+        <View style={[styles.emoteCherry, index === 1 && styles.emoteCherryHeart]} />
+        <View style={[styles.emoteCherry, styles.emoteCherrySecond]} />
+        <Text style={styles.emoteCherryFace}>{index === 2 ? "B:" : ":)"}</Text>
+      </View>
+    );
+  }
+
+  if (tone === "school") {
+    return (
+      <View style={styles.emoteSchoolArt}>
+        <View style={styles.emoteNoteSheet} />
+        <View style={[styles.emotePencil, index === 2 && styles.emotePencilTilt]} />
+        <Text style={styles.emoteSchoolMark}>{index === 1 ? "B" : "!"}</Text>
+      </View>
+    );
+  }
+
+  if (tone === "night") {
+    return (
+      <View style={styles.emoteNightArt}>
+        <View style={styles.emoteRadarRing} />
+        <View style={styles.emoteRadarDot} />
+        {index === 2 ? (
+          <View style={styles.emoteLock}>
+            <View style={styles.emoteLockShackle} />
+          </View>
+        ) : (
+          <Text style={styles.emoteNightText}>B</Text>
+        )}
+      </View>
+    );
+  }
+
+  return <BeepyMini dark={dark} blush={index === 2} />;
+}
+
+function BeepyMini({ dark, blush = false }: { dark: boolean; blush?: boolean }) {
+  return (
+    <View style={[styles.beepyMini, dark && styles.beepyMiniDark]}>
+      <View style={styles.beepyAntenna} />
+      <View style={styles.beepyEyeRow}>
+        <View style={[styles.beepyEye, dark && styles.beepyEyeDark]} />
+        <View style={[styles.beepyEye, dark && styles.beepyEyeDark]} />
+      </View>
+      <View style={[styles.beepyMouth, blush && styles.beepyMouthBlush]} />
+    </View>
+  );
+}
+
+function FilmFrameArt({
+  tone,
+  frame,
+  compact,
+  dark,
+}: {
+  tone: IdentityPackTone;
+  frame: number;
+  compact: boolean;
+  dark: boolean;
+}) {
+  if (tone === "photo") {
+    return (
+      <View style={[styles.photoFrameArt, compact && styles.photoFrameArtCompact]}>
+        <View style={styles.photoHair} />
+        <View style={styles.photoHead} />
+        <View style={styles.photoShoulders} />
+        <Text style={[styles.photoPose, compact && styles.photoPoseCompact]}>{frame === 2 ? "B" : "V"}</Text>
+      </View>
+    );
+  }
+
+  if (tone === "school") {
+    return (
+      <View style={[styles.schoolFrameArt, compact && styles.schoolFrameArtCompact]}>
+        <View style={styles.schoolMiniRule} />
+        <View style={styles.schoolMiniPencil} />
+      </View>
+    );
+  }
+
+  if (tone === "cherry") {
+    return (
+      <View style={[styles.cherryFrameArt, compact && styles.cherryFrameArtCompact]}>
+        <View style={styles.cherryFrameDot} />
+        <View style={styles.cherryFrameDotSecond} />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.frameSilhouette,
+        dark && styles.frameSilhouetteNight,
+        compact && styles.frameSilhouetteCompact,
+      ]}
+    />
+  );
+}
+
 function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
   const dark = tone === "night";
   const marks =
@@ -512,29 +657,32 @@ function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; comp
             : ["B", "BEEP", "OK"];
 
   return (
-    <View style={[styles.filmStrip, compact && styles.filmStripCompact, dark && styles.filmStripDark]}>
+    <View
+      style={[
+        styles.filmStrip,
+        tone === "paper" && styles.filmStripPaper,
+        tone === "school" && styles.filmStripSchool,
+        tone === "cherry" && styles.filmStripCherry,
+        tone === "photo" && styles.filmStripPhoto,
+        compact && styles.filmStripCompact,
+        dark && styles.filmStripDark,
+      ]}
+    >
       {[1, 2, 3].map((frame) => (
         <View
           key={frame}
           style={[
             styles.filmFrame,
             !dark && styles.filmFrameLight,
+            tone === "photo" && styles.filmFramePhoto,
+            tone === "school" && styles.filmFrameSchool,
+            tone === "cherry" && styles.filmFrameCherry,
             compact && styles.filmFrameCompact,
             dark && styles.filmFrameDark,
           ]}
         >
           <Text style={[styles.frameNum, dark && styles.glowText]}>0{frame}</Text>
-          <View
-            style={[
-              styles.frameSilhouette,
-              tone === "photo" && styles.frameSilhouettePhoto,
-              tone === "cherry" && styles.frameSilhouetteCherry,
-              tone === "night" && styles.frameSilhouetteNight,
-              compact && styles.frameSilhouetteCompact,
-            ]}
-          >
-            {tone === "photo" ? <View style={[styles.photoFace, compact && styles.photoFaceCompact]} /> : null}
-          </View>
+          <FilmFrameArt tone={tone} frame={frame} compact={compact} dark={dark} />
           <Text style={[styles.frameMark, dark && styles.glowText, compact && styles.frameMarkCompact]}>
             {marks[frame - 1]}
           </Text>
@@ -1289,32 +1437,276 @@ const styles = StyleSheet.create({
   emoteBox: {
     flex: 1,
     minWidth: 0,
-    height: 38,
+    height: 58,
     borderWidth: 1,
-    borderStyle: "dashed",
     borderColor: colors.ruleStrong,
     borderRadius: radius.control,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  emoteBoxSchool: {
+    backgroundColor: "rgba(255, 231, 184, 0.58)",
+    borderColor: "#C7A06A",
+  },
+  emoteBoxCherry: {
+    backgroundColor: "rgba(255, 232, 235, 0.62)",
+    borderColor: "#D9868A",
+  },
+  emoteBoxPhoto: {
+    backgroundColor: "rgba(235, 244, 255, 0.82)",
+    borderColor: "#8AA8D7",
   },
   emoteBoxDark: {
     borderColor: "rgba(182, 239, 101, 0.42)",
+    backgroundColor: "rgba(182, 239, 101, 0.08)",
   },
-  emoteText: {
-    ...type.slipTitle,
-    fontFamily: font.mono,
-    fontSize: 14,
+  emoteCamera: {
+    width: 44,
+    height: 30,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: "#1C2430",
+    backgroundColor: "#F7F3EA",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteCameraTop: {
+    position: "absolute",
+    top: -7,
+    left: 7,
+    width: 16,
+    height: 8,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    backgroundColor: "#1C2430",
+  },
+  emoteCameraLens: {
+    width: 17,
+    height: 17,
+    borderRadius: 99,
+    borderWidth: 3,
+    borderColor: "#1C2430",
+    backgroundColor: "#BFD8FF",
+  },
+  emoteCameraFlash: {
+    position: "absolute",
+    right: 6,
+    top: 6,
+    width: 5,
+    height: 5,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+  },
+  emotePhotoSpark: {
+    width: 45,
+    height: 35,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emotePhotoCard: {
+    position: "absolute",
+    width: 33,
+    height: 27,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#1C2430",
+    backgroundColor: "#111111",
+    transform: [{ rotate: "-6deg" }],
+  },
+  emoteSparkText: {
+    ...type.buttonMono,
+    color: "#F7F3EA",
+    fontSize: 15,
+  },
+  emoteCherryArt: {
+    width: 48,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteCherry: {
+    position: "absolute",
+    width: 25,
+    height: 25,
+    borderRadius: 99,
+    backgroundColor: "#F06E78",
+    borderWidth: 1,
+    borderColor: "#9E2115",
+    left: 9,
+    top: 10,
+  },
+  emoteCherryHeart: {
+    borderTopLeftRadius: 9,
+    transform: [{ rotate: "-18deg" }],
+  },
+  emoteCherrySecond: {
+    left: 22,
+    top: 7,
+    backgroundColor: "#FF9FAB",
+  },
+  emoteCherryFace: {
+    ...type.tinyMono,
+    color: "#5F1E17",
+    marginTop: 9,
+  },
+  emoteSchoolArt: {
+    width: 46,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteNoteSheet: {
+    width: 32,
+    height: 26,
+    borderWidth: 1,
+    borderColor: "#C7A06A",
+    borderRadius: 5,
+    backgroundColor: "#FFF3CE",
+  },
+  emotePencil: {
+    position: "absolute",
+    width: 31,
+    height: 5,
+    borderRadius: 99,
+    backgroundColor: "#E8AA3B",
+    transform: [{ rotate: "-28deg" }],
+  },
+  emotePencilTilt: {
+    transform: [{ rotate: "22deg" }],
+  },
+  emoteSchoolMark: {
+    ...type.tinyMono,
+    color: "#6B4A18",
+    marginTop: 1,
+  },
+  emoteNightArt: {
+    width: 48,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteRadarRing: {
+    position: "absolute",
+    width: 35,
+    height: 35,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.58)",
+  },
+  emoteRadarDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 99,
+    backgroundColor: "#B6EF65",
+  },
+  emoteNightText: {
+    position: "absolute",
+    ...type.buttonMono,
+    color: "#B6EF65",
+  },
+  emoteLock: {
+    width: 22,
+    height: 19,
+    borderRadius: 4,
+    backgroundColor: "#B6EF65",
+    marginTop: 6,
+  },
+  emoteLockShackle: {
+    position: "absolute",
+    top: -12,
+    left: 4,
+    width: 14,
+    height: 15,
+    borderTopLeftRadius: 9,
+    borderTopRightRadius: 9,
+    borderWidth: 3,
+    borderBottomWidth: 0,
+    borderColor: "#B6EF65",
+  },
+  beepyMini: {
+    width: 38,
+    height: 34,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: "#FFF7E6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  beepyMiniDark: {
+    borderColor: "#B6EF65",
+    backgroundColor: "#10160A",
+  },
+  beepyAntenna: {
+    position: "absolute",
+    top: -8,
+    right: 7,
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+  },
+  beepyEyeRow: {
+    flexDirection: "row",
+    gap: spacing[3],
+  },
+  beepyEye: {
+    width: 4,
+    height: 8,
+    borderRadius: 99,
+    backgroundColor: colors.ink,
+  },
+  beepyEyeDark: {
+    backgroundColor: "#B6EF65",
+  },
+  beepyMouth: {
+    width: 10,
+    height: 3,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+    marginTop: spacing[2],
+  },
+  beepyMouthBlush: {
+    width: 13,
   },
   filmStrip: {
     width: "100%",
-    height: 54,
+    minHeight: 76,
     borderRadius: radius.control,
     backgroundColor: colors.ink,
     flexDirection: "row",
     overflow: "hidden",
+    gap: spacing[2],
+    padding: spacing[2],
+  },
+  filmStripPaper: {
+    backgroundColor: "#F5EBDD",
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+  },
+  filmStripSchool: {
+    backgroundColor: "#FFE7B8",
+    borderWidth: 1,
+    borderColor: "#C7A06A",
+  },
+  filmStripCherry: {
+    backgroundColor: "#FBE0E4",
+    borderWidth: 1,
+    borderColor: "#D9868A",
+  },
+  filmStripPhoto: {
+    backgroundColor: "#F7FBFF",
+    borderWidth: 1,
+    borderColor: "#8AA8D7",
+    shadowColor: "#6D8FC0",
+    shadowOpacity: 0.16,
+    shadowRadius: 7,
   },
   filmStripCompact: {
-    height: 36,
+    minHeight: 48,
+    padding: spacing[1],
+    gap: spacing[1],
   },
   filmStripDark: {
     backgroundColor: "#040604",
@@ -1323,12 +1715,27 @@ const styles = StyleSheet.create({
   },
   filmFrame: {
     flex: 1,
-    height: "100%",
     borderRightWidth: 1,
     borderRightColor: "rgba(244,239,229,0.34)",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing[1],
+  },
+  filmFramePhoto: {
+    minHeight: 66,
+    borderRightWidth: 0,
+    borderRadius: 6,
+    backgroundColor: "#111111",
+  },
+  filmFrameSchool: {
+    minHeight: 66,
+    borderRightColor: "#C7A06A",
+    backgroundColor: "rgba(255, 244, 214, 0.66)",
+  },
+  filmFrameCherry: {
+    minHeight: 66,
+    borderRightColor: "rgba(158, 33, 21, 0.22)",
+    backgroundColor: "rgba(255, 246, 248, 0.55)",
   },
   filmFrameLight: {
     backgroundColor: "rgba(247,243,234,0.12)",
@@ -1338,11 +1745,111 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(182, 239, 101, 0.04)",
   },
   filmFrameCompact: {
-    height: "100%",
+    minHeight: 42,
   },
   frameNum: {
     ...type.tinyMono,
     color: "#F7F3EA",
+  },
+  photoFrameArt: {
+    width: 42,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  photoFrameArtCompact: {
+    width: 28,
+    height: 20,
+  },
+  photoHair: {
+    position: "absolute",
+    top: 3,
+    width: 22,
+    height: 15,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    backgroundColor: "#F7F3EA",
+    opacity: 0.82,
+  },
+  photoHead: {
+    width: 14,
+    height: 14,
+    borderRadius: 99,
+    backgroundColor: "#D9D9D1",
+    marginBottom: -1,
+  },
+  photoShoulders: {
+    width: 34,
+    height: 12,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: "#3A3A36",
+  },
+  photoPose: {
+    position: "absolute",
+    right: 0,
+    bottom: -2,
+    ...type.tinyMono,
+    color: "#F7F3EA",
+    fontSize: 10,
+  },
+  photoPoseCompact: {
+    fontSize: 7,
+  },
+  schoolFrameArt: {
+    width: 38,
+    height: 26,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#C7A06A",
+    backgroundColor: "#FFF7D8",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  schoolFrameArtCompact: {
+    width: 26,
+    height: 18,
+  },
+  schoolMiniRule: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "rgba(78, 142, 180, 0.32)",
+  },
+  schoolMiniPencil: {
+    position: "absolute",
+    width: 28,
+    height: 4,
+    borderRadius: 99,
+    backgroundColor: "#E8AA3B",
+    transform: [{ rotate: "-18deg" }],
+  },
+  cherryFrameArt: {
+    width: 38,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cherryFrameArtCompact: {
+    width: 26,
+    height: 20,
+  },
+  cherryFrameDot: {
+    position: "absolute",
+    left: 8,
+    width: 19,
+    height: 19,
+    borderRadius: 99,
+    backgroundColor: "#F06E78",
+  },
+  cherryFrameDotSecond: {
+    position: "absolute",
+    right: 7,
+    top: 5,
+    width: 14,
+    height: 14,
+    borderRadius: 99,
+    backgroundColor: "#FF9FAB",
   },
   frameSilhouette: {
     width: 20,
