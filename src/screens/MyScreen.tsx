@@ -538,7 +538,7 @@ function PackEmote({
 function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number; dark: boolean }) {
   if (tone === "paper") {
     if (index === 0) {
-      return <BeepyMini dark={dark} blush />;
+      return <BeepyMascot size={34} style={styles.emoteMascotAsset} />;
     }
 
     if (index === 1) {
@@ -572,7 +572,13 @@ function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number
     }
 
     if (index === 1) {
-      return <BeepyMini dark={dark} blush />;
+      return (
+        <View style={styles.emotePhotoPoseArt}>
+          <View style={styles.emotePhotoPoseFrame} />
+          <Text style={styles.emotePhotoPoseText}>V</Text>
+          <View style={styles.emotePhotoPoseFlash} />
+        </View>
+      );
     }
 
     return (
@@ -597,8 +603,12 @@ function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number
 
     if (index === 2) {
       return (
-        <View style={styles.emoteCherryBeepy}>
-          <BeepyMini dark={dark} blush />
+        <View style={styles.emoteCherryShyArt}>
+          <View style={styles.emoteCherryShyFace}>
+            <View style={styles.emoteCherryShyEye} />
+            <View style={[styles.emoteCherryShyEye, styles.emoteCherryShyEyeRight]} />
+            <View style={styles.emoteCherryShyMouth} />
+          </View>
           <View style={styles.emoteCherryAccent} />
         </View>
       );
@@ -1600,6 +1610,9 @@ const styles = StyleSheet.create({
   emoteCaptionDark: {
     color: "#B6EF65",
   },
+  emoteMascotAsset: {
+    marginTop: -2,
+  },
   emotePaperOk: {
     width: 43,
     height: 34,
@@ -1704,6 +1717,37 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     backgroundColor: colors.red,
   },
+  emotePhotoPoseArt: {
+    width: 46,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emotePhotoPoseFrame: {
+    width: 34,
+    height: 28,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#16345E",
+    backgroundColor: "#0D1014",
+  },
+  emotePhotoPoseText: {
+    position: "absolute",
+    ...type.buttonMono,
+    color: "#F5F1E8",
+    fontSize: 15,
+  },
+  emotePhotoPoseFlash: {
+    position: "absolute",
+    right: 3,
+    top: 3,
+    width: 9,
+    height: 9,
+    borderRadius: 99,
+    backgroundColor: "#D9342B",
+    borderWidth: 1,
+    borderColor: "#16345E",
+  },
   emotePhotoSpark: {
     width: 45,
     height: 35,
@@ -1805,9 +1849,39 @@ const styles = StyleSheet.create({
     color: "#5F1E17",
     marginTop: 7,
   },
-  emoteCherryBeepy: {
+  emoteCherryShyArt: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  emoteCherryShyFace: {
+    width: 36,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#9E2115",
+    backgroundColor: "#FFD9DF",
+  },
+  emoteCherryShyEye: {
+    position: "absolute",
+    left: 9,
+    top: 11,
+    width: 4,
+    height: 4,
+    borderRadius: 99,
+    backgroundColor: "#5F1E17",
+  },
+  emoteCherryShyEyeRight: {
+    left: 22,
+  },
+  emoteCherryShyMouth: {
+    position: "absolute",
+    left: 15,
+    top: 20,
+    width: 8,
+    height: 4,
+    borderBottomWidth: 1,
+    borderColor: "#5F1E17",
+    borderRadius: 8,
   },
   emoteCherryAccent: {
     position: "absolute",

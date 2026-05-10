@@ -1,14 +1,14 @@
-# Beepy Emote Design Source Of Truth
+# Beepy And Pack Emote Design Source Of Truth
 
 ## Status
 
-This is the design source of truth for Beepy emotes and sticker-like identity-pack assets.
+This is the design source of truth for the default Beepy mascot emotes and the skin-native emote systems that ship inside identity packs.
 
-The app UI can preview placeholder marks, but purchasable Beepy value must come from real art assets. Do not treat React Native view-coded doodles, text labels, or generic icon chips as final emotes.
+The app UI can preview placeholder marks, but purchasable pack value must come from real art assets. Do not treat React Native view-coded doodles, text labels, generic icon chips, or the same mascot with different props as final premium emotes.
 
 ## Why This Exists
 
-The identity shop only becomes worth buying if each pack changes the user's emotional signal, not just the card color. Beepy emotes are the small collectible layer that makes a skin feel personal on a friend's home screen.
+The identity shop only becomes worth buying if each pack changes the user's emotional signal, not just the card color. The free/default skin should use the real Beepy mascot; paid skins should introduce different emote languages that feel native to that skin.
 
 The goal is not "more emojis." The goal is:
 
@@ -19,7 +19,7 @@ The goal is not "more emojis." The goal is:
 
 ## Product Role
 
-Beepy emotes appear in these places:
+Mascot and pack emotes appear in these places:
 
 - `MY` pack detail preview.
 - Friend-home widget preview.
@@ -29,9 +29,27 @@ Beepy emotes appear in these places:
 
 They should support the widget-first loop. They should not turn BEEP-GET into a chat sticker marketplace, public feed, or mascot game.
 
-## Character DNA
+## Mascot Boundary
 
-Beepy is a tiny hand-drawn pager creature.
+There are two different asset families:
+
+- `Classic Paper` uses canonical Beepy. This pack should visibly use `assets/brand/beepy-handdrawn.png` as the source reference and can include Beepy holding slips, pinging, waiting, or opening a signal.
+- Paid/locked packs use skin-native emotes. They may include tiny Beepy cameos only as secondary stamps, but the main emote value must be different per skin.
+
+Do not make every paid pack "Beepy wearing a different costume." That reads like one mascot pose pack, not like a shop full of distinct identities.
+
+Pack-native examples:
+
+- `School Desk`: memo doodles, pencil stamps, food/cafe/study marks, sleepy notebook creatures.
+- `Cherry Dot`: cherry blobs, heart pings, shy sticker faces, red-dot charm marks.
+- `Photo Booth Blink`: camera flashes, pose stamps, film-strip faces, BFF strip symbols.
+- `Night Signal`: radar glyphs, lock slips, secret signal ghosts, green scan marks.
+
+The BEEP-GET red dot, paper/slip feeling, and private-signal mood tie the packs together. The mascot does not need to carry every pack.
+
+## Canonical Beepy DNA
+
+Beepy is the default mascot and belongs primarily to `Classic Paper`, login/onboarding, and brand moments.
 
 Core traits:
 
@@ -64,8 +82,9 @@ Color:
 
 - Default body: cream paper / off-white.
 - Accent: BEEP-GET red dot.
-- Pack tones may tint props, background chips, or paper, but Beepy should remain recognizable.
-- Night Signal can use green glow lines, but the character should not become a full LCD icon.
+- Classic Paper should keep the canonical cream Beepy body recognizable.
+- Paid packs should change the emote subject and silhouette, not only tint Beepy.
+- Night Signal can use green glow lines and radar/lock glyphs, but it should not become a separate LCD pack.
 
 Texture:
 
@@ -106,7 +125,7 @@ Bad expression types:
 
 ### Classic Paper
 
-Role: free baseline. Simple, useful, and iconic.
+Role: free baseline. Simple, useful, iconic, and clearly Beepy.
 
 Visual notes:
 
@@ -126,7 +145,7 @@ Expressions:
 
 ### School Desk
 
-Role: teen/20s daily-life utility pack. This should feel immediately usable.
+Role: teen/20s daily-life utility pack. This should feel immediately usable and should not be Beepy in school cosplay.
 
 Visual notes:
 
@@ -136,16 +155,16 @@ Visual notes:
 
 Expressions:
 
-- `hungry`: Beepy holding or staring at a tiny food cue.
-- `focus-mode`: Beepy with concentration lines and a small desk mark.
-- `cafe-study`: Beepy with notebook/cup props, not a full cafe scene.
-- `done-after-class`: Beepy escaping the ruled page edge.
-- `sleepy`: Beepy slumped with small z marks.
-- `exam-panic`: Beepy with tiny paper storm marks.
+- `hungry`: small lunch/food doodle with signal dot.
+- `focus-mode`: pencil target mark and concentration rings.
+- `cafe-study`: notebook/cup stamp, not a full cafe scene.
+- `done-after-class`: stamped DONE mark escaping the ruled page edge.
+- `sleepy`: sleepy notebook creature or folded memo mark.
+- `exam-panic`: tiny paper storm and pencil panic marks.
 
 ### Cherry Dot
 
-Role: soft, friendly, slightly flirty without becoming couple-only.
+Role: soft, friendly, slightly flirty without becoming couple-only. This pack should feel like cherry/sticker characters, not Beepy with pink props.
 
 Visual notes:
 
@@ -156,12 +175,12 @@ Visual notes:
 
 Expressions:
 
-- `like`: Beepy with a tiny heart ping.
-- `waiting`: Beepy peeking from the side.
-- `sulking`: Beepy turned away with one red dot.
-- `come-out`: Beepy waving from a slip edge.
-- `heart-ping`: Beepy sending a small signal heart.
-- `shy-yes`: Beepy half-hiding behind a sticker corner.
+- `like`: cherry blob with a tiny heart ping.
+- `waiting`: red-dot charm peeking from the side.
+- `sulking`: round sticker face turned away.
+- `come-out`: cherry pair waving from a slip edge.
+- `heart-ping`: heart signal with red-dot trail.
+- `shy-yes`: shy pink sticker face half-hidden behind a corner.
 
 ### Photo Booth Blink
 
@@ -176,12 +195,12 @@ Visual notes:
 
 Expressions:
 
-- `pose`: Beepy posing for a cut.
-- `v-sign`: Beepy making a tiny V sign.
-- `retake`: Beepy with a redo arrow and camera mark.
-- `bff`: two tiny Beepy marks sharing a strip.
-- `camera-flash`: Beepy hit by a tiny flash burst.
-- `photo-saved`: Beepy pinning a mini photo slip.
+- `pose`: photo-frame pose stamp.
+- `v-sign`: V-sign sticker inside a tiny film frame.
+- `retake`: redo arrow and camera mark.
+- `bff`: two frame faces sharing a strip.
+- `camera-flash`: flash burst over a black photo card.
+- `photo-saved`: pinned mini photo slip.
 
 ### Night Signal
 
@@ -192,16 +211,16 @@ Visual notes:
 - Black/near-black slip.
 - Green signal lines.
 - Small radar and lock marks.
-- Beepy remains a hand-drawn character, not only a pixel icon.
+- Keep the marks hand-drawn and signal-based, not a full LCD/pixel mascot set.
 
 Expressions:
 
-- `secret`: Beepy holding a tiny shh/signal mark.
-- `private`: Beepy behind a lock slip.
-- `lock`: Beepy beside a small lock icon.
-- `radar-detected`: Beepy on a radar ring.
-- `do-not-disturb`: Beepy sleeping under a quiet signal line.
-- `open-quietly`: Beepy opening a paper edge carefully.
+- `secret`: tiny green secret-signal ghost or shh glyph.
+- `private`: lock slip with hidden dot.
+- `lock`: hand-drawn lock mark with scan line.
+- `radar-detected`: radar ring and detected signal dot.
+- `do-not-disturb`: quiet signal line over a dark slip.
+- `open-quietly`: barely-open black paper edge with green glow.
 
 ## UI Preview Contract
 
@@ -219,7 +238,7 @@ Pack detail must not show:
 - Color-only variants.
 - Inconsistent preview grammar between packs.
 
-The catalog source is `src/design/identityPacks.ts`. Each expression id in that file must match the final asset filename.
+The catalog source is `src/design/identityPacks.ts`. Each expression id in that file must match the final asset filename. `Classic Paper` expressions should use `artFamily: "canonical-beepy"`; paid pack expressions should use `artFamily: "pack-native"`.
 
 ## Asset Contract
 
@@ -253,18 +272,22 @@ Before real assets land, `source: "placeholder"` is allowed only for layout QA.
 Use this as the base prompt, then add the pack-specific notes above.
 
 ```text
-Create a cohesive Beepy emote sheet for BEEP-GET.
+Create a cohesive emote sheet for BEEP-GET.
 
 Brand:
 - private pager signal app for close friends
 - widget-first, paper-slip UI, tiny red notification dot
 - Korean teen/20s mood, cute but not childish
 
-Character:
-- tiny hand-drawn pager creature named Beepy
+Mascot and pack boundary:
+- Classic Paper should use the canonical hand-drawn Beepy mascot
+- paid packs should use skin-native emote subjects, not the same Beepy mascot in costumes
+- keep the BEEP-GET red dot/private signal language across every pack
+
+Character / art:
 - slightly uneven thin black ink outline
-- small rounded body, minimal face, tiny antenna/signal details
-- cream paper sticker feeling with transparent background
+- simple silhouette, minimal face, tiny signal details
+- cream paper or pack-native sticker feeling with transparent background
 
 Style:
 - restrained hand-drawn sticker sheet
@@ -286,6 +309,7 @@ Avoid:
 - anime mascot
 - generic emoji faces
 - corporate vector icon
+- same mascot with only costume or prop changes across all packs
 - Discord sticker gloss
 - over-detailed full-body character
 - purple gradients
@@ -303,8 +327,9 @@ An emote pack is production-ready only if:
 - The pack has at least six expressions.
 - At least three expressions are clearly useful as quick replies.
 - The pack looks different by idea, not only by palette.
+- Paid packs use a pack-native emote subject, not canonical Beepy with different poses.
 - The red-dot/signal language still feels like BEEP-GET.
-- The style matches the hand-drawn Beepy direction from `assets/brand/beepy-handdrawn.png`.
+- Classic Paper uses the hand-drawn Beepy direction from `assets/brand/beepy-handdrawn.png`.
 - The pack detail preview makes the user understand why the pack could be worth paying for.
 
 ## Open Work

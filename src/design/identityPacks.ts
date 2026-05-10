@@ -12,6 +12,7 @@ export type IdentityPackLayout =
 export type IdentityPackExpression = {
   id: string;
   label: string;
+  artFamily: "canonical-beepy" | "pack-native";
   source: "placeholder" | "asset";
   asset?: ImageSourcePropType;
 };
@@ -35,19 +36,24 @@ export type IdentityPack = {
   isFree?: boolean;
 };
 
-const expression = (id: string, label: string): IdentityPackExpression => ({
+const expression = (
+  id: string,
+  label: string,
+  artFamily: IdentityPackExpression["artFamily"] = "pack-native",
+): IdentityPackExpression => ({
   id,
   label,
+  artFamily,
   source: "placeholder",
 });
 
 const classicPaperExpressions = [
-  expression("basic-beepy", "Basic Beepy"),
-  expression("ok-slip", "OK slip"),
-  expression("open-signal", "Open signal"),
-  expression("save", "Save"),
-  expression("ping", "Ping"),
-  expression("waiting", "Waiting"),
+  expression("basic-beepy", "Basic Beepy", "canonical-beepy"),
+  expression("ok-slip", "OK slip", "canonical-beepy"),
+  expression("open-signal", "Open signal", "canonical-beepy"),
+  expression("save", "Save", "canonical-beepy"),
+  expression("ping", "Ping", "canonical-beepy"),
+  expression("waiting", "Waiting", "canonical-beepy"),
 ];
 
 const schoolDeskExpressions = [
