@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
 import { BeepyMascot } from "@/components/BeepyMascot";
+import { BlinkPersonStrip } from "@/components/BlinkPersonStrip";
 import { StatusDot } from "@/components/StatusDot";
 import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
@@ -22,14 +23,6 @@ const PACK_EMOTE_LABELS: Record<IdentityPackTone, readonly [string, string, stri
   photo: ["CAM", "BEEPY", "POSE"],
   night: ["RADAR", "SECRET", "LOCK"],
 };
-const PACK_FRAME_MARKS: Record<IdentityPackTone, readonly [string, string, string]> = {
-  paper: ["BEEP", "SAVE", "OK"],
-  school: ["MEMO", "D-1", "DONE"],
-  cherry: ["DOT", "LOVE", "B:"],
-  photo: ["POSE", "BFF", "SHOT"],
-  night: ["SIG", "CODE", "LOCK"],
-};
-
 export function MyScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
@@ -709,85 +702,8 @@ function BeepyMini({ dark, blush = false }: { dark: boolean; blush?: boolean }) 
   );
 }
 
-function FilmFrameArt({
-  tone,
-  frame,
-  compact,
-  dark,
-}: {
-  tone: IdentityPackTone;
-  frame: number;
-  compact: boolean;
-  dark: boolean;
-}) {
-  if (tone === "paper") {
-    return (
-      <View style={[styles.paperFrameArt, compact && styles.paperFrameArtCompact]}>
-        <View style={styles.paperFrameSlip} />
-        <View style={[styles.paperFrameDot, frame === 2 && styles.paperFrameDotMuted]} />
-        <Text style={styles.paperFrameGlyph}>{frame === 3 ? "OK" : "B"}</Text>
-      </View>
-    );
-  }
-
-  if (tone === "photo") {
-    return (
-      <View style={[styles.photoFrameArt, compact && styles.photoFrameArtCompact]}>
-        <View style={styles.photoHair} />
-        <View style={styles.photoHead} />
-        <View style={styles.photoShoulders} />
-        <Text style={[styles.photoPose, compact && styles.photoPoseCompact]}>{frame === 2 ? "B" : "V"}</Text>
-      </View>
-    );
-  }
-
-  if (tone === "school") {
-    return (
-      <View style={[styles.schoolFrameArt, compact && styles.schoolFrameArtCompact]}>
-        <View style={styles.schoolMiniMargin} />
-        <View style={styles.schoolMiniRule} />
-        <View style={[styles.schoolMiniRule, styles.schoolMiniRuleSecond]} />
-        <View style={styles.schoolMiniPencil} />
-      </View>
-    );
-  }
-
-  if (tone === "cherry") {
-    return (
-      <View style={[styles.cherryFrameArt, compact && styles.cherryFrameArtCompact]}>
-        <View style={styles.cherryFrameStem} />
-        <View style={styles.cherryFrameDot} />
-        <View style={styles.cherryFrameDotSecond} />
-        <Text style={styles.cherryFrameFace}>{frame === 2 ? "<3" : ":)"}</Text>
-      </View>
-    );
-  }
-
-  if (tone === "night") {
-    return (
-      <View style={[styles.nightFrameArt, compact && styles.nightFrameArtCompact]}>
-        <View style={styles.nightFrameRing} />
-        <View style={styles.nightFrameDot} />
-        {frame === 3 ? <View style={styles.nightFrameLock} /> : <View style={styles.nightFrameBeam} />}
-      </View>
-    );
-  }
-
-  return (
-    <View
-      style={[
-        styles.frameSilhouette,
-        dark && styles.frameSilhouetteNight,
-        compact && styles.frameSilhouetteCompact,
-      ]}
-    />
-  );
-}
-
 function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
   const dark = tone === "night";
-  const marks = PACK_FRAME_MARKS[tone];
-  const invertFrameText = dark || tone === "photo";
 
   return (
     <View
@@ -801,35 +717,7 @@ function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; comp
         dark && styles.filmStripDark,
       ]}
     >
-      {[1, 2, 3].map((frame) => (
-        <View
-          key={frame}
-          style={[
-            styles.filmFrame,
-            !dark && styles.filmFrameLight,
-            tone === "photo" && styles.filmFramePhoto,
-            tone === "school" && styles.filmFrameSchool,
-            tone === "cherry" && styles.filmFrameCherry,
-            compact && styles.filmFrameCompact,
-            dark && styles.filmFrameDark,
-          ]}
-        >
-          <Text style={[styles.frameNum, !invertFrameText && styles.frameNumLight, dark && styles.glowText]}>
-            0{frame}
-          </Text>
-          <FilmFrameArt tone={tone} frame={frame} compact={compact} dark={dark} />
-          <Text
-            style={[
-              styles.frameMark,
-              !invertFrameText && styles.frameMarkLight,
-              dark && styles.glowText,
-              compact && styles.frameMarkCompact,
-            ]}
-          >
-            {marks[frame - 1]}
-          </Text>
-        </View>
-      ))}
+      <BlinkPersonStrip compact={compact} />
     </View>
   );
 }
