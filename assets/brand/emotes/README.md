@@ -1,5 +1,7 @@
 # Beepy Emoji Asset Boundary
 
+Design source of truth: `docs/plans/2026-05-10-beepy-emote-design.md`.
+
 This folder is the production boundary for Beepy emoji assets.
 
 The current React Native view-coded Beepy marks remain layout placeholders only. Do not treat those coded shapes as monetization-ready sticker art. Production packs should replace placeholder expression metadata in `src/design/identityPacks.ts` with real image assets.

@@ -103,6 +103,8 @@ Behavior:
 
 ## Beepy Emoji Direction
 
+Detailed source of truth: `docs/plans/2026-05-10-beepy-emote-design.md`.
+
 The current view-coded emotes are useful for layout QA only. They are not good enough for monetization.
 
 Approved direction:
