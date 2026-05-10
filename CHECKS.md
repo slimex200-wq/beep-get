@@ -13,13 +13,19 @@ npm run web
 
 ## CI Gate
 
-Pull requests into `master` must pass the GitHub Actions `validate` job before merge. The CI baseline is:
+Pull requests into `master` must pass the GitHub Actions `validate` job before merge. The PR baseline is intentionally fast:
 
 ```bash
 npm ci
 npx --yes expo-doctor
 npm run typecheck
 npm test -- --runInBand
+```
+
+Android debug APK builds are intentionally not run for every PR. They run on `master` pushes and manual `workflow_dispatch` runs via the `android-build` job:
+
+```bash
+npm ci
 npx expo prebuild --platform android --no-install
 cd android && ./gradlew :app:assembleDebug --console=plain --no-daemon
 ```
