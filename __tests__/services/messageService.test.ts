@@ -27,8 +27,13 @@ const signal = {
 };
 
 describe("validateMessage", () => {
-  it("accepts valid number code", () => {
+  it("accepts valid numeric code", () => {
     expect(validateMessage("012486")).toEqual({ valid: true });
+  });
+
+  it("accepts short text signal tokens", () => {
+    expect(validateMessage("배고픔")).toEqual({ valid: true });
+    expect(validateMessage("focus+1")).toEqual({ valid: true });
   });
 
   it("accepts code with memo", () => {
@@ -43,8 +48,9 @@ describe("validateMessage", () => {
     expect(validateMessage("123456789012345678901").valid).toBe(false);
   });
 
-  it("rejects non-numeric code", () => {
-    expect(validateMessage("abc123").valid).toBe(false);
+  it("rejects unsafe signal tokens", () => {
+    expect(validateMessage("hello\nnow").valid).toBe(false);
+    expect(validateMessage("https://example.com").valid).toBe(false);
   });
 
   it("rejects memo over 30 chars", () => {
@@ -128,12 +134,12 @@ describe("sendQuickReplyToMessage", () => {
         expires_at: "2026-05-04T00:00:00.000Z",
         created_at: "2026-05-03T00:00:00.000Z",
       },
-      "8282"
+      "배고픔"
     );
 
     expect(supabase.rpc).toHaveBeenCalledWith("reply_with_preset_once", {
       p_signal_id: "source-1",
-      p_code: "8282",
+      p_code: "배고픔",
       p_client_action_id: expect.stringMatching(
         /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
       ),

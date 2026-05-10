@@ -11,6 +11,7 @@ import { SlipFrame } from "@/components/SlipFrame";
 
 type Props = {
   modeSwitch?: React.ReactNode;
+  deckHeader?: React.ReactNode;
   recipientName: string;
   recipientNo: string;
   code: string;
@@ -26,6 +27,7 @@ type Props = {
 
 export function SendBeepScreen({
   modeSwitch,
+  deckHeader,
   recipientName,
   recipientNo,
   code,
@@ -43,9 +45,9 @@ export function SendBeepScreen({
   return (
     <AppSurface>
       <HeaderBar title="SEND BEEP" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
-      {modeSwitch}
+      {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="Outgoing Beep" accent={false}>
+        <SlipFrame title="Send Slip" accent={false}>
           <View style={styles.recipientRow}>
             <View style={styles.recipientText}>
               <MetaRow label="TO." value={`${recipientName} - NO ${recipientNo}`} />
@@ -57,20 +59,20 @@ export function SendBeepScreen({
           </View>
 
           <View style={styles.codeArea}>
-            <Text style={type.tinyMono}>CODE.</Text>
+            <Text style={type.tinyMono}>CODE / TOKEN.</Text>
             <SignalCode code={cleanCode} />
             <TextInput
               value={code}
-              onChangeText={(value) => onCodeChange(value.replace(/[^0-9]/g, ""))}
-              keyboardType="number-pad"
+              onChangeText={(value) => onCodeChange(value.slice(0, 20))}
+              keyboardType="default"
               maxLength={20}
-              placeholder="8282"
+              placeholder="8282 or 배고픔"
               placeholderTextColor={colors.muted2}
               style={styles.hiddenInput}
             />
           </View>
 
-          <Text style={type.tinyMono}>PRESET</Text>
+          <Text style={type.tinyMono}>CLASSIC CODES</Text>
           <View style={styles.presets}>
             {["8282", "486", "000", "1004"].map((preset) => (
               <ActionButton

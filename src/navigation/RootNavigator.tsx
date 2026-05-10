@@ -22,7 +22,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   FirstRun: undefined;
-  Send: { friendId: string; friendName: string; friendNo?: string };
+  Send: { friendId: string; friendName: string; friendNo?: string; mode?: "beep" | "blink" };
   ReplyRoom: { signalId: string };
   WidgetStates: { size?: "small" | "medium" } | undefined;
   Logs: undefined;
@@ -40,7 +40,9 @@ export type MainTabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const tabLabels: Record<keyof MainTabParamList, string> = {
+export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
+
+const tabLabels: Record<keyof MainTabParamList, (typeof primaryTabLabels)[number]> = {
   Today: "TODAY",
   Compose: "SEND",
   People: "PEOPLE",

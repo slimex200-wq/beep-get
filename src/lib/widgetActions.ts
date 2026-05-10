@@ -25,7 +25,8 @@ export function buildWidgetActionUrls(
 ): WidgetActionUrls {
   const encodedSignalId = encodeURIComponent(signalId);
   const quickReplyUrls = quickReplyCodes
-    .filter((code) => /^\d+$/.test(code))
+    .map((code) => code.trim())
+    .filter(Boolean)
     .slice(0, WIDGET_MAX_QUICK_REPLY_CODES)
     .map((code) => ({
       code,
