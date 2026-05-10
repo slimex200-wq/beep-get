@@ -11,7 +11,7 @@ export function BlinkPersonStrip({ compact = false }: Props) {
   return (
     <View style={[styles.wrap, compact && styles.compactWrap]}>
       <Image
-        accessibilityLabel={`${BLINK_PERSON_MODEL.displayName} three-frame Blink photo strip`}
+        accessibilityLabel={`${BLINK_PERSON_MODEL.displayName} two-second Blink sample as three extracted video frames`}
         source={BLINK_PERSON_MODEL.stripAsset}
         resizeMode="cover"
         style={styles.image}
