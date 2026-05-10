@@ -1,4 +1,5 @@
 import { identityPacks } from "@/design/identityPacks";
+import { beepyEmotePackAssets } from "@/design/beepyEmoteAssets.generated";
 
 describe("identityPacks", () => {
   it("defines the approved pack catalog with at least five expressions each", () => {
@@ -18,9 +19,8 @@ describe("identityPacks", () => {
         expect(expression.label).toEqual(expect.any(String));
         expect(["canonical-beepy", "pack-native"]).toContain(expression.artFamily);
         expect(["placeholder", "asset"]).toContain(expression.source);
-        if (expression.source === "asset") {
-          expect(expression.asset).toBeTruthy();
-        }
+        expect(expression.source).toBe("asset");
+        expect(expression.asset).toBeTruthy();
       });
     });
   });
@@ -33,6 +33,19 @@ describe("identityPacks", () => {
 
     paidPacks.forEach((pack) => {
       expect(pack.expressions.every((expression) => expression.artFamily === "pack-native")).toBe(true);
+    });
+  });
+
+  it("keeps the generated asset map aligned with the identity-pack expression ids", () => {
+    const generatedBySlug = new Map(beepyEmotePackAssets.map((pack) => [pack.slug, pack]));
+
+    identityPacks.forEach((pack) => {
+      const generated = generatedBySlug.get(pack.slug);
+
+      expect(generated?.artFamily).toBe(pack.expressions[0].artFamily);
+      expect(generated?.expressions.map((expression) => expression.id)).toEqual(
+        pack.expressions.map((expression) => expression.id),
+      );
     });
   });
 });

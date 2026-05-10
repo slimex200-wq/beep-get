@@ -43,12 +43,15 @@ Each expression in `src/design/identityPacks.ts` uses:
 {
   id: string;
   label: string;
+  artFamily: "canonical-beepy" | "pack-native";
   source: "placeholder" | "asset";
   asset?: ImageSourcePropType;
 }
 ```
 
-When a real file exists, switch `source` to `"asset"` and assign `asset: require("../../assets/brand/emotes/<pack>/<file>.png")` from the catalog file after validating the bundler path.
+Production assets are wired through `src/design/beepyEmoteAssets.generated.ts`. Keep `assets/brand/emotes/manifest.json`, the generated map, and `src/design/identityPacks.ts` expression ids aligned.
+
+When a real file exists, `identityPacks.ts` should hydrate the generated map so `source` becomes `"asset"` and `asset` points at the static `require("../../assets/brand/emotes/<pack>/<file>.png")`.
 
 ## Style Prompt Skeleton
 

@@ -1,0 +1,228 @@
+{
+  "version": "v2",
+  "assetRoot": "assets/brand/emotes",
+  "format": "png",
+  "cellSize": 512,
+  "packs": [
+    {
+      "slug": "classic-paper",
+      "name": "Classic Paper",
+      "artFamily": "canonical-beepy",
+      "sheetSource": "sheets/classic-paper__sheet_source.png",
+      "expressions": [
+        {
+          "id": "basic-beepy",
+          "label": "Basic Beepy",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__basic-beepy.png"
+        },
+        {
+          "id": "ok-slip",
+          "label": "OK Slip",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__ok-slip.png"
+        },
+        {
+          "id": "open-signal",
+          "label": "Open Signal",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__open-signal.png"
+        },
+        {
+          "id": "save",
+          "label": "Save",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__save.png"
+        },
+        {
+          "id": "ping",
+          "label": "Ping",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__ping.png"
+        },
+        {
+          "id": "waiting",
+          "label": "Waiting",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/classic-paper/classic-paper__waiting.png"
+        }
+      ]
+    },
+    {
+      "slug": "school-desk",
+      "name": "School Desk",
+      "artFamily": "pack-native",
+      "sheetSource": "sheets/school-desk__sheet_source.png",
+      "expressions": [
+        {
+          "id": "hungry",
+          "label": "Hungry",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__hungry.png"
+        },
+        {
+          "id": "focus-mode",
+          "label": "Focus Mode",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__focus-mode.png"
+        },
+        {
+          "id": "cafe-study",
+          "label": "Cafe Study",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__cafe-study.png"
+        },
+        {
+          "id": "done-after-class",
+          "label": "Done After Class",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__done-after-class.png"
+        },
+        {
+          "id": "sleepy",
+          "label": "Sleepy",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__sleepy.png"
+        },
+        {
+          "id": "exam-panic",
+          "label": "Exam Panic",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/school-desk/school-desk__exam-panic.png"
+        }
+      ]
+    },
+    {
+      "slug": "cherry-dot",
+      "name": "Cherry Dot",
+      "artFamily": "pack-native",
+      "sheetSource": "sheets/cherry-dot__sheet_source.png",
+      "expressions": [
+        {
+          "id": "like",
+          "label": "Like",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__like.png"
+        },
+        {
+          "id": "waiting",
+          "label": "Waiting",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__waiting.png"
+        },
+        {
+          "id": "sulking",
+          "label": "Sulking",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__sulking.png"
+        },
+        {
+          "id": "come-out",
+          "label": "Come Out",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__come-out.png"
+        },
+        {
+          "id": "heart-ping",
+          "label": "Heart Ping",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__heart-ping.png"
+        },
+        {
+          "id": "shy-yes",
+          "label": "Shy Yes",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/cherry-dot/cherry-dot__shy-yes.png"
+        }
+      ]
+    },
+    {
+      "slug": "photo-booth-blink",
+      "name": "Photo Booth Blink",
+      "artFamily": "pack-native",
+      "sheetSource": "sheets/photo-booth-blink__sheet_source.png",
+      "expressions": [
+        {
+          "id": "pose",
+          "label": "Pose",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__pose.png"
+        },
+        {
+          "id": "v-sign",
+          "label": "V Sign",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__v-sign.png"
+        },
+        {
+          "id": "retake",
+          "label": "Retake",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__retake.png"
+        },
+        {
+          "id": "bff",
+          "label": "BFF",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__bff.png"
+        },
+        {
+          "id": "camera-flash",
+          "label": "Camera Flash",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__camera-flash.png"
+        },
+        {
+          "id": "photo-saved",
+          "label": "Photo Saved",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/photo-booth-blink/photo-booth-blink__photo-saved.png"
+        }
+      ]
+    },
+    {
+      "slug": "night-signal",
+      "name": "Night Signal",
+      "artFamily": "pack-native",
+      "sheetSource": "sheets/night-signal__sheet_source.png",
+      "expressions": [
+        {
+          "id": "secret",
+          "label": "Secret",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__secret.png"
+        },
+        {
+          "id": "private",
+          "label": "Private",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__private.png"
+        },
+        {
+          "id": "lock",
+          "label": "Lock",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__lock.png"
+        },
+        {
+          "id": "radar-detected",
+          "label": "Radar Detected",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__radar-detected.png"
+        },
+        {
+          "id": "do-not-disturb",
+          "label": "Do Not Disturb",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__do-not-disturb.png"
+        },
+        {
+          "id": "open-quietly",
+          "label": "Open Quietly",
+          "source": "asset",
+          "assetPath": "assets/brand/emotes/night-signal/night-signal__open-quietly.png"
+        }
+      ]
+    }
+  ]
+}
