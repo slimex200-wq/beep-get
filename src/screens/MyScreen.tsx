@@ -15,6 +15,20 @@ import { useDictionaryStore } from "@/stores/dictionaryStore";
 
 const DEFAULT_WIDGET_SLOTS = ["배고픔", "집중중", "끝나고"];
 const DEFAULT_PACK = "classic-paper";
+const PACK_EMOTE_LABELS: Record<IdentityPackTone, readonly [string, string, string]> = {
+  paper: ["PING", "OK", "OPEN"],
+  school: ["NOTE", "FOCUS", "DONE"],
+  cherry: ["CHERRY", "HEART", "B:"],
+  photo: ["CAM", "BEEPY", "POSE"],
+  night: ["RADAR", "SECRET", "LOCK"],
+};
+const PACK_FRAME_MARKS: Record<IdentityPackTone, readonly [string, string, string]> = {
+  paper: ["BEEP", "SAVE", "OK"],
+  school: ["MEMO", "D-1", "DONE"],
+  cherry: ["DOT", "LOVE", "B:"],
+  photo: ["POSE", "BFF", "SHOT"],
+  night: ["SIG", "CODE", "LOCK"],
+};
 
 export function MyScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -500,6 +514,8 @@ function PackEmote({
   label: string;
   dark: boolean;
 }) {
+  const displayLabel = PACK_EMOTE_LABELS[tone][index] ?? label;
+
   return (
     <View
       accessibilityLabel={`${label} emote`}
@@ -511,12 +527,39 @@ function PackEmote({
         dark && styles.emoteBoxDark,
       ]}
     >
-      <EmoteArt tone={tone} index={index} dark={dark} />
+      <View style={styles.emoteArtSlot}>
+        <EmoteArt tone={tone} index={index} dark={dark} />
+      </View>
+      <Text style={[styles.emoteCaption, dark && styles.emoteCaptionDark]}>{displayLabel}</Text>
     </View>
   );
 }
 
 function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number; dark: boolean }) {
+  if (tone === "paper") {
+    if (index === 0) {
+      return <BeepyMini dark={dark} blush />;
+    }
+
+    if (index === 1) {
+      return (
+        <View style={styles.emotePaperOk}>
+          <View style={styles.emotePaperRule} />
+          <Text style={styles.emotePaperOkText}>OK</Text>
+          <View style={styles.emotePaperStamp} />
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emotePaperOpen}>
+        <View style={styles.emotePaperDoor} />
+        <View style={styles.emotePaperSignal} />
+        <Text style={styles.emotePaperOpenText}>B</Text>
+      </View>
+    );
+  }
+
   if (tone === "photo") {
     if (index === 0) {
       return (
@@ -541,29 +584,83 @@ function EmoteArt({ tone, index, dark }: { tone: IdentityPackTone; index: number
   }
 
   if (tone === "cherry") {
+    if (index === 1) {
+      return (
+        <View style={styles.emoteCherryHeartArt}>
+          <View style={styles.emoteHeartLeft} />
+          <View style={styles.emoteHeartRight} />
+          <View style={styles.emoteHeartPoint} />
+          <Text style={styles.emoteHeartText}>!</Text>
+        </View>
+      );
+    }
+
+    if (index === 2) {
+      return (
+        <View style={styles.emoteCherryBeepy}>
+          <BeepyMini dark={dark} blush />
+          <View style={styles.emoteCherryAccent} />
+        </View>
+      );
+    }
+
     return (
       <View style={styles.emoteCherryArt}>
+        <View style={styles.emoteCherryStem} />
         <View style={[styles.emoteCherry, index === 1 && styles.emoteCherryHeart]} />
         <View style={[styles.emoteCherry, styles.emoteCherrySecond]} />
-        <Text style={styles.emoteCherryFace}>{index === 2 ? "B:" : ":)"}</Text>
+        <Text style={styles.emoteCherryFace}>:)</Text>
       </View>
     );
   }
 
   if (tone === "school") {
+    if (index === 1) {
+      return (
+        <View style={styles.emoteFocusArt}>
+          <View style={styles.emoteFocusRing} />
+          <View style={styles.emoteFocusDot} />
+          <View style={styles.emotePencil} />
+        </View>
+      );
+    }
+
+    if (index === 2) {
+      return (
+        <View style={styles.emoteDoneStamp}>
+          <Text style={styles.emoteDoneCheck}>OK</Text>
+          <View style={styles.emotePencilSmall} />
+        </View>
+      );
+    }
+
     return (
       <View style={styles.emoteSchoolArt}>
-        <View style={styles.emoteNoteSheet} />
-        <View style={[styles.emotePencil, index === 2 && styles.emotePencilTilt]} />
-        <Text style={styles.emoteSchoolMark}>{index === 1 ? "B" : "!"}</Text>
+        <View style={styles.emoteNoteSheet}>
+          <View style={styles.emoteNoteHole} />
+          <View style={styles.emoteNoteRule} />
+          <View style={[styles.emoteNoteRule, styles.emoteNoteRuleSecond]} />
+        </View>
+        <Text style={styles.emoteSchoolMark}>!</Text>
       </View>
     );
   }
 
   if (tone === "night") {
+    if (index === 1) {
+      return (
+        <View style={styles.emoteSecretArt}>
+          <View style={styles.emoteSecretCard} />
+          <View style={styles.emoteSecretBar} />
+          <Text style={styles.emoteNightText}>B</Text>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.emoteNightArt}>
         <View style={styles.emoteRadarRing} />
+        <View style={styles.emoteRadarRingSmall} />
         <View style={styles.emoteRadarDot} />
         {index === 2 ? (
           <View style={styles.emoteLock}>
@@ -603,6 +700,16 @@ function FilmFrameArt({
   compact: boolean;
   dark: boolean;
 }) {
+  if (tone === "paper") {
+    return (
+      <View style={[styles.paperFrameArt, compact && styles.paperFrameArtCompact]}>
+        <View style={styles.paperFrameSlip} />
+        <View style={[styles.paperFrameDot, frame === 2 && styles.paperFrameDotMuted]} />
+        <Text style={styles.paperFrameGlyph}>{frame === 3 ? "OK" : "B"}</Text>
+      </View>
+    );
+  }
+
   if (tone === "photo") {
     return (
       <View style={[styles.photoFrameArt, compact && styles.photoFrameArtCompact]}>
@@ -617,7 +724,9 @@ function FilmFrameArt({
   if (tone === "school") {
     return (
       <View style={[styles.schoolFrameArt, compact && styles.schoolFrameArtCompact]}>
+        <View style={styles.schoolMiniMargin} />
         <View style={styles.schoolMiniRule} />
+        <View style={[styles.schoolMiniRule, styles.schoolMiniRuleSecond]} />
         <View style={styles.schoolMiniPencil} />
       </View>
     );
@@ -626,8 +735,20 @@ function FilmFrameArt({
   if (tone === "cherry") {
     return (
       <View style={[styles.cherryFrameArt, compact && styles.cherryFrameArtCompact]}>
+        <View style={styles.cherryFrameStem} />
         <View style={styles.cherryFrameDot} />
         <View style={styles.cherryFrameDotSecond} />
+        <Text style={styles.cherryFrameFace}>{frame === 2 ? "<3" : ":)"}</Text>
+      </View>
+    );
+  }
+
+  if (tone === "night") {
+    return (
+      <View style={[styles.nightFrameArt, compact && styles.nightFrameArtCompact]}>
+        <View style={styles.nightFrameRing} />
+        <View style={styles.nightFrameDot} />
+        {frame === 3 ? <View style={styles.nightFrameLock} /> : <View style={styles.nightFrameBeam} />}
       </View>
     );
   }
@@ -645,16 +766,8 @@ function FilmFrameArt({
 
 function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
   const dark = tone === "night";
-  const marks =
-    tone === "photo"
-      ? ["POSE", "BFF", "SHOT"]
-      : tone === "school"
-        ? ["NOTE", "MEMO", "D-1"]
-        : tone === "cherry"
-          ? ["DOT", "B:", "LOVE"]
-          : tone === "night"
-            ? ["SIG", "B", "LOCK"]
-            : ["B", "BEEP", "OK"];
+  const marks = PACK_FRAME_MARKS[tone];
+  const invertFrameText = dark || tone === "photo";
 
   return (
     <View
@@ -681,9 +794,18 @@ function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; comp
             dark && styles.filmFrameDark,
           ]}
         >
-          <Text style={[styles.frameNum, dark && styles.glowText]}>0{frame}</Text>
+          <Text style={[styles.frameNum, !invertFrameText && styles.frameNumLight, dark && styles.glowText]}>
+            0{frame}
+          </Text>
           <FilmFrameArt tone={tone} frame={frame} compact={compact} dark={dark} />
-          <Text style={[styles.frameMark, dark && styles.glowText, compact && styles.frameMarkCompact]}>
+          <Text
+            style={[
+              styles.frameMark,
+              !invertFrameText && styles.frameMarkLight,
+              dark && styles.glowText,
+              compact && styles.frameMarkCompact,
+            ]}
+          >
             {marks[frame - 1]}
           </Text>
         </View>
@@ -1437,13 +1559,15 @@ const styles = StyleSheet.create({
   emoteBox: {
     flex: 1,
     minWidth: 0,
-    height: 58,
+    height: 74,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
     borderRadius: radius.control,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.22)",
+    paddingVertical: spacing[2],
+    gap: spacing[1],
   },
   emoteBoxSchool: {
     backgroundColor: "rgba(255, 231, 184, 0.58)",
@@ -1460,6 +1584,88 @@ const styles = StyleSheet.create({
   emoteBoxDark: {
     borderColor: "rgba(182, 239, 101, 0.42)",
     backgroundColor: "rgba(182, 239, 101, 0.08)",
+  },
+  emoteArtSlot: {
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteCaption: {
+    ...type.tinyMono,
+    color: colors.ink,
+    fontSize: 8,
+    lineHeight: 10,
+    letterSpacing: 0.8,
+  },
+  emoteCaptionDark: {
+    color: "#B6EF65",
+  },
+  emotePaperOk: {
+    width: 43,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    backgroundColor: "#FFF7E6",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    transform: [{ rotate: "-3deg" }],
+  },
+  emotePaperRule: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 10,
+    height: 1,
+    backgroundColor: "rgba(10,10,10,0.18)",
+  },
+  emotePaperOkText: {
+    ...type.buttonMono,
+    color: colors.ink,
+    fontSize: 13,
+  },
+  emotePaperStamp: {
+    position: "absolute",
+    right: 4,
+    bottom: 3,
+    width: 12,
+    height: 12,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(10,10,10,0.36)",
+  },
+  emotePaperOpen: {
+    width: 44,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emotePaperDoor: {
+    width: 28,
+    height: 32,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    borderRadius: 7,
+    backgroundColor: "#FFF7E6",
+    transform: [{ rotate: "5deg" }],
+  },
+  emotePaperSignal: {
+    position: "absolute",
+    right: 5,
+    top: 2,
+    width: 14,
+    height: 14,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderColor: colors.red,
+    borderTopRightRadius: 16,
+  },
+  emotePaperOpenText: {
+    position: "absolute",
+    ...type.tinyMono,
+    color: colors.ink,
   },
   emoteCamera: {
     width: 44,
@@ -1525,6 +1731,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  emoteCherryStem: {
+    position: "absolute",
+    top: 4,
+    width: 20,
+    height: 15,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderColor: "#7A6B2E",
+    borderTopLeftRadius: 16,
+    transform: [{ rotate: "18deg" }],
+  },
   emoteCherry: {
     position: "absolute",
     width: 25,
@@ -1550,6 +1767,59 @@ const styles = StyleSheet.create({
     color: "#5F1E17",
     marginTop: 9,
   },
+  emoteCherryHeartArt: {
+    width: 45,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteHeartLeft: {
+    position: "absolute",
+    left: 11,
+    top: 7,
+    width: 18,
+    height: 18,
+    borderRadius: 99,
+    backgroundColor: "#F06E78",
+  },
+  emoteHeartRight: {
+    position: "absolute",
+    right: 10,
+    top: 7,
+    width: 18,
+    height: 18,
+    borderRadius: 99,
+    backgroundColor: "#FF9FAB",
+  },
+  emoteHeartPoint: {
+    position: "absolute",
+    top: 15,
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    backgroundColor: "#F06E78",
+    transform: [{ rotate: "45deg" }],
+  },
+  emoteHeartText: {
+    ...type.tinyMono,
+    color: "#5F1E17",
+    marginTop: 7,
+  },
+  emoteCherryBeepy: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteCherryAccent: {
+    position: "absolute",
+    right: 3,
+    top: 3,
+    width: 10,
+    height: 10,
+    borderRadius: 99,
+    backgroundColor: "#F06E78",
+    borderWidth: 1,
+    borderColor: "#9E2115",
+  },
   emoteSchoolArt: {
     width: 46,
     height: 40,
@@ -1563,6 +1833,27 @@ const styles = StyleSheet.create({
     borderColor: "#C7A06A",
     borderRadius: 5,
     backgroundColor: "#FFF3CE",
+    overflow: "hidden",
+  },
+  emoteNoteHole: {
+    position: "absolute",
+    left: 4,
+    top: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 99,
+    backgroundColor: "rgba(10,10,10,0.18)",
+  },
+  emoteNoteRule: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 10,
+    height: 1,
+    backgroundColor: "rgba(78,142,180,0.36)",
+  },
+  emoteNoteRuleSecond: {
+    top: 18,
   },
   emotePencil: {
     position: "absolute",
@@ -1575,10 +1866,58 @@ const styles = StyleSheet.create({
   emotePencilTilt: {
     transform: [{ rotate: "22deg" }],
   },
+  emotePencilSmall: {
+    position: "absolute",
+    right: 3,
+    bottom: 5,
+    width: 22,
+    height: 4,
+    borderRadius: 99,
+    backgroundColor: "#E8AA3B",
+    transform: [{ rotate: "-16deg" }],
+  },
   emoteSchoolMark: {
     ...type.tinyMono,
     color: "#6B4A18",
     marginTop: 1,
+  },
+  emoteFocusArt: {
+    width: 46,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteFocusRing: {
+    width: 30,
+    height: 30,
+    borderRadius: 99,
+    borderWidth: 2,
+    borderColor: "#6B4A18",
+    borderStyle: "dashed",
+    backgroundColor: "rgba(255, 243, 206, 0.72)",
+  },
+  emoteFocusDot: {
+    position: "absolute",
+    width: 7,
+    height: 7,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+  },
+  emoteDoneStamp: {
+    width: 42,
+    height: 28,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "#6B4A18",
+    backgroundColor: "rgba(255, 243, 206, 0.82)",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ rotate: "-8deg" }],
+  },
+  emoteDoneCheck: {
+    ...type.buttonMono,
+    color: "#6B4A18",
+    fontSize: 12,
   },
   emoteNightArt: {
     width: 48,
@@ -1594,6 +1933,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(182, 239, 101, 0.58)",
   },
+  emoteRadarRingSmall: {
+    position: "absolute",
+    width: 22,
+    height: 22,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.38)",
+  },
   emoteRadarDot: {
     width: 7,
     height: 7,
@@ -1604,6 +1951,28 @@ const styles = StyleSheet.create({
     position: "absolute",
     ...type.buttonMono,
     color: "#B6EF65",
+  },
+  emoteSecretArt: {
+    width: 48,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emoteSecretCard: {
+    width: 38,
+    height: 26,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.62)",
+    backgroundColor: "rgba(182, 239, 101, 0.08)",
+  },
+  emoteSecretBar: {
+    position: "absolute",
+    left: 8,
+    right: 8,
+    bottom: 11,
+    height: 2,
+    backgroundColor: "rgba(182, 239, 101, 0.42)",
   },
   emoteLock: {
     width: 22,
@@ -1751,6 +2120,46 @@ const styles = StyleSheet.create({
     ...type.tinyMono,
     color: "#F7F3EA",
   },
+  frameNumLight: {
+    color: colors.ink,
+  },
+  paperFrameArt: {
+    width: 42,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paperFrameArtCompact: {
+    width: 28,
+    height: 20,
+  },
+  paperFrameSlip: {
+    position: "absolute",
+    width: 34,
+    height: 24,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    backgroundColor: "#FFF7E6",
+    transform: [{ rotate: "-3deg" }],
+  },
+  paperFrameDot: {
+    position: "absolute",
+    right: 4,
+    top: 3,
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+  },
+  paperFrameDotMuted: {
+    backgroundColor: "rgba(10,10,10,0.35)",
+  },
+  paperFrameGlyph: {
+    ...type.tinyMono,
+    color: colors.ink,
+    fontSize: 10,
+  },
   photoFrameArt: {
     width: 42,
     height: 30,
@@ -1816,6 +2225,17 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "rgba(78, 142, 180, 0.32)",
   },
+  schoolMiniRuleSecond: {
+    marginTop: 6,
+  },
+  schoolMiniMargin: {
+    position: "absolute",
+    left: 8,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: "rgba(208, 68, 46, 0.42)",
+  },
   schoolMiniPencil: {
     position: "absolute",
     width: 28,
@@ -1842,6 +2262,17 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     backgroundColor: "#F06E78",
   },
+  cherryFrameStem: {
+    position: "absolute",
+    top: 3,
+    width: 18,
+    height: 12,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderColor: "#7A6B2E",
+    borderTopLeftRadius: 15,
+    transform: [{ rotate: "15deg" }],
+  },
   cherryFrameDotSecond: {
     position: "absolute",
     right: 7,
@@ -1850,6 +2281,52 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 99,
     backgroundColor: "#FF9FAB",
+  },
+  cherryFrameFace: {
+    ...type.tinyMono,
+    color: "#5F1E17",
+    fontSize: 8,
+  },
+  nightFrameArt: {
+    width: 42,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nightFrameArtCompact: {
+    width: 28,
+    height: 20,
+  },
+  nightFrameRing: {
+    position: "absolute",
+    width: 29,
+    height: 29,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.45)",
+  },
+  nightFrameDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+    backgroundColor: "#B6EF65",
+  },
+  nightFrameBeam: {
+    position: "absolute",
+    right: 5,
+    top: 6,
+    width: 14,
+    height: 1,
+    backgroundColor: "rgba(182, 239, 101, 0.54)",
+    transform: [{ rotate: "-20deg" }],
+  },
+  nightFrameLock: {
+    position: "absolute",
+    bottom: 3,
+    width: 14,
+    height: 10,
+    borderRadius: 3,
+    backgroundColor: "#B6EF65",
   },
   frameSilhouette: {
     width: 20,
@@ -1901,6 +2378,9 @@ const styles = StyleSheet.create({
     color: "#F7F3EA",
     fontSize: 11,
     fontWeight: "700",
+  },
+  frameMarkLight: {
+    color: colors.ink,
   },
   frameMarkCompact: {
     fontSize: 7,
