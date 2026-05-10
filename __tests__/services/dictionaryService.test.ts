@@ -12,11 +12,13 @@ beforeEach(() => jest.clearAllMocks());
 describe("validateDictionaryEntry", () => {
   it("accepts valid entry", () => {
     expect(validateDictionaryEntry("012486", "love")).toEqual({ valid: true });
+    expect(validateDictionaryEntry("배고픔", "hungry")).toEqual({ valid: true });
   });
 
   it("rejects invalid entries", () => {
     expect(validateDictionaryEntry("", "meaning").valid).toBe(false);
     expect(validateDictionaryEntry("123456789012345678901", "meaning").valid).toBe(false);
+    expect(validateDictionaryEntry("https://example.com", "meaning").valid).toBe(false);
     expect(validateDictionaryEntry("012486", "").valid).toBe(false);
     expect(validateDictionaryEntry("012486", "a".repeat(51)).valid).toBe(false);
   });

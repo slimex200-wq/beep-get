@@ -66,11 +66,15 @@ export type LegacyMessage = {
 };
 
 export function validateMessage(code: string, memo?: string): ValidationResult {
-  if (!code) return { valid: false, error: "숫자 코드를 입력하세요" };
-  if (code.length > MAX_CODE_LENGTH)
-    return { valid: false, error: `숫자 코드는 ${MAX_CODE_LENGTH}자리 이하여야 합니다` };
-  if (!/^\d+$/.test(code))
-    return { valid: false, error: "숫자만 입력 가능합니다" };
+  const token = code.trim();
+  if (!token) return { valid: false, error: "신호 토큰을 입력하세요" };
+  if (token.length > MAX_CODE_LENGTH)
+    return { valid: false, error: `신호 토큰은 ${MAX_CODE_LENGTH}자 이하여야 합니다` };
+  if (/[\r\n]/.test(token)) return { valid: false, error: "신호 토큰은 한 줄이어야 합니다" };
+  if (/(https?:\/\/|www\.|:\/\/)/i.test(token))
+    return { valid: false, error: "신호 토큰에는 링크를 넣을 수 없습니다" };
+  if (!/^[0-9A-Za-z가-힣!?+_. -]+$/.test(token))
+    return { valid: false, error: "신호 토큰에는 숫자, 글자, 짧은 기호만 사용할 수 있습니다" };
   if (memo && memo.length > MAX_MEMO_LENGTH)
     return { valid: false, error: `메모는 ${MAX_MEMO_LENGTH}자 이하여야 합니다` };
   return { valid: true };
@@ -82,14 +86,15 @@ export async function sendMessage(
   numberCode: string,
   memo?: string
 ) {
-  const validation = validateMessage(numberCode, memo);
+  const token = numberCode.trim();
+  const validation = validateMessage(token, memo);
   if (!validation.valid) throw new Error(validation.error);
 
   void fromUserId;
 
   const { data, error } = await supabase.rpc("send_beep", {
     p_receiver_id: toUserId,
-    p_code: numberCode,
+    p_code: token,
     p_memo: memo ?? null,
   });
 
@@ -101,19 +106,21 @@ export async function sendQuickReplyToMessage(
   currentUserId: string,
   sourceMessage: LegacyMessage,
   numberCode: string,
-  clientActionId = buildQuickReplyClientActionId(sourceMessage.id, numberCode)
+  clientActionId?: string
 ) {
   if (sourceMessage.to_user !== currentUserId) {
     throw new Error("Cannot reply to a signal that was not received by this user");
   }
 
-  const validation = validateMessage(numberCode);
+  const token = numberCode.trim();
+  const validation = validateMessage(token);
   if (!validation.valid) throw new Error(validation.error);
+  const actionId = clientActionId ?? buildQuickReplyClientActionId(sourceMessage.id, token);
 
   const { data, error } = await supabase.rpc("reply_with_preset_once", {
     p_signal_id: sourceMessage.id,
-    p_code: numberCode,
-    p_client_action_id: clientActionId,
+    p_code: token,
+    p_client_action_id: actionId,
   });
 
   if (error) throw error;

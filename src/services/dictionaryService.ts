@@ -15,9 +15,15 @@ type CodePresetRow = {
 };
 
 export function validateDictionaryEntry(code: string, meaning: string): ValidationResult {
-  if (!code) return { valid: false, error: "숫자 코드를 입력하세요" };
-  if (code.length > MAX_CODE_LENGTH)
-    return { valid: false, error: `숫자 코드는 ${MAX_CODE_LENGTH}자리 이하여야 합니다` };
+  const token = code.trim();
+  if (!token) return { valid: false, error: "신호 토큰을 입력하세요" };
+  if (token.length > MAX_CODE_LENGTH)
+    return { valid: false, error: `신호 토큰은 ${MAX_CODE_LENGTH}자 이하여야 합니다` };
+  if (/[\r\n]/.test(token)) return { valid: false, error: "신호 토큰은 한 줄이어야 합니다" };
+  if (/(https?:\/\/|www\.|:\/\/)/i.test(token))
+    return { valid: false, error: "신호 토큰에는 링크를 넣을 수 없습니다" };
+  if (!/^[0-9A-Za-z가-힣!?+_. -]+$/.test(token))
+    return { valid: false, error: "신호 토큰에는 숫자, 글자, 짧은 기호만 사용할 수 있습니다" };
   if (!meaning) return { valid: false, error: "의미를 입력하세요" };
   if (meaning.length > 50)
     return { valid: false, error: "의미는 50자 이하여야 합니다" };
@@ -37,10 +43,11 @@ export async function getDictionary(userId: string) {
 export async function addEntry(userId: string, code: string, meaning: string) {
   const validation = validateDictionaryEntry(code, meaning);
   if (!validation.valid) throw new Error(validation.error);
+  const token = code.trim();
 
   const { data, error } = await supabase
     .from("code_presets")
-    .insert({ owner_id: userId, code, label: meaning, is_widget_slot: false })
+    .insert({ owner_id: userId, code: token, label: meaning, is_widget_slot: false })
     .select()
     .single();
   if (error) throw error;
@@ -50,10 +57,11 @@ export async function addEntry(userId: string, code: string, meaning: string) {
 export async function updateEntry(entryId: string, code: string, meaning: string) {
   const validation = validateDictionaryEntry(code, meaning);
   if (!validation.valid) throw new Error(validation.error);
+  const token = code.trim();
 
   const { error } = await supabase
     .from("code_presets")
-    .update({ code, label: meaning })
+    .update({ code: token, label: meaning })
     .eq("id", entryId);
   if (error) throw error;
 }

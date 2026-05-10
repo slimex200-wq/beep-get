@@ -2,22 +2,28 @@ import React, { useEffect, useMemo } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors, spacing } from "@/design/tokens";
+import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { FriendPulseRow } from "@/components/FriendPulseRow";
 import { HeaderBar } from "@/components/HeaderBar";
 import { SignalSlip } from "@/components/SignalSlip";
+import { SignalSlotRail } from "@/components/SignalSlotRail";
 import { StatusDot } from "@/components/StatusDot";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
+import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 
+const FALLBACK_REPLY_SLOTS = ["OK", "8282", "OPEN"];
+
 export function TodayScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
+  const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const { friends, fetch: fetchFriends } = useFriendStore();
   const {
     received,
@@ -33,7 +39,8 @@ export function TodayScreen() {
   useEffect(() => {
     if (!profile) return;
     fetchFriends(profile.id).catch(reportError);
-  }, [profile?.id, fetchFriends]);
+    fetchDictionary(profile.id).catch(reportError);
+  }, [profile?.id, fetchFriends, fetchDictionary]);
 
   useEffect(() => {
     if (!profile) return;
@@ -54,9 +61,38 @@ export function TodayScreen() {
   const signalQueue = useMemo(
     () =>
       received
-        .slice(1, 4)
+        .slice(1, 5)
         .map((message, index) => messageToSlipSignal(message, { index: index + 1 })),
     [received]
+  );
+
+  const quickReplySlots = useMemo(() => {
+    const savedSlots = entries.map((entry) => entry.code).filter(Boolean);
+    return Array.from(new Set([...savedSlots, ...FALLBACK_REPLY_SLOTS])).slice(0, 6);
+  }, [entries]);
+
+  const friendPulseRows = useMemo(
+    () =>
+      friends.slice(0, 4).map((friend, index) => {
+        const name = friend.nickname?.trim() || friend.friend.nickname || `FRIEND ${index + 1}`;
+        const latestFromFriend = received.find((message) => message.from_user === friend.friend_id);
+        if (!latestFromFriend) {
+          return { id: friend.friend_id, name, summary: `${name} quiet`, quiet: true };
+        }
+
+        if (latestFromFriend.is_saved) {
+          return { id: friend.friend_id, name, summary: `${name} saved Blink`, quiet: false };
+        }
+
+        const kind = latestFromFriend.kind === "blink" || latestFromFriend.media ? "Blink" : "Beep";
+        return {
+          id: friend.friend_id,
+          name,
+          summary: `${name} sent ${latestFromFriend.number_code} ${kind}`,
+          quiet: false,
+        };
+      }),
+    [friends, received]
   );
 
   const refresh = () => {
@@ -64,11 +100,22 @@ export function TodayScreen() {
     fetchReceived(profile.id, friends).catch(reportError);
   };
 
-  const quickReplyLatest = async (code: string) => {
+  const handleQuickReply = async (slot: string) => {
     if (!latestMessage) return;
+
+    if (slot === "OK") {
+      await read(latestMessage.id).catch(reportError);
+      return;
+    }
+
+    if (slot === "OPEN") {
+      navigation.navigate("ReplyRoom", { signalId: latestMessage.id });
+      return;
+    }
+
     try {
-      await quickReply(latestMessage.id, code);
-      Alert.alert("Reply sent", `${code} Beep sent back.`);
+      await quickReply(latestMessage.id, slot);
+      Alert.alert("Reply sent", `${slot} Beep sent back.`);
     } catch (err: any) {
       Alert.alert("Reply failed", err?.message ?? "Try again.");
     }
@@ -83,6 +130,7 @@ export function TodayScreen() {
         onRightPress={refresh}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <SectionHeader label="INCOMING NOW" hint="LATEST SIGNAL" />
         {latestSignal ? (
           <SignalSlip
             signal={latestSignal}
@@ -102,32 +150,8 @@ export function TodayScreen() {
           </View>
         )}
 
-        <View style={styles.quickRow}>
-          <ActionButton
-            label="OK"
-            mono
-            flex
-            disabled={!latestMessage}
-            onPress={() => latestMessage && read(latestMessage.id).catch(reportError)}
-          />
-          <ActionButton
-            label="8282"
-            mono
-            flex
-            disabled={!latestMessage}
-            onPress={() => quickReplyLatest("8282")}
-          />
-          <ActionButton
-            label="OPEN"
-            variant="dark"
-            flex
-            disabled={!latestMessage}
-            onPress={() =>
-              latestMessage && navigation.navigate("ReplyRoom", { signalId: latestMessage.id })
-            }
-          />
-        </View>
-
+        <SectionHeader label="QUICK REPLY" hint="MY SLOTS + CLASSIC CODES" />
+        <SignalSlotRail slots={quickReplySlots} disabled={!latestMessage} onSelect={handleQuickReply} />
         <ActionButton
           label="SAVE LOG"
           variant="ghost"
@@ -135,26 +159,70 @@ export function TodayScreen() {
           onPress={() => latestMessage && save(latestMessage.id).catch(reportError)}
         />
 
+        <SectionHeader label="TODAY QUEUE" hint={`${signalQueue.length} WAITING`} />
         <View style={styles.queue}>
-          {signalQueue.map((item) => (
-            <View key={item.id} style={styles.queueRow}>
-              <View style={styles.noColumn}>
-                <Text style={type.tinyMono}>NO.</Text>
-                <Text style={type.codeSmall}>{item.code}</Text>
+          {signalQueue.length > 0 ? (
+            signalQueue.map((item) => (
+              <View key={item.id} style={styles.queueRow}>
+                <View style={styles.noColumn}>
+                  <Text style={type.tinyMono}>NO.</Text>
+                  <Text style={type.codeSmall}>{item.code}</Text>
+                </View>
+                <View style={styles.fromColumn}>
+                  <Text style={type.tinyMono}>FROM.</Text>
+                  <Text style={type.metaValue}>{item.sender}</Text>
+                </View>
+                <Text style={type.monoValue}>{item.time}</Text>
+                <StatusDot size={7} color={item.status === "new" ? colors.red : colors.faint} />
               </View>
-              <View style={styles.fromColumn}>
-                <Text style={type.tinyMono}>FROM.</Text>
-                <Text style={type.metaValue}>{item.sender}</Text>
-              </View>
-              <Text style={type.monoValue}>{item.time}</Text>
-              <StatusDot size={7} color={item.status === "new" ? colors.red : colors.faint} />
+            ))
+          ) : (
+            <View style={styles.softPanel}>
+              <Text style={type.bodyMuted}>No more signals queued.</Text>
             </View>
-          ))}
+          )}
+        </View>
+
+        <SectionHeader label="FRIEND PULSE" hint="CLOSE CIRCUIT" />
+        <View style={styles.pulseList}>
+          {friendPulseRows.length > 0 ? (
+            friendPulseRows.map((row) => (
+              <FriendPulseRow key={row.id} name={row.name} summary={row.summary} quiet={row.quiet} />
+            ))
+          ) : (
+            <View style={styles.softPanel}>
+              <Text style={type.bodyMuted}>Add close friends to see their signal pulse here.</Text>
+            </View>
+          )}
+        </View>
+
+        <SectionHeader label="WIDGET MIRROR" hint="FRIEND HOME STATE" />
+        <View style={styles.widgetMirror}>
+          <View style={styles.widgetTopLine}>
+            <Text style={type.tinyMono}>BEEP WIDGET</Text>
+            <StatusDot size={7} color={latestSignal ? colors.red : colors.faint} />
+          </View>
+          <Text style={styles.widgetCode}>{latestSignal?.code ?? "----"}</Text>
+          <Text style={type.bodyMuted}>
+            {latestSignal
+              ? `${latestSignal.sender} · ${latestSignal.hasBlink ? "2 SEC BLINK" : "CODE-ONLY BEEP"}`
+              : "No signal is currently mirrored on the friend-home widget."}
+          </Text>
         </View>
 
         <ActionButton label="REFRESH" variant="ghost" mono onPress={refresh} />
       </ScrollView>
     </AppSurface>
+  );
+}
+
+function SectionHeader({ label, hint }: { label: string; hint: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={type.tinyMono}>{label}</Text>
+      <View style={styles.sectionLine} />
+      <Text style={type.tinyMono}>{hint}</Text>
+    </View>
   );
 }
 
@@ -174,13 +242,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[8],
     gap: spacing[4],
   },
-  quickRow: {
+  sectionHeader: {
     flexDirection: "row",
+    alignItems: "center",
     gap: spacing[3],
+    marginTop: spacing[2],
+  },
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.rule,
   },
   queue: {
     gap: spacing[2],
-    marginTop: spacing[3],
   },
   queueRow: {
     minHeight: 56,
@@ -199,6 +273,9 @@ const styles = StyleSheet.create({
   fromColumn: {
     flex: 1,
   },
+  pulseList: {
+    gap: spacing[2],
+  },
   empty: {
     minHeight: 180,
     justifyContent: "center",
@@ -208,5 +285,31 @@ const styles = StyleSheet.create({
     borderColor: colors.ruleStrong,
     borderRadius: 12,
     backgroundColor: colors.paperWarm,
+  },
+  softPanel: {
+    minHeight: 48,
+    justifyContent: "center",
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: radius.control,
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
+  widgetMirror: {
+    gap: spacing[3],
+    padding: spacing[5],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 12,
+    backgroundColor: colors.paperWarm,
+  },
+  widgetTopLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  widgetCode: {
+    ...type.codeMedium,
+    textAlign: "left",
   },
 });

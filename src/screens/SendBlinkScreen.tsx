@@ -13,6 +13,7 @@ import { SlipFrame } from "@/components/SlipFrame";
 
 type Props = {
   modeSwitch?: React.ReactNode;
+  deckHeader?: React.ReactNode;
   recipientName: string;
   recipientNo: string;
   code: string;
@@ -34,6 +35,7 @@ type Props = {
 
 export function SendBlinkScreen({
   modeSwitch,
+  deckHeader,
   recipientName,
   recipientNo,
   code,
@@ -55,9 +57,9 @@ export function SendBlinkScreen({
   return (
     <AppSurface>
       <HeaderBar title="SEND BLINK" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
-      {modeSwitch}
+      {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="Outgoing Blink" accent={false}>
+        <SlipFrame title="Send Slip" accent={false}>
           <View style={styles.recipientRow}>
             <View style={styles.recipientText}>
               <MetaRow label="TO." value={`${recipientName} - NO ${recipientNo}`} />
@@ -103,7 +105,7 @@ export function SendBlinkScreen({
             )}
           </View>
 
-          <Text style={type.tinyMono}>CODE / PRESET</Text>
+          <Text style={type.tinyMono}>CODE / TOKEN</Text>
           <View style={styles.presets}>
             {["8282", "486", "000"].map((preset) => (
               <ActionButton
@@ -118,10 +120,10 @@ export function SendBlinkScreen({
           </View>
           <TextInput
             value={code}
-            onChangeText={(value) => onCodeChange(value.replace(/[^0-9]/g, ""))}
-            keyboardType="number-pad"
+            onChangeText={(value) => onCodeChange(value.slice(0, 20))}
+            keyboardType="default"
             maxLength={20}
-            placeholder="8282"
+            placeholder="8282 or 배고픔"
             placeholderTextColor={colors.muted2}
             style={styles.input}
           />

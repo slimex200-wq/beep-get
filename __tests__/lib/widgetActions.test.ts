@@ -7,7 +7,7 @@ import {
 
 describe("buildWidgetActionUrls", () => {
   it("builds open, confirm, save, and quick reply deep links", () => {
-    expect(buildWidgetActionUrls("signal-1", ["8282", "OK", "1004"])).toEqual({
+    expect(buildWidgetActionUrls("signal-1", ["8282", "OK", "배고픔"])).toEqual({
       openReplyRoomUrl: "beepget://reply/signal-1",
       confirmUrl: "beepget://signal/signal-1/confirm",
       saveUrl: "beepget://signal/signal-1/save",
@@ -17,8 +17,12 @@ describe("buildWidgetActionUrls", () => {
           url: "beepget://signal/signal-1/quick-reply/8282",
         },
         {
-          code: "1004",
-          url: "beepget://signal/signal-1/quick-reply/1004",
+          code: "OK",
+          url: "beepget://signal/signal-1/quick-reply/OK",
+        },
+        {
+          code: "배고픔",
+          url: `beepget://signal/signal-1/quick-reply/${encodeURIComponent("배고픔")}`,
         },
       ],
     });
