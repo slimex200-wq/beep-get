@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
@@ -7,7 +7,7 @@ import { BeepyMascot } from "@/components/BeepyMascot";
 import { StatusDot } from "@/components/StatusDot";
 import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
-import { identityPacks, type IdentityPack, type IdentityPackTone } from "@/lib/identityPacks";
+import { identityPacks, type IdentityPack, type IdentityPackExpression, type IdentityPackTone } from "@/lib/identityPacks";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { useAuthStore } from "@/stores/authStore";
@@ -363,8 +363,14 @@ function PackDetail({
           <View style={styles.detailBlockFull}>
             <Text style={[styles.blockLabel, dark && styles.glowText]}>BEEPY EMOTE</Text>
             <View style={styles.emoteRow}>
-              {pack.emotes.map((emote, index) => (
-                <PackEmote key={`${pack.slug}-${index}`} tone={pack.tone} index={index} label={emote} dark={dark} />
+              {pack.expressions.slice(0, 3).map((expression, index) => (
+                <PackEmote
+                  key={`${pack.slug}-${expression.id}`}
+                  tone={pack.tone}
+                  index={index}
+                  expression={expression}
+                  dark={dark}
+                />
               ))}
             </View>
           </View>
@@ -506,19 +512,19 @@ function MetaRow({
 function PackEmote({
   tone,
   index,
-  label,
+  expression,
   dark,
 }: {
   tone: IdentityPackTone;
   index: number;
-  label: string;
+  expression: IdentityPackExpression;
   dark: boolean;
 }) {
-  const displayLabel = PACK_EMOTE_LABELS[tone][index] ?? label;
+  const displayLabel = PACK_EMOTE_LABELS[tone][index] ?? expression.label;
 
   return (
     <View
-      accessibilityLabel={`${label} emote`}
+      accessibilityLabel={`${expression.label} emote`}
       style={[
         styles.emoteBox,
         tone === "school" && styles.emoteBoxSchool,
@@ -528,7 +534,11 @@ function PackEmote({
       ]}
     >
       <View style={styles.emoteArtSlot}>
-        <EmoteArt tone={tone} index={index} dark={dark} />
+        {expression.source === "asset" && expression.asset ? (
+          <Image source={expression.asset} resizeMode="contain" style={styles.emoteImage} />
+        ) : (
+          <EmoteArt tone={tone} index={index} dark={dark} />
+        )}
       </View>
       <Text style={[styles.emoteCaption, dark && styles.emoteCaptionDark]}>{displayLabel}</Text>
     </View>
@@ -1599,6 +1609,10 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
+  },
+  emoteImage: {
+    width: 46,
+    height: 44,
   },
   emoteCaption: {
     ...type.tinyMono,

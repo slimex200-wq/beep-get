@@ -1,4 +1,5 @@
 import type { ImageSourcePropType } from "react-native";
+import { beepyEmotePackAssets } from "./beepyEmoteAssets.generated";
 
 export type IdentityPackTone = "paper" | "school" | "cherry" | "photo" | "night";
 
@@ -47,50 +48,77 @@ const expression = (
   source: "placeholder",
 });
 
-const classicPaperExpressions = [
+const hydrateAssetExpressions = (
+  packSlug: string,
+  expressions: IdentityPackExpression[],
+): IdentityPackExpression[] => {
+  const packAssets = beepyEmotePackAssets.find((pack) => pack.slug === packSlug);
+
+  if (!packAssets) {
+    return expressions;
+  }
+
+  return expressions.map((item) => {
+    const assetExpression = packAssets.expressions.find((asset) => asset.id === item.id);
+
+    if (!assetExpression) {
+      return item;
+    }
+
+    return {
+      ...item,
+      label: assetExpression.label,
+      artFamily: packAssets.artFamily,
+      source: assetExpression.source,
+      asset: assetExpression.asset,
+    };
+  });
+};
+
+const classicPaperExpressions = hydrateAssetExpressions("classic-paper", [
   expression("basic-beepy", "Basic Beepy", "canonical-beepy"),
   expression("ok-slip", "OK slip", "canonical-beepy"),
   expression("open-signal", "Open signal", "canonical-beepy"),
   expression("save", "Save", "canonical-beepy"),
   expression("ping", "Ping", "canonical-beepy"),
   expression("waiting", "Waiting", "canonical-beepy"),
-];
+]);
 
-const schoolDeskExpressions = [
+const schoolDeskExpressions = hydrateAssetExpressions("school-desk", [
   expression("hungry", "Hungry"),
   expression("focus-mode", "Focus mode"),
   expression("cafe-study", "Cafe study"),
   expression("done-after-class", "Done after class"),
   expression("sleepy", "Sleepy"),
   expression("exam-panic", "Exam panic"),
-];
+]);
 
-const cherryDotExpressions = [
+const cherryDotExpressions = hydrateAssetExpressions("cherry-dot", [
   expression("like", "Like"),
   expression("waiting", "Waiting"),
   expression("sulking", "Sulking"),
   expression("come-out", "Come out"),
   expression("heart-ping", "Heart ping"),
   expression("shy-yes", "Shy yes"),
-];
+]);
 
-const photoBoothBlinkExpressions = [
+const photoBoothBlinkExpressions = hydrateAssetExpressions("photo-booth-blink", [
   expression("pose", "Pose"),
   expression("v-sign", "V sign"),
   expression("retake", "Retake"),
   expression("bff", "BFF"),
   expression("camera-flash", "Camera flash"),
   expression("photo-saved", "Photo saved"),
-];
+]);
 
-const nightSignalExpressions = [
+const nightSignalExpressions = hydrateAssetExpressions("night-signal", [
   expression("secret", "Secret"),
   expression("private", "Private"),
   expression("lock", "Lock"),
   expression("radar-detected", "Radar detected"),
   expression("do-not-disturb", "Do not disturb"),
   expression("open-quietly", "Open quietly"),
-];
+]);
 
 export const identityPacks: IdentityPack[] = [
   {
