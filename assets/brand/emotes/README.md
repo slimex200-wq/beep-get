@@ -2,9 +2,14 @@
 
 Design source of truth: `docs/plans/2026-05-10-beepy-emote-design.md`.
 
-This folder is the production boundary for Beepy emoji assets.
+This folder is the production boundary for Beepy and identity-pack emote assets.
 
-The current React Native view-coded Beepy marks remain layout placeholders only. Do not treat those coded shapes as monetization-ready sticker art. Production packs should replace placeholder expression metadata in `src/design/identityPacks.ts` with real image assets.
+The current React Native view-coded marks remain layout placeholders only. Do not treat those coded shapes as monetization-ready sticker art. Production packs should replace placeholder expression metadata in `src/design/identityPacks.ts` with real image assets.
+
+Important boundary:
+
+- `Classic Paper` should use the canonical hand-drawn Beepy mascot reference.
+- Paid packs should use skin-native emotes, not the same Beepy mascot with only different actions, props, or costumes.
 
 ## Format
 
@@ -48,10 +53,11 @@ When a real file exists, switch `source` to `"asset"` and assign `asset: require
 ## Style Prompt Skeleton
 
 ```text
-Create a cohesive Beepy sticker/emote sheet for BEEP-GET.
+Create a cohesive BEEP-GET emote sheet.
 
 Style:
-- hand-drawn tiny pager mascot named Beepy
+- Classic Paper uses the hand-drawn tiny pager mascot named Beepy
+- paid packs use skin-native emote subjects, not Beepy costume/action variants
 - cream paper sticker feeling, thin black ink outline, slightly uneven linework
 - tiny red notification dot accent
 - minimal Korean teen/20s private-friend mood

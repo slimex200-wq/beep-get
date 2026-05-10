@@ -110,14 +110,17 @@ The current view-coded emotes are useful for layout QA only. They are not good e
 Approved direction:
 
 - Keep coded emotes as temporary placeholders.
-- Build real `PNG` or `WebP` Beepy emoji assets.
+- Use the real hand-drawn Beepy mascot for the default `Classic Paper` skin.
+- Build real `PNG` or `WebP` skin-native emote assets for paid packs.
+- Do not make paid packs the same Beepy mascot doing different actions or wearing different costumes.
 - Each identity pack needs 5-8 expressions, not only 3.
 - The app should preview 3 emotes in pack detail, but the pack can include more in the future.
 - Maintain the BEEP-GET visual language: cream paper, thin black ink, tiny red dot, slightly imperfect hand-drawn lines, not glossy mascot art.
 
 Shared art rules:
 
-- Hand-drawn Beepy, simple body, asymmetrical tiny details.
+- Default skin: hand-drawn Beepy, simple body, asymmetrical tiny details.
+- Other skins: different emote subjects that belong to the skin, tied together by paper/signal/red-dot language.
 - Thin black outline with small red accent dot.
 - Transparent background for production sticker assets.
 - Readable at small widget-preview size.
@@ -176,10 +179,11 @@ Shared art rules:
 Use this as the stable prompt skeleton:
 
 ```text
-Create a cohesive Beepy sticker/emote sheet for BEEP-GET.
+Create a cohesive BEEP-GET emote sheet.
 
 Style:
-- hand-drawn tiny pager mascot named Beepy
+- Classic Paper uses the hand-drawn tiny pager mascot named Beepy
+- paid packs use different skin-native emote subjects, not Beepy costume/action variants
 - cream paper sticker feeling, thin black ink outline, slightly uneven linework
 - tiny red notification dot accent
 - minimal Korean teen/20s private-friend mood
