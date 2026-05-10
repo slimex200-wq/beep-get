@@ -8,12 +8,14 @@ export type BlinkPersonFrame = {
   label: string;
   shortLabel: string;
   pose: BlinkPersonPose;
+  sampleAtSeconds: 0 | 0.7 | 1.3;
   accessibilityLabel: string;
 };
 
 export type BlinkPersonModel = {
   id: string;
   displayName: string;
+  clipDurationSeconds: 2;
   stripAsset: ImageSourcePropType;
   frames: readonly [BlinkPersonFrame, BlinkPersonFrame, BlinkPersonFrame];
 };
@@ -21,6 +23,7 @@ export type BlinkPersonModel = {
 export const BLINK_PERSON_MODEL: BlinkPersonModel = {
   id: "mina-motion-sample",
   displayName: "Mina",
+  clipDurationSeconds: 2,
   stripAsset: require("../../assets/brand/blink/blink-person-model-strip.png"),
   frames: [
     {
@@ -29,6 +32,7 @@ export const BLINK_PERSON_MODEL: BlinkPersonModel = {
       label: "WAVE",
       shortLabel: "HI",
       pose: "wave",
+      sampleAtSeconds: 0,
       accessibilityLabel: "waves into frame",
     },
     {
@@ -37,6 +41,7 @@ export const BLINK_PERSON_MODEL: BlinkPersonModel = {
       label: "JUMP",
       shortLabel: "UP",
       pose: "jump",
+      sampleAtSeconds: 0.7,
       accessibilityLabel: "jumps in the middle frame",
     },
     {
@@ -45,6 +50,7 @@ export const BLINK_PERSON_MODEL: BlinkPersonModel = {
       label: "PEACE",
       shortLabel: "V",
       pose: "peace",
+      sampleAtSeconds: 1.3,
       accessibilityLabel: "finishes with a peace sign",
     },
   ],
