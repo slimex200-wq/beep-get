@@ -59,6 +59,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - `MY` style-shop picker now avoids the earlier dense two-column card wall: selected pack context is shown in a single `NOW PREVIEWING` panel, pack choices are compact ticket rows, and Blink 3-cut pack art uses skin-specific mini marks instead of placeholder `IMG` labels.
 - `MY` paid-pack previews now avoid blank black media strips: Photo Booth Blink uses camera/Beepy/pose emote chips and a visible three-cut photo strip, while other packs render tone-matched mini art instead of raw text labels.
 - `MY` identity-pack previews now use a consistent purchasable preview grammar: each selected pack detail shows three themed Beepy emote chips and a tone-specific Blink 3-cut strip instead of color-only variants.
+- Beepy emote art direction now has a standalone source-of-truth document at `docs/plans/2026-05-10-beepy-emote-design.md`; `assets/brand/emotes/README.md` remains the asset-boundary/naming contract.
 - macOS/iOS availability may block iOS verification.
 
 ## Next Work Queue
@@ -71,7 +72,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Configure Google Play Console/service account, then run production EAS build and submit.
 - Keep visual changes aligned with `.brand.json` and existing mockups.
 - Continue UI/UX review from the current `EXPO_PUBLIC_UI_PREVIEW=1` emulator build for real-device pacing and medium-widget placement.
-- Continue polishing paid identity-pack assets and real mascot/emote/Blink thumbnail art before adding real IAP; preview grammar is consistent now, but final commissioned sticker art is still pending.
+- Continue polishing paid identity-pack assets against `docs/plans/2026-05-10-beepy-emote-design.md` before adding real IAP; preview grammar is consistent now, but final commissioned sticker art is still pending.
 - Add the reply-slot editor and persistence rules from `docs/plans/2026-05-08-four-tab-identity-shop.md`; current `MY` uses existing slots plus safe defaults.
 - Keep identity packs as official mock/locked packs until StoreKit / Google Play Billing is explicitly designed and implemented.
 - Add native background widget direct-send actions only after native auth/session sharing and retry UX are deliberately designed; the current safe implementation routes widget taps through app-owned deep links backed by server idempotency.
