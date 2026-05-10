@@ -91,10 +91,11 @@ export function MyScreen() {
         <SectionHeader label="CURRENT WIDGET" hint="FRIEND HOME PREVIEW" />
         <WidgetPreview pack={selectedPack} replySlots={replySlots} />
 
-        <SectionHeader label="STYLE SHOP" hint="PICK ONE PACK" />
-        <View style={styles.packGrid}>
+        <SectionHeader label="STYLE SHOP" hint="TAP TO TRY" />
+        <SelectedPackSummary pack={selectedPack} />
+        <View style={styles.packPicker}>
           {identityPacks.map((pack) => (
-            <PackTile
+            <PackTicket
               key={pack.slug}
               pack={pack}
               selected={pack.slug === selectedPack.slug}
@@ -198,7 +199,55 @@ function WidgetPreview({ pack, replySlots }: { pack: IdentityPack; replySlots: s
   );
 }
 
-function PackTile({
+function SelectedPackSummary({ pack }: { pack: IdentityPack }) {
+  const dark = pack.tone === "night";
+
+  return (
+    <View
+      style={[
+        styles.selectedPackPanel,
+        detailToneStyle[pack.tone],
+        dark && styles.selectedPackPanelDark,
+      ]}
+    >
+      <View pointerEvents="none" style={styles.selectedPackDecor}>
+        <PackSurfaceDecor tone={pack.tone} />
+      </View>
+      <View style={styles.selectedPackContent}>
+        <View style={styles.selectedPackTop}>
+          <View style={styles.selectedPackTitleBlock}>
+            <Text style={[styles.selectedPackKicker, dark && styles.glowText]}>NOW PREVIEWING</Text>
+            <Text style={[styles.selectedPackName, dark && styles.darkText]}>
+              {pack.index}. {pack.name}
+            </Text>
+          </View>
+          <View style={[styles.selectedPackPricePill, dark && styles.darkPill]}>
+            <Text style={[styles.selectedPackPrice, dark && styles.darkText]}>{pack.priceLabel}</Text>
+          </View>
+        </View>
+
+        <Text style={[styles.selectedPackCopy, dark && styles.darkMuted]} numberOfLines={2}>
+          {pack.shortCopy}
+        </Text>
+
+        <View style={styles.selectedPackSignals}>
+          <View style={[styles.signalPill, dark && styles.signalPillDark]}>
+            <Text style={[styles.signalLabel, dark && styles.darkMuted]}>SIGNAL</Text>
+            <Text style={[styles.signalValue, dark && styles.darkText]}>{pack.code}</Text>
+          </View>
+          <View style={[styles.signalPill, dark && styles.signalPillDark]}>
+            <Text style={[styles.signalLabel, dark && styles.darkMuted]}>REPLY SLOTS</Text>
+            <Text style={[styles.signalValueSmall, dark && styles.darkText]} numberOfLines={1}>
+              {pack.slots.join(" / ")}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function PackTicket({
   pack,
   selected,
   onPress,
@@ -221,23 +270,23 @@ function PackTile({
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.packTop}>
-        <Text style={[styles.packIndex, dark && styles.packIndexDark]}>{pack.index}</Text>
-        <Text style={[styles.packName, dark && styles.darkText]}>{pack.name}</Text>
-        <Text style={[styles.packBadge, pack.badge === "RARE" && styles.rareBadge]}>{pack.badge}</Text>
-      </View>
       <View style={[styles.tileSlip, widgetToneStyle[pack.tone], dark && styles.tileSlipDark]}>
         <PackSurfaceDecor tone={pack.tone} compact />
-        <WidgetHeader title={pack.title} dark={dark} dotColor={dark ? colors.greenDot : colors.red} />
         <Text style={[styles.tileCode, pack.tone === "school" && styles.tileTextCode, dark && styles.glowCode]}>
           {pack.code}
         </Text>
-        {pack.tone === "photo" ? <MiniFilmStrip tone={pack.tone} compact /> : null}
-        <MetaRow label="FROM." value={pack.from} dark={dark} compact />
+        <View style={[styles.tileMiniDot, dark && styles.tileMiniDotDark]} />
+      </View>
+      <View style={styles.packTop}>
+        <Text style={[styles.packIndex, dark && styles.packIndexDark]}>{pack.index}</Text>
+        <Text style={[styles.packName, dark && styles.darkText]} numberOfLines={1}>
+          {pack.name}
+        </Text>
+        <Text style={[styles.packBadge, pack.badge === "RARE" && styles.rareBadge]}>{pack.badge}</Text>
       </View>
       <View style={styles.packBottom}>
         <Text style={[styles.priceText, dark && styles.glowText]}>{pack.priceLabel}</Text>
-        <Text style={[styles.selectText, selected && styles.selectTextActive]}>{selected ? "SELECTED" : "TRY"}</Text>
+        <Text style={[styles.selectText, selected && styles.selectTextActive]}>{selected ? "ON" : "TRY"}</Text>
       </View>
     </Pressable>
   );
@@ -451,16 +500,43 @@ function MetaRow({
 
 function MiniFilmStrip({ tone, compact = false }: { tone: IdentityPackTone; compact?: boolean }) {
   const dark = tone === "night";
-  const mark = tone === "photo" ? "IMG" : tone === "school" ? "NOTE" : tone === "cherry" ? "B:" : "B";
+  const marks =
+    tone === "photo"
+      ? ["POSE", "BFF", "SHOT"]
+      : tone === "school"
+        ? ["NOTE", "MEMO", "D-1"]
+        : tone === "cherry"
+          ? ["DOT", "B:", "LOVE"]
+          : tone === "night"
+            ? ["SIG", "B", "LOCK"]
+            : ["B", "BEEP", "OK"];
 
   return (
     <View style={[styles.filmStrip, compact && styles.filmStripCompact, dark && styles.filmStripDark]}>
       {[1, 2, 3].map((frame) => (
-        <View key={frame} style={[styles.filmFrame, compact && styles.filmFrameCompact, dark && styles.filmFrameDark]}>
+        <View
+          key={frame}
+          style={[
+            styles.filmFrame,
+            !dark && styles.filmFrameLight,
+            compact && styles.filmFrameCompact,
+            dark && styles.filmFrameDark,
+          ]}
+        >
           <Text style={[styles.frameNum, dark && styles.glowText]}>0{frame}</Text>
-          <View style={[styles.frameSilhouette, compact && styles.frameSilhouetteCompact]} />
+          <View
+            style={[
+              styles.frameSilhouette,
+              tone === "photo" && styles.frameSilhouettePhoto,
+              tone === "cherry" && styles.frameSilhouetteCherry,
+              tone === "night" && styles.frameSilhouetteNight,
+              compact && styles.frameSilhouetteCompact,
+            ]}
+          >
+            {tone === "photo" ? <View style={[styles.photoFace, compact && styles.photoFaceCompact]} /> : null}
+          </View>
           <Text style={[styles.frameMark, dark && styles.glowText, compact && styles.frameMarkCompact]}>
-            {mark}
+            {marks[frame - 1]}
           </Text>
         </View>
       ))}
@@ -920,25 +996,113 @@ const styles = StyleSheet.create({
     ...type.metaValue,
     flex: 1,
   },
-  packGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[5],
-  },
-  packTile: {
-    width: "48%",
-    minHeight: 210,
+  selectedPackPanel: {
     borderWidth: 1,
     borderColor: colors.ink,
     borderRadius: radius.slip,
-    padding: spacing[5],
+    padding: spacing[6],
+    position: "relative",
+    overflow: "hidden",
     gap: spacing[4],
+  },
+  selectedPackPanelDark: {
+    borderColor: "rgba(182, 239, 101, 0.62)",
+  },
+  selectedPackDecor: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.44,
+  },
+  selectedPackContent: {
+    gap: spacing[4],
+  },
+  selectedPackTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing[4],
+  },
+  selectedPackTitleBlock: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  selectedPackKicker: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  selectedPackName: {
+    ...type.screenTitle,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  selectedPackPricePill: {
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.paper,
+  },
+  selectedPackPrice: {
+    ...type.buttonMono,
+    color: colors.ink,
+  },
+  selectedPackCopy: {
+    ...type.body,
+    color: colors.muted,
+  },
+  selectedPackSignals: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[3],
+  },
+  signalPill: {
+    flex: 1,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.control,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    backgroundColor: "rgba(255, 253, 244, 0.72)",
+  },
+  signalPillDark: {
+    borderColor: "rgba(182, 239, 101, 0.32)",
+    backgroundColor: "rgba(182, 239, 101, 0.07)",
+  },
+  signalLabel: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  signalValue: {
+    ...type.codeSmall,
+    fontSize: 24,
+    lineHeight: 29,
+  },
+  signalValueSmall: {
+    ...type.buttonMono,
+    color: colors.ink,
+  },
+  packPicker: {
+    gap: spacing[3],
+  },
+  packTile: {
+    width: "100%",
+    minHeight: 78,
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.slipSmall,
+    padding: spacing[3],
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
   },
   packTileSelected: {
     borderWidth: 2,
-    transform: [{ translateY: -2 }],
+    borderColor: colors.ink,
+    transform: [{ translateY: -1 }],
   },
   packTop: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[3],
@@ -959,6 +1123,8 @@ const styles = StyleSheet.create({
   packName: {
     ...type.slipTitleSmall,
     flex: 1,
+    fontSize: 14,
+    lineHeight: 18,
   },
   packBadge: {
     ...type.tinyMono,
@@ -974,38 +1140,51 @@ const styles = StyleSheet.create({
     borderColor: "#E0C759",
   },
   tileSlip: {
+    width: 62,
+    minHeight: 52,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
     borderRadius: radius.slipSmall,
-    padding: spacing[4],
-    gap: spacing[2],
-    minHeight: 104,
+    padding: spacing[2],
+    gap: spacing[1],
     overflow: "hidden",
     position: "relative",
   },
   tileSlipDark: {
     borderColor: "rgba(158, 216, 91, 0.58)",
   },
+  tileMiniDot: {
+    position: "absolute",
+    right: spacing[2],
+    top: spacing[2],
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+    backgroundColor: colors.red,
+  },
+  tileMiniDotDark: {
+    backgroundColor: colors.greenDot,
+  },
   tileCode: {
     ...type.codeSmall,
     textAlign: "center",
-    fontSize: 33,
-    lineHeight: 38,
+    fontSize: 18,
+    lineHeight: 22,
   },
   tileTextCode: {
     fontFamily: font.displayKo,
-    fontSize: 23,
-    lineHeight: 31,
-    letterSpacing: -0.8,
+    fontSize: 13,
+    lineHeight: 17,
+    letterSpacing: -0.4,
   },
   packBottom: {
-    flexDirection: "row",
+    width: 70,
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: "auto",
+    gap: spacing[1],
   },
   priceText: {
-    ...type.buttonMono,
+    ...type.tinyMono,
+    color: colors.ink,
   },
   selectText: {
     ...type.tinyMono,
@@ -1128,14 +1307,14 @@ const styles = StyleSheet.create({
   },
   filmStrip: {
     width: "100%",
-    minHeight: 48,
+    height: 54,
     borderRadius: radius.control,
     backgroundColor: colors.ink,
     flexDirection: "row",
     overflow: "hidden",
   },
   filmStripCompact: {
-    minHeight: 34,
+    height: 36,
   },
   filmStripDark: {
     backgroundColor: "#040604",
@@ -1144,22 +1323,26 @@ const styles = StyleSheet.create({
   },
   filmFrame: {
     flex: 1,
-    minHeight: 48,
+    height: "100%",
     borderRightWidth: 1,
-    borderRightColor: "rgba(244,239,229,0.25)",
+    borderRightColor: "rgba(244,239,229,0.34)",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing[1],
   },
+  filmFrameLight: {
+    backgroundColor: "rgba(247,243,234,0.12)",
+  },
   filmFrameDark: {
     borderRightColor: "rgba(182, 239, 101, 0.18)",
+    backgroundColor: "rgba(182, 239, 101, 0.04)",
   },
   filmFrameCompact: {
-    minHeight: 34,
+    height: "100%",
   },
   frameNum: {
     ...type.tinyMono,
-    color: colors.white,
+    color: "#F7F3EA",
   },
   frameSilhouette: {
     width: 20,
@@ -1168,13 +1351,48 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12,
     backgroundColor: "rgba(247,243,234,0.2)",
   },
+  frameSilhouettePhoto: {
+    width: 25,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(247,243,234,0.28)",
+    backgroundColor: "rgba(247,243,234,0.1)",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 3,
+  },
+  frameSilhouetteCherry: {
+    width: 18,
+    height: 18,
+    borderRadius: 99,
+    backgroundColor: "rgba(232, 76, 69, 0.5)",
+  },
+  frameSilhouetteNight: {
+    width: 22,
+    height: 14,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: "rgba(182, 239, 101, 0.44)",
+    backgroundColor: "rgba(182, 239, 101, 0.07)",
+  },
+  photoFace: {
+    width: 9,
+    height: 9,
+    borderRadius: 99,
+    backgroundColor: "rgba(247,243,234,0.72)",
+  },
+  photoFaceCompact: {
+    width: 6,
+    height: 6,
+  },
   frameSilhouetteCompact: {
     width: 14,
     height: 10,
   },
   frameMark: {
-    color: colors.white,
-    fontSize: 10,
+    color: "#F7F3EA",
+    fontSize: 11,
     fontWeight: "700",
   },
   frameMarkCompact: {
@@ -1252,6 +1470,13 @@ const styles = StyleSheet.create({
   },
   darkBody: {
     color: "rgba(243, 247, 208, 0.72)",
+  },
+  darkMuted: {
+    color: "rgba(243, 247, 208, 0.62)",
+  },
+  darkPill: {
+    backgroundColor: "rgba(182, 239, 101, 0.08)",
+    borderColor: "rgba(182, 239, 101, 0.36)",
   },
   glowText: {
     color: "#B6EF65",
