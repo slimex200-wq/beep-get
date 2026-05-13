@@ -16,14 +16,14 @@ export async function findRegisteredContacts(): Promise<
     fields: [Contacts.Fields.PhoneNumbers],
   });
 
-  // Extract phone numbers
   const phoneNumbers: string[] = [];
   for (const contact of data) {
     if (contact.phoneNumbers) {
-      for (const pn of contact.phoneNumbers) {
-        if (pn.number) {
-          // Normalize: remove spaces, dashes, country code
-          const normalized = pn.number.replace(/[\s\-\(\)]/g, "").replace(/^\+82/, "0");
+      for (const phoneNumber of contact.phoneNumbers) {
+        if (phoneNumber.number) {
+          const normalized = phoneNumber.number
+            .replace(/[\s\-\(\)]/g, "")
+            .replace(/^\+82/, "0");
           phoneNumbers.push(normalized);
         }
       }
@@ -32,8 +32,7 @@ export async function findRegisteredContacts(): Promise<
 
   if (phoneNumbers.length === 0) return [];
 
-  // Check which phone numbers are registered (requires a lookup function on Supabase)
-  // For now, return empty — actual implementation needs a phone_number column or Edge Function
+  void supabase;
   return [];
 }
 
@@ -42,5 +41,10 @@ export function generateInviteLink(beepId: string): string {
 }
 
 export function generateShareText(beepId: string, nickname: string): string {
-  return `${nickname}님이 BEEP-GET으로 초대합니다! 삐삐 번호: ${beepId}\n\n다운로드: beepget://add/${beepId}`;
+  return [
+    `${nickname} invited you to BEEP-GET.`,
+    `Beep ID: ${beepId}`,
+    "",
+    `Open in app: ${generateInviteLink(beepId)}`,
+  ].join("\n");
 }

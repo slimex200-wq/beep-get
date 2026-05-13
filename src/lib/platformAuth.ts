@@ -9,7 +9,7 @@ export function getPlatformAuthProvider(platform: RuntimePlatform): PlatformAuth
 }
 
 export function getPlatformAuthLabel(provider: PlatformAuthProvider): string {
-  return provider === "apple" ? "Apple로 시작" : "Google로 시작";
+  return provider === "apple" ? "Continue with Apple" : "Continue with Google";
 }
 
 export function getPlatformAuthVariant(provider: PlatformAuthProvider): "dark" | "light" {

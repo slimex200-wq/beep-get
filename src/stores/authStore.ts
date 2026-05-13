@@ -29,10 +29,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
 
   setSession: (session) => {
+    const nextUser = session?.user ?? null;
+    const currentProfile = get().profile;
+    const shouldKeepProfile = Boolean(
+      nextUser && currentProfile && currentProfile.id === nextUser.id
+    );
+
     set({
       session,
-      user: session?.user ?? null,
-      profile: session ? get().profile : null,
+      user: nextUser,
+      profile: shouldKeepProfile ? currentProfile : null,
       loading: false,
     });
   },

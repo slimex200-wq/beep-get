@@ -266,7 +266,7 @@ function CompactBeepIdCard({
           <Text style={styles.compactId}>{beepId}</Text>
           <Text style={type.tinyMono}>{nickname} / PRIVATE INVITE</Text>
         </View>
-        <ActionButton label="COPY" mono variant="light" onPress={onShare} disabled={!onShare} />
+        <ActionButton label="SHARE" mono variant="light" onPress={onShare} disabled={!onShare} />
       </View>
     </View>
   );
