@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import type { NavigationContainerRef } from "@react-navigation/native";
 import { useFonts } from "expo-font";
@@ -69,28 +69,46 @@ class StartupErrorBoundary extends React.Component<
 }
 
 export default function App() {
-  const { setSession, fetchProfile } = useAuthStore();
+  const { setSession, fetchProfile, session, profile } = useAuthStore();
   const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [fontsLoaded, fontError] = useFonts(customFonts);
   const [startupTimedOut, setStartupTimedOut] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
+  const [pendingWidgetUrl, setPendingWidgetUrl] = useState<string | null>(null);
   const appReady = fontsLoaded || Boolean(fontError) || startupTimedOut;
+  const canHandleWidgetActions = Boolean(appReady && navigationReady && session && profile);
+
+  const handleWidgetUrl = useCallback(
+    async (url: string) => {
+      const action = parseWidgetActionUrl(url);
+      if (!action) return false;
+
+      if (!canHandleWidgetActions) {
+        setPendingWidgetUrl(url);
+        return true;
+      }
+
+      try {
+        if (action.type === "confirm") {
+          await read(action.signalId);
+        } else if (action.type === "save") {
+          await save(action.signalId);
+        } else {
+          await quickReply(action.signalId, action.code);
+        }
+        navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
+      } catch (err: any) {
+        console.warn("Widget action failed", err?.message ?? err);
+      }
+
+      return true;
+    },
+    [canHandleWidgetActions, quickReply, read, save]
+  );
 
   // Handle widget deeplink actions
   useEffect(() => {
-    const handleWidgetUrl = async (url: string) => {
-      const action = parseWidgetActionUrl(url);
-      if (!action) return;
-
-      if (action.type === "confirm") {
-        await read(action.signalId);
-      } else if (action.type === "save") {
-        await save(action.signalId);
-      } else {
-        await quickReply(action.signalId, action.code);
-      }
-    };
-
     const handleOAuthUrl = async (url: string) => {
       try {
         return await exchangeOAuthCodeFromUrl(url);
@@ -109,20 +127,27 @@ export default function App() {
           read(confirmMatch[1]);
           return;
         }
-        void handleWidgetUrl(url);
+        handleWidgetUrl(url);
       });
     };
 
     Linking.getInitialURL().then((url) => {
       if (!url) return;
       handleOAuthUrl(url).then((handled) => {
-        if (!handled) void handleWidgetUrl(url);
+        if (!handled) handleWidgetUrl(url);
       });
     });
 
     const sub = Linking.addEventListener("url", handleUrl);
     return () => sub.remove();
-  }, [quickReply, read, save]);
+  }, [handleWidgetUrl, read]);
+
+  useEffect(() => {
+    if (!pendingWidgetUrl || !canHandleWidgetActions) return;
+    const url = pendingWidgetUrl;
+    setPendingWidgetUrl(null);
+    handleWidgetUrl(url);
+  }, [canHandleWidgetActions, handleWidgetUrl, pendingWidgetUrl]);
 
   useEffect(() => {
     supabase.auth
@@ -164,7 +189,11 @@ export default function App() {
   return (
     <StartupErrorBoundary>
       <ThemeProvider>
-        <NavigationContainer ref={navigationRef} linking={linking}>
+        <NavigationContainer
+          ref={navigationRef}
+          linking={linking}
+          onReady={() => setNavigationReady(true)}
+        >
           <RootNavigator />
         </NavigationContainer>
       </ThemeProvider>
