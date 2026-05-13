@@ -36,11 +36,18 @@
           "contactsPermission": "BEEP-GET can use contacts to help find friends."
         }
       ],
-      "./modules/beep-widget/plugin/build/index"
+      "./modules/beep-widget/plugin/build/index",
+      "@bacons/apple-targets"
     ],
     "ios": {
       "bundleIdentifier": "com.hypeboyo.beepget",
+      "appleTeamId": "YR267UY7UX",
       "supportsTablet": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.beepget.shared"
+        ]
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

@@ -13,8 +13,17 @@ describe("iOS widget source", () => {
     path.join(process.cwd(), "modules/beep-widget/plugin/src/withBeepWidgetIOS.ts"),
     "utf8"
   );
+  const widgetTargetConfig = readFileSync(
+    path.join(process.cwd(), "targets/BeepWidgetExtension/expo-target.config.js"),
+    "utf8"
+  );
+  const notificationTargetConfig = readFileSync(
+    path.join(process.cwd(), "targets/BeepNotificationService/expo-target.config.js"),
+    "utf8"
+  );
   const appWidgetSource = readFileSync(path.join(process.cwd(), "src/components/WidgetCard.tsx"), "utf8");
   const appJson = readFileSync(path.join(process.cwd(), "app.json"), "utf8");
+  const packageJson = readFileSync(path.join(process.cwd(), "package.json"), "utf8");
 
   it("keeps parity with the app and Android widget payload", () => {
     ["kind", "WidgetSignalTeaser", "WidgetActions", "quickReplyUrls"].forEach((token) => {
@@ -28,9 +37,21 @@ describe("iOS widget source", () => {
     expect(smallSource).toContain(".widgetURL");
   });
 
-  it("copies shared widget data into extension source folders", () => {
-    expect(pluginSource).toContain("copySharedWidgetData(moduleSrcDir, widgetDstDir)");
-    expect(pluginSource).toContain("copySharedWidgetData(moduleSrcDir, notifDstDir)");
+  it("generates native iOS extension targets for EAS prebuild", () => {
+    expect(packageJson).toContain("@bacons/apple-targets");
+    expect(appJson).toContain("@bacons/apple-targets");
+    expect(appJson).toContain("YR267UY7UX");
+    expect(appJson).toContain("group.com.beepget.shared");
+    expect(widgetTargetConfig).toContain('type: "widget"');
+    expect(widgetTargetConfig).toContain('bundleIdentifier: ".widget"');
+    expect(notificationTargetConfig).toContain('type: "notification-service"');
+    expect(notificationTargetConfig).toContain('bundleIdentifier: ".notificationservice"');
+  });
+
+  it("keeps the app group plugin focused on app-level entitlements", () => {
+    expect(pluginSource).toContain("withEntitlementsPlist");
+    expect(pluginSource).toContain("withInfoPlist");
+    expect(pluginSource).not.toContain("withDangerousMod");
   });
 
   it("does not ship mojibake permission prompts", () => {
