@@ -19,6 +19,7 @@ import {
   getPlatformAuthLabel,
   getPlatformAuthProvider,
   getPlatformAuthVariant,
+  type PlatformAuthProvider,
 } from "@/lib/platformAuth";
 import { isUiPreviewEnabled } from "@/lib/uiPreview";
 import { signInWithApple, signInWithGoogle } from "@/services/authService";
@@ -27,31 +28,39 @@ import { useAuthStore } from "@/stores/authStore";
 export function AuthScreen() {
   const { enterPreviewMode, initProfile, user } = useAuthStore();
   const [nickname, setNickname] = useState("");
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const authProvider = getPlatformAuthProvider(Platform.OS);
+  const showGoogleFallback = Platform.OS === "ios";
   const showNicknameForm = Boolean(user);
 
-  const handlePlatformLogin = async () => {
+  const handleProviderLogin = async (provider: PlatformAuthProvider) => {
     try {
-      if (authProvider === "apple") {
+      setStatusMessage(null);
+      if (provider === "apple") {
         await signInWithApple();
       } else {
         await signInWithGoogle();
       }
     } catch (err: any) {
-      Alert.alert("로그인 실패", err?.message ?? "다시 시도해 주세요.");
+      const message = err?.message ?? "다시 시도해 주세요.";
+      setStatusMessage(message);
+      Alert.alert("로그인 실패", message);
     }
   };
 
   const handleSetNickname = async () => {
     if (!nickname.trim()) {
-      Alert.alert("닉네임을 입력하세요");
+      Alert.alert("닉네임을 입력해 주세요.");
       return;
     }
     try {
+      setStatusMessage(null);
       const beepId = await initProfile(nickname.trim());
-      Alert.alert("가입 완료", `삐삐 번호: ${beepId}`);
+      Alert.alert("가입 완료", `친구 번호: ${beepId}`);
     } catch (err: any) {
-      Alert.alert("오류", err?.message ?? "다시 시도해 주세요.");
+      const message = err?.message ?? "다시 시도해 주세요.";
+      setStatusMessage(message);
+      Alert.alert("오류", message);
     }
   };
 
@@ -75,7 +84,7 @@ export function AuthScreen() {
           <View style={styles.topNotch} />
           <BeepyMascot size={148} style={styles.mascot} />
           <Text style={styles.logo}>BEEP-GET</Text>
-          <Text style={styles.subtitle}>친한 친구끼리 쓰는 작은 호출기</Text>
+          <Text style={styles.subtitle}>친한 친구끼리 주고받는 작은 호출기</Text>
           <View style={styles.rule} />
 
           {showNicknameForm ? (
@@ -102,10 +111,18 @@ export function AuthScreen() {
             <View style={styles.buttons}>
               <ActionButton
                 label={getPlatformAuthLabel(authProvider)}
-                onPress={handlePlatformLogin}
+                onPress={() => handleProviderLogin(authProvider)}
                 variant={getPlatformAuthVariant(authProvider)}
                 style={styles.fullButton}
               />
+              {showGoogleFallback ? (
+                <ActionButton
+                  label={getPlatformAuthLabel("google")}
+                  onPress={() => handleProviderLogin("google")}
+                  variant="light"
+                  style={styles.fullButton}
+                />
+              ) : null}
               {isUiPreviewEnabled && !isSupabaseConfigured ? (
                 <ActionButton
                   label="UI PREVIEW"
@@ -117,6 +134,10 @@ export function AuthScreen() {
               ) : null}
             </View>
           )}
+
+          {statusMessage ? (
+            <Text style={styles.statusMessage}>{statusMessage}</Text>
+          ) : null}
 
           <View style={styles.footerStamp}>
             <Text style={styles.footerText}>PRIVATE PAGER{"\n"}FOR CLOSE FRIENDS</Text>
@@ -242,6 +263,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700",
+  },
+  statusMessage: {
+    ...type.bodyMuted,
+    color: colors.red,
+    textAlign: "center",
+    marginTop: spacing[5],
   },
   footerStamp: {
     alignSelf: "flex-start",

@@ -4,14 +4,23 @@
     "slug": "beep-get",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/beepy-app-icon-20260514.png",
     "scheme": "beepget",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/beepy-splash-icon-20260514.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFF5EE"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/beepy-splash-icon-20260514.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF5EE"
+        }
+      ],
       "expo-secure-store",
       "expo-font",
       [
@@ -39,7 +48,7 @@
     "android": {
       "package": "com.hypeboyo.beepget",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/beepy-adaptive-icon-20260514.png",
         "backgroundColor": "#FFF5EE"
       },
       "blockedPermissions": [
@@ -51,7 +60,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/beepy-app-icon-20260514.png"
     },
     "extra": {
       "eas": {

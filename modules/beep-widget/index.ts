@@ -1,4 +1,4 @@
-import BeepWidgetModule from "./src/BeepWidgetModule";
+import { getBeepWidgetModule } from "./src/BeepWidgetModule";
 
 export interface WidgetMessage {
   kind?: "beep" | "blink";
@@ -43,15 +43,21 @@ export interface WidgetData {
 }
 
 export function updateWidgetData(data: WidgetData): void {
-  BeepWidgetModule.updateWidgetData(JSON.stringify(data));
+  const module = getBeepWidgetModule();
+  if (!module) return;
+  module.updateWidgetData(JSON.stringify(data));
 }
 
 export function reloadWidgets(): void {
-  BeepWidgetModule.reloadWidgets();
+  const module = getBeepWidgetModule();
+  if (!module) return;
+  module.reloadWidgets();
 }
 
 export async function getWidgetData(): Promise<WidgetData | null> {
-  const raw = await BeepWidgetModule.getWidgetData();
+  const module = getBeepWidgetModule();
+  if (!module) return null;
+  const raw = await module.getWidgetData();
   if (!raw) return null;
   return JSON.parse(raw);
 }
