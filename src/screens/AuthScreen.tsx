@@ -30,7 +30,6 @@ export function AuthScreen() {
   const [nickname, setNickname] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const authProvider = getPlatformAuthProvider(Platform.OS);
-  const showGoogleFallback = Platform.OS === "ios";
   const showNicknameForm = Boolean(user);
 
   const handleProviderLogin = async (provider: PlatformAuthProvider) => {
@@ -42,25 +41,26 @@ export function AuthScreen() {
         await signInWithGoogle();
       }
     } catch (err: any) {
-      const message = err?.message ?? "다시 시도해 주세요.";
+      const message = normalizeAuthError(err?.message);
       setStatusMessage(message);
-      Alert.alert("로그인 실패", message);
+      Alert.alert("Login failed", message);
     }
   };
 
   const handleSetNickname = async () => {
-    if (!nickname.trim()) {
-      Alert.alert("닉네임을 입력해 주세요.");
+    const trimmed = nickname.trim();
+    if (!trimmed) {
+      Alert.alert("Nickname needed", "Pick a nickname before entering BEEP-GET.");
       return;
     }
+
     try {
       setStatusMessage(null);
-      const beepId = await initProfile(nickname.trim());
-      Alert.alert("가입 완료", `친구 번호: ${beepId}`);
+      await initProfile(trimmed);
     } catch (err: any) {
-      const message = err?.message ?? "다시 시도해 주세요.";
+      const message = err?.message ?? "Try again.";
       setStatusMessage(message);
-      Alert.alert("오류", message);
+      Alert.alert("Profile failed", message);
     }
   };
 
@@ -84,7 +84,7 @@ export function AuthScreen() {
           <View style={styles.topNotch} />
           <BeepyMascot size={148} style={styles.mascot} />
           <Text style={styles.logo}>BEEP-GET</Text>
-          <Text style={styles.subtitle}>친한 친구끼리 주고받는 작은 호출기</Text>
+          <Text style={styles.subtitle}>A private pager for close friends.</Text>
           <View style={styles.rule} />
 
           {showNicknameForm ? (
@@ -94,14 +94,14 @@ export function AuthScreen() {
                 style={styles.input}
                 value={nickname}
                 onChangeText={setNickname}
-                placeholder="2~20자"
+                placeholder="2-20 characters"
                 placeholderTextColor={colors.muted2}
                 maxLength={20}
                 returnKeyType="done"
                 onSubmitEditing={handleSetNickname}
               />
               <ActionButton
-                label="시작하기"
+                label="ENTER BEEP-GET"
                 onPress={handleSetNickname}
                 variant="dark"
                 style={styles.fullButton}
@@ -115,13 +115,10 @@ export function AuthScreen() {
                 variant={getPlatformAuthVariant(authProvider)}
                 style={styles.fullButton}
               />
-              {showGoogleFallback ? (
-                <ActionButton
-                  label={getPlatformAuthLabel("google")}
-                  onPress={() => handleProviderLogin("google")}
-                  variant="light"
-                  style={styles.fullButton}
-                />
+              {Platform.OS === "ios" ? (
+                <Text style={styles.providerNote}>
+                  Google login is disabled on iOS until the provider is enabled in Supabase.
+                </Text>
               ) : null}
               {isUiPreviewEnabled && !isSupabaseConfigured ? (
                 <ActionButton
@@ -135,9 +132,7 @@ export function AuthScreen() {
             </View>
           )}
 
-          {statusMessage ? (
-            <Text style={styles.statusMessage}>{statusMessage}</Text>
-          ) : null}
+          {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
 
           <View style={styles.footerStamp}>
             <Text style={styles.footerText}>PRIVATE PAGER{"\n"}FOR CLOSE FRIENDS</Text>
@@ -151,6 +146,14 @@ export function AuthScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+function normalizeAuthError(message?: string): string {
+  if (!message) return "Try again.";
+  if (message.includes("Unsupported provider")) {
+    return "This login provider is not enabled yet. Try Apple sign-in.";
+  }
+  return message;
 }
 
 const styles = StyleSheet.create({
@@ -222,7 +225,6 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     textAlign: "center",
     fontWeight: "900",
-    letterSpacing: -1.8,
   },
   subtitle: {
     ...type.bodyMuted,
@@ -243,6 +245,10 @@ const styles = StyleSheet.create({
   },
   fullButton: {
     width: "100%",
+  },
+  providerNote: {
+    ...type.bodyMuted,
+    textAlign: "center",
   },
   form: {
     gap: spacing[4],

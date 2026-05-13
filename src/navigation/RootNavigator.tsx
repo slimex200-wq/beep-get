@@ -110,7 +110,7 @@ export function RootNavigator() {
           <Stack.Screen
             name="WidgetStates"
             component={WidgetStatesScreen}
-            options={{ presentation: "modal" }}
+            options={{ presentation: "fullScreenModal" }}
           />
           <Stack.Screen
             name="Logs"

@@ -128,7 +128,7 @@ export function MyScreen() {
             <Text style={styles.toolHint}>OPTIONAL</Text>
           </View>
           <View style={styles.toolGrid}>
-            <ToolButton label="WIDGET" onPress={() => navigation.navigate("WidgetStates", { size: "medium" })} />
+            <ToolButton label="WIDGET SETUP" onPress={() => navigation.navigate("WidgetStates", { size: "medium" })} />
             <ToolButton label="LOGS" onPress={() => navigation.navigate("Logs")} />
             <ToolButton label="STUDIO" onPress={() => navigation.navigate("StudioTools")} />
             <ToolButton label="ACCOUNT" onPress={() => navigation.navigate("Account")} />
@@ -208,7 +208,7 @@ function RoomControlStrip({
           onPress={onOpenWidget}
           style={({ pressed }) => [styles.roomAction, pressed && styles.pressed]}
         >
-          <Text style={styles.roomActionText}>WIDGET STATES</Text>
+          <Text style={styles.roomActionText}>WIDGET SETUP</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
