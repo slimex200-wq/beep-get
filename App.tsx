@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import type { NavigationContainerRef } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
+import { StyleSheet, Text, View } from "react-native";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { parseWidgetActionUrl } from "@/lib/widgetActions";
@@ -38,11 +39,40 @@ const linking = {
   },
 };
 
+class StartupErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("Startup render failed", error.message);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={styles.errorStage}>
+          <Text style={styles.errorTitle}>BEEP-GET STARTUP ERROR</Text>
+          <Text style={styles.errorBody}>{this.state.error.message}</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const { setSession, fetchProfile } = useAuthStore();
   const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [fontsLoaded, fontError] = useFonts(customFonts);
+  const [startupTimedOut, setStartupTimedOut] = useState(false);
+  const appReady = fontsLoaded || Boolean(fontError) || startupTimedOut;
 
   // Handle widget deeplink actions
   useEffect(() => {
@@ -115,16 +145,48 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontError, fontsLoaded]);
+    const timeout = setTimeout(() => setStartupTimedOut(true), 2500);
+    return () => clearTimeout(timeout);
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  useEffect(() => {
+    if (appReady) {
+      SplashScreen.hideAsync().catch((err) =>
+        console.warn("Splash hide failed", err?.message ?? err),
+      );
+    }
+  }, [appReady]);
+
+  if (!appReady) return null;
 
   return (
-    <ThemeProvider>
-      <NavigationContainer ref={navigationRef} linking={linking}>
-        <RootNavigator />
-      </NavigationContainer>
-    </ThemeProvider>
+    <StartupErrorBoundary>
+      <ThemeProvider>
+        <NavigationContainer ref={navigationRef} linking={linking}>
+          <RootNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
+    </StartupErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  errorStage: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#111111",
+  },
+  errorTitle: {
+    color: "#FFF5EE",
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  errorBody: {
+    color: "#F36F5A",
+    fontSize: 13,
+    lineHeight: 19,
+  },
+});
