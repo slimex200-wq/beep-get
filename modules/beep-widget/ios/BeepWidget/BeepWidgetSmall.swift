@@ -7,11 +7,14 @@ struct BeepWidgetSmallView: View {
     var body: some View {
         if let msg = entry.latestMessage {
             SwissPaperSmallView(
+                kind: msg.kind ?? "beep",
                 code: msg.code,
                 fromName: msg.senderNickname,
                 time: formatTime(msg.receivedAt),
                 indexNo: formatIndex(msg),
-                isNew: !msg.isRead
+                isNew: !msg.isRead,
+                hasBlinkPreview: msg.teaser != nil,
+                openUrl: msg.actions?.openReplyRoomUrl
             )
         } else {
             PlaceholderSmallView()
@@ -38,11 +41,11 @@ struct PlaceholderSmallView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text("BEEP·GET")
+            Text("BEEP-GET")
                 .font(.custom(skin.displayFont, size: 13))
                 .fontWeight(.heavy)
                 .foregroundColor(skin.ink)
-            Text("대기")
+            Text("Waiting")
                 .font(.custom(skin.monoFont, size: 10))
                 .tracking(1.2)
                 .foregroundColor(skin.mute)
@@ -68,8 +71,8 @@ struct BeepWidgetSmallWidget: Widget {
         StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
             BeepWidgetSmallView(entry: entry)
         }
-        .configurationDisplayName("삐삐")
-        .description("마지막 수신 코드")
+        .configurationDisplayName("Beep Get")
+        .description("Latest Beep or Blink code.")
         .supportedFamilies([.systemSmall])
     }
 }

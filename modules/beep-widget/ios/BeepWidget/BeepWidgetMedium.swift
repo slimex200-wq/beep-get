@@ -7,11 +7,14 @@ struct BeepWidgetMediumView: View {
     var body: some View {
         if let msg = entry.latestMessage {
             SwissPaperMediumView(
+                kind: msg.kind ?? "beep",
                 code: msg.code,
                 fromName: msg.senderNickname,
                 time: formatTime(msg.receivedAt),
                 indexNo: formatIndex(msg),
-                isNew: !msg.isRead
+                isNew: !msg.isRead,
+                hasBlinkPreview: msg.teaser != nil,
+                actions: msg.actions
             )
         } else {
             PlaceholderMediumView()
@@ -38,11 +41,11 @@ struct PlaceholderMediumView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text("BEEP·GET")
+            Text("BEEP-GET")
                 .font(.custom(skin.displayFont, size: 14))
                 .fontWeight(.heavy)
                 .foregroundColor(skin.ink)
-            Text("수신 대기 중")
+            Text("Waiting for signal")
                 .font(.custom(skin.monoFont, size: 10))
                 .tracking(1.2)
                 .foregroundColor(skin.mute)
@@ -68,8 +71,8 @@ struct BeepWidgetMediumWidget: Widget {
         StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
             BeepWidgetMediumView(entry: entry)
         }
-        .configurationDisplayName("삐삐 (넓게)")
-        .description("수신 코드 + 발신자 + 시간")
+        .configurationDisplayName("Beep Get Medium")
+        .description("Latest Beep or Blink with quick reply links.")
         .supportedFamilies([.systemMedium])
     }
 }

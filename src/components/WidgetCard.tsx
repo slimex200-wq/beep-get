@@ -24,17 +24,17 @@ type Props = {
 };
 
 export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Props) {
-  const senderLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : '민아 - NO 04';
+  const senderLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : 'Mina - NO 04';
   const code = signal?.code ?? '8282';
   const time = signal?.time ?? '14:56';
   const isMedium = size === 'medium';
 
   if (state === 'sent') {
     return (
-      <SlipFrame title="보냄" variant="success" compact accent={false}>
+      <SlipFrame title="Sent Beep" variant="success" compact accent={false}>
         <View style={styles.centerState}>
           <Text style={styles.check}>✓</Text>
-          <MetaRow label="TO." value="민아 - NO 04" />
+          <MetaRow label="TO." value="Mina - NO 04" />
           <MetaRow label="TIME." value="14:57" mono />
         </View>
       </SlipFrame>
@@ -43,12 +43,12 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
 
   if (state === 'failed') {
     return (
-      <SlipFrame title="전송 실패" variant="danger" compact>
+      <SlipFrame title="Send Failed" variant="danger" compact>
         <View style={styles.centerState}>
           <Text style={styles.x}>×</Text>
-          <MetaRow label="TO." value="민아 - NO 04" />
+          <MetaRow label="TO." value="Mina - NO 04" />
           <View style={styles.redButton}>
-            <Text style={[type.button, styles.redButtonText]}>앱 열기</Text>
+            <Text style={[type.button, styles.redButtonText]}>OPEN APP</Text>
           </View>
         </View>
       </SlipFrame>
@@ -57,10 +57,10 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
 
   if (state === 'sending') {
     return (
-      <SlipFrame title="전송 중..." compact>
+      <SlipFrame title="Sending..." compact>
         <View style={styles.centerState}>
           <DotRadar size={104} label="" />
-          <MetaRow label="TO." value="민아 - NO 04" />
+          <MetaRow label="TO." value="Mina - NO 04" />
           <MetaRow label="TIME." value="00:02 / 02.0" mono />
         </View>
       </SlipFrame>
@@ -71,7 +71,7 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
   const isEmpty = state === 'empty';
 
   return (
-    <SlipFrame title={isBlink ? '도착한 Blink' : '도착한 Beep'} compact accent={!isEmpty}>
+    <SlipFrame title={isBlink ? 'Incoming Blink' : 'Incoming Beep'} compact accent={!isEmpty}>
       {isEmpty ? (
         <View style={styles.emptyBlock}>
           <Text style={[type.tinyMono, styles.emptyLabel]}>NO.</Text>

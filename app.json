@@ -26,14 +26,14 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "QR 코드로 친구를 추가하기 위해 카메라 접근이 필요합니다.",
+          "cameraPermission": "BEEP-GET uses the camera to record 2 second Blink messages.",
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-contacts",
         {
-          "contactsPermission": "연락처에서 BEEP-GET 친구를 찾기 위해 접근이 필요합니다."
+          "contactsPermission": "BEEP-GET can use contacts to help find friends."
         }
       ],
       "./modules/beep-widget/plugin/build/index"

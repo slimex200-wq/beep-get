@@ -14,7 +14,6 @@ import { ActionButton } from "@/components/ActionButton";
 import { BeepyMascot } from "@/components/BeepyMascot";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
-import { isSupabaseConfigured } from "@/lib/supabase";
 import {
   getPlatformAuthLabel,
   getPlatformAuthProvider,
@@ -120,7 +119,7 @@ export function AuthScreen() {
                   Google login is disabled on iOS until the provider is enabled in Supabase.
                 </Text>
               ) : null}
-              {isUiPreviewEnabled && !isSupabaseConfigured ? (
+              {isUiPreviewEnabled ? (
                 <ActionButton
                   label="UI PREVIEW"
                   onPress={enterPreviewMode}
