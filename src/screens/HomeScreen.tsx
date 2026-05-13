@@ -369,14 +369,14 @@ function createStyles(width: number) {
       marginBottom: 2,
     },
     titleModern: {
-      fontFamily: "Fraunces",
+      fontFamily: "Pretendard-Bold",
       fontSize: 45,
       lineHeight: 43,
       color: SWISS.paper,
       letterSpacing: -1.2,
     },
     titlePager: {
-      fontFamily: "Fraunces-Italic",
+      fontFamily: "Pretendard-Medium",
       fontSize: 46,
       lineHeight: 42,
       color: SWISS.paper,
@@ -524,14 +524,14 @@ const stylesStatic = StyleSheet.create({
     borderRightColor: SWISS.ink,
   },
   incoming: {
-    fontFamily: "Fraunces",
+    fontFamily: "Pretendard-Bold",
     color: SWISS.ink,
     fontSize: 28,
     lineHeight: 27,
     letterSpacing: -1.2,
   },
   beepWord: {
-    fontFamily: "Fraunces-Italic",
+    fontFamily: "Pretendard-Medium",
     color: SWISS.ink,
     fontSize: 28,
     lineHeight: 26,
@@ -647,7 +647,7 @@ const stylesStatic = StyleSheet.create({
     borderColor: SWISS.ink,
   },
   emptyTitle: {
-    fontFamily: "Fraunces",
+    fontFamily: "Pretendard-Bold",
     fontSize: 36,
     color: SWISS.ink,
   },

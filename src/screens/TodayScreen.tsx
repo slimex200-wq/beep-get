@@ -94,6 +94,10 @@ export function TodayScreen() {
       }),
     [friends, received]
   );
+  const widgetRecentRows = useMemo(
+    () => [latestSignal, ...signalQueue].filter(Boolean).slice(0, 3),
+    [latestSignal, signalQueue]
+  );
 
   const refresh = () => {
     if (!profile) return;
@@ -183,7 +187,7 @@ export function TodayScreen() {
           )}
         </View>
 
-        <SectionHeader label="FRIEND PULSE" hint="CLOSE CIRCUIT" />
+        <SectionHeader label="FRIEND PULSE" hint="RECENT FRIENDS" />
         <View style={styles.pulseList}>
           {friendPulseRows.length > 0 ? (
             friendPulseRows.map((row) => (
@@ -198,16 +202,61 @@ export function TodayScreen() {
 
         <SectionHeader label="WIDGET MIRROR" hint="FRIEND HOME STATE" />
         <View style={styles.widgetMirror}>
-          <View style={styles.widgetTopLine}>
-            <Text style={type.tinyMono}>BEEP WIDGET</Text>
-            <StatusDot size={7} color={latestSignal ? colors.red : colors.faint} />
+          <View style={styles.widgetSignalPane}>
+            <View style={styles.widgetTopLine}>
+              <Text style={styles.widgetTitle}>
+                {latestSignal?.hasBlink ? "Incoming Blink" : "Incoming Beep"}
+              </Text>
+              <StatusDot size={7} color={latestSignal ? colors.red : colors.faint} />
+            </View>
+            <View style={styles.widgetRule} />
+            <Text style={type.tinyMono}>NO.</Text>
+            <Text style={styles.widgetCode}>{latestSignal?.code ?? "WAIT"}</Text>
+            <View style={styles.widgetRule} />
+            <View style={styles.widgetMeta}>
+              <Text style={type.tinyMono}>FROM. {latestSignal?.sender ?? "-"}</Text>
+              <Text style={type.tinyMono}>TIME. {latestSignal?.time ?? "--:--"}</Text>
+            </View>
+            {latestSignal?.hasBlink ? (
+              <View style={styles.widgetThumb}>
+                <Text style={styles.widgetThumbText}>BLINK PREVIEW</Text>
+              </View>
+            ) : null}
+            <View style={styles.widgetActions}>
+              {FALLBACK_REPLY_SLOTS.map((slot) => (
+                <View
+                  key={slot}
+                  style={[styles.widgetActionChip, slot === "OPEN" && styles.widgetActionDark]}
+                >
+                  <Text
+                    style={[styles.widgetActionText, slot === "OPEN" && styles.widgetActionTextDark]}
+                  >
+                    {slot}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <Text style={styles.widgetCode}>{latestSignal?.code ?? "----"}</Text>
-          <Text style={type.bodyMuted}>
-            {latestSignal
-              ? `${latestSignal.sender} · ${latestSignal.hasBlink ? "2 SEC BLINK" : "CODE-ONLY BEEP"}`
-              : "No signal is currently mirrored on the friend-home widget."}
-          </Text>
+          <View style={styles.widgetGap} />
+          <View style={styles.widgetRecentPane}>
+            <Text style={styles.widgetRecentTitle}>RECENT</Text>
+            {widgetRecentRows.length > 0 ? (
+              widgetRecentRows.map((item) =>
+                item ? (
+                  <View key={item.id} style={styles.widgetRecentRow}>
+                    <Text style={styles.widgetRecentName} numberOfLines={1}>
+                      {item.sender}
+                    </Text>
+                    <Text style={type.tinyMono} numberOfLines={1}>
+                      {item.code}
+                    </Text>
+                  </View>
+                ) : null
+              )
+            ) : (
+              <Text style={type.bodyMuted}>Waiting</Text>
+            )}
+          </View>
         </View>
 
         <ActionButton label="REFRESH" variant="ghost" mono onPress={refresh} />
@@ -296,11 +345,19 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.14)",
   },
   widgetMirror: {
-    gap: spacing[3],
-    padding: spacing[5],
+    flexDirection: "row",
+    gap: spacing[1],
+    padding: spacing[1],
     borderWidth: 1,
     borderColor: colors.ruleStrong,
     borderRadius: 12,
+    backgroundColor: colors.paper,
+    overflow: "hidden",
+  },
+  widgetSignalPane: {
+    flex: 1.45,
+    gap: spacing[2],
+    padding: spacing[4],
     backgroundColor: colors.paperWarm,
   },
   widgetTopLine: {
@@ -308,8 +365,71 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  widgetTitle: {
+    ...type.metaValue,
+    fontSize: 12,
+    lineHeight: 15,
+  },
+  widgetRule: {
+    height: 1,
+    backgroundColor: colors.paperLine,
+  },
   widgetCode: {
     ...type.codeMedium,
-    textAlign: "left",
+    textAlign: "center",
+  },
+  widgetMeta: {
+    gap: spacing[1],
+  },
+  widgetThumb: {
+    minHeight: 34,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.ink,
+  },
+  widgetThumbText: {
+    ...type.tinyMono,
+    color: colors.paperWarm,
+  },
+  widgetActions: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  widgetActionChip: {
+    flex: 1,
+    minHeight: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.paper,
+  },
+  widgetActionDark: {
+    backgroundColor: colors.ink,
+  },
+  widgetActionText: {
+    ...type.tinyMono,
+    color: colors.ink,
+  },
+  widgetActionTextDark: {
+    color: colors.paperWarm,
+  },
+  widgetGap: {
+    width: spacing[1],
+    backgroundColor: colors.paper,
+  },
+  widgetRecentPane: {
+    flex: 1,
+    gap: spacing[3],
+    padding: spacing[4],
+    backgroundColor: colors.paperWarm,
+  },
+  widgetRecentTitle: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  widgetRecentRow: {
+    gap: spacing[1],
+  },
+  widgetRecentName: {
+    ...type.metaValue,
   },
 });

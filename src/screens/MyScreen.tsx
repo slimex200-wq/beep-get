@@ -95,6 +95,13 @@ export function MyScreen() {
           onShare={handleShare}
         />
 
+        <RoomControlStrip
+          pack={selectedPack}
+          replySlots={replySlots}
+          onOpenWidget={() => navigation.navigate("WidgetStates", { size: "medium" })}
+          onOpenLogs={() => navigation.navigate("Logs")}
+        />
+
         <SectionHeader label="CURRENT WIDGET" hint="FRIEND HOME PREVIEW" />
         <WidgetPreview pack={selectedPack} replySlots={replySlots} />
 
@@ -159,6 +166,58 @@ function ProfileSlip({
       >
         <Text style={styles.shareText}>SHARE MY BEEP ID</Text>
       </Pressable>
+    </View>
+  );
+}
+
+function RoomControlStrip({
+  pack,
+  replySlots,
+  onOpenWidget,
+  onOpenLogs,
+}: {
+  pack: IdentityPack;
+  replySlots: string[];
+  onOpenWidget: () => void;
+  onOpenLogs: () => void;
+}) {
+  return (
+    <View style={styles.roomControl}>
+      <View style={styles.roomControlTop}>
+        <View>
+          <Text style={type.tinyMono}>WIDGET CONTROL</Text>
+          <Text style={styles.roomControlTitle}>{pack.name}</Text>
+        </View>
+        <View style={styles.roomLiveBadge}>
+          <StatusDot size={6} color={colors.red} />
+          <Text style={type.tinyMono}>FRIEND HOME</Text>
+        </View>
+      </View>
+
+      <View style={styles.roomSlotRow}>
+        {replySlots.map((slot) => (
+          <View key={slot} style={styles.roomSlot}>
+            <Text style={styles.roomSlotText}>{slot}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.roomActionRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenWidget}
+          style={({ pressed }) => [styles.roomAction, pressed && styles.pressed]}
+        >
+          <Text style={styles.roomActionText}>WIDGET STATES</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenLogs}
+          style={({ pressed }) => [styles.roomAction, styles.roomActionDark, pressed && styles.pressed]}
+        >
+          <Text style={[styles.roomActionText, styles.roomActionTextDark]}>LOGS</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -892,6 +951,79 @@ const styles = StyleSheet.create({
   },
   shareText: {
     ...type.buttonMono,
+    color: colors.paperWarm,
+  },
+  roomControl: {
+    gap: spacing[4],
+    padding: spacing[5],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 12,
+    backgroundColor: colors.paperWarm,
+  },
+  roomControlTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing[4],
+    paddingBottom: spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+  },
+  roomControlTitle: {
+    ...type.slipTitle,
+  },
+  roomLiveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.paper,
+  },
+  roomSlotRow: {
+    flexDirection: "row",
+    gap: spacing[3],
+  },
+  roomSlot: {
+    flex: 1,
+    minHeight: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.button,
+    backgroundColor: colors.paper,
+  },
+  roomSlotText: {
+    ...type.buttonMono,
+    color: colors.ink,
+  },
+  roomActionRow: {
+    flexDirection: "row",
+    gap: spacing[3],
+  },
+  roomAction: {
+    flex: 1,
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.ink,
+    borderRadius: radius.button,
+    backgroundColor: colors.paper,
+  },
+  roomActionDark: {
+    backgroundColor: colors.ink,
+  },
+  roomActionText: {
+    ...type.buttonMono,
+    color: colors.ink,
+  },
+  roomActionTextDark: {
     color: colors.paperWarm,
   },
   sectionHeader: {

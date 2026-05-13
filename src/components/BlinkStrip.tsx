@@ -91,6 +91,6 @@ const styles = StyleSheet.create({
     bottom: 4,
     color: colors.paper,
     fontSize: 7,
-    fontFamily: 'monospace',
+    fontFamily: 'IBMPlexMono',
   },
 });

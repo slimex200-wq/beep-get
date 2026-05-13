@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     marginBottom: -spacing[3],
   },
   logo: {
-    fontFamily: 'monospace',
+    fontFamily: 'IBMPlexMono',
     color: colors.ink,
     fontSize: 42,
     lineHeight: 48,
