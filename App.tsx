@@ -15,7 +15,9 @@ import { exchangeOAuthCodeFromUrl } from "@/services/authService";
 import { customFonts } from "@/theme/fonts";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch((err) => {
+  console.warn("Splash prevent auto-hide failed", err?.message ?? err);
+});
 
 const linking = {
   prefixes: [Linking.createURL("/"), "beepget://"],
