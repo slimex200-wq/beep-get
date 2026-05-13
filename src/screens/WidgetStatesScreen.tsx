@@ -14,6 +14,33 @@ import { useDictionaryStore } from "@/stores/dictionaryStore";
 
 const DEFAULT_REPLY_SLOTS = ["OK", "8282", "OPEN"];
 
+const setupCopy =
+  Platform.OS === "ios"
+    ? {
+        body:
+          "Add BEEP-GET to your iPhone Home Screen, then use these reply slots from the widget.",
+        installLabel: "INSTALL ON IOS",
+        steps: [
+          "Long-press the Home Screen.",
+          "Tap + and search BEEP-GET.",
+          "Choose Medium for reply buttons, then Add Widget.",
+        ],
+        note:
+          "Widget setup is controlled by iOS. The app can preview and sync the widget data, but placement happens on the Home Screen.",
+      }
+    : {
+        body:
+          "Add BEEP-GET from your Android launcher widget picker. Medium shows reply chips that open the app-owned reply flow.",
+        installLabel: "INSTALL ON ANDROID",
+        steps: [
+          "Long-press an empty spot on the Home screen.",
+          "Tap Widgets and find BEEP-GET.",
+          "Drag the Medium widget for OK / reply / OPEN chips.",
+        ],
+        note:
+          "Widget taps open BEEP-GET through deep links, then the app sends idempotent quick replies or opens the Reply Room.",
+      };
+
 export function WidgetStatesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "WidgetStates">>();
@@ -41,23 +68,17 @@ export function WidgetStatesScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <Text style={styles.heroTitle}>Friend-home widget</Text>
-          <Text style={type.bodyMuted}>
-            Add BEEP-GET to your iPhone Home Screen, then use these reply slots from the widget.
-          </Text>
+          <Text style={type.bodyMuted}>{setupCopy.body}</Text>
         </View>
 
         <View style={styles.setupCard}>
-          <Text style={type.tinyMono}>INSTALL ON IOS</Text>
+          <Text style={type.tinyMono}>{setupCopy.installLabel}</Text>
           <View style={styles.stepList}>
-            <Step number="01" text="Long-press the Home Screen." />
-            <Step number="02" text="Tap + and search BEEP-GET." />
-            <Step number="03" text="Choose Medium for reply buttons, then Add Widget." />
+            {setupCopy.steps.map((step, index) => (
+              <Step key={step} number={`0${index + 1}`} text={step} />
+            ))}
           </View>
-          <Text style={styles.platformNote}>
-            {Platform.OS === "ios"
-              ? "Widget setup is controlled by iOS. The app can preview and sync the widget data, but placement happens on the Home Screen."
-              : "On Android, add the BEEP-GET widget from your launcher widget picker."}
-          </Text>
+          <Text style={styles.platformNote}>{setupCopy.note}</Text>
         </View>
 
         <View style={styles.controlPanel}>
