@@ -63,12 +63,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   name: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 12,
     textAlign: "center",
   },
   rarity: {
-    fontFamily: "Silkscreen",
+    fontFamily: "Pretendard-SemiBold",
     fontSize: 8,
     marginTop: 2,
   },
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   lockIcon: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 24,
     color: "#FFFFFF",
   },

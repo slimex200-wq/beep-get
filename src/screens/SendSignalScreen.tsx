@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -124,6 +124,12 @@ export function SendSignalScreen() {
 
   const deckHeader = recipient ? (
     <View style={styles.deck}>
+      <HeroBlock
+        titleTop="Signal"
+        titleBottom="Deck"
+        copy="Pick a friend, choose a slot, preview the outgoing slip, then send."
+        badge={friendOptions.length.toString().padStart(2, "0")}
+      />
       <Text style={type.tinyMono}>TO STRIP</Text>
       <FriendPickerStrip
         friends={friendOptions}
@@ -231,20 +237,53 @@ export function SendSignalScreen() {
           onLeftPress={goBackToFlow}
           onRightPress={() => navigation.navigate("Main", { screen: "People" })}
         />
-        <View style={styles.empty}>
-          <View style={styles.emptyPanel}>
-            <Text style={type.metaValue}>NO CLOSE CIRCUIT</Text>
+        <ScrollView contentContainerStyle={styles.emptyContent} showsVerticalScrollIndicator={false}>
+          <HeroBlock
+            titleTop="Signal"
+            titleBottom="Deck"
+            copy="Friend picker, slot deck, outgoing slip, and recent combos stay in this order."
+            badge="04"
+          />
+          <View style={styles.emptyDeck}>
+            <View style={styles.emptyDeckTop}>
+              <View>
+                <Text style={type.tinyMono}>SIGNAL DECK</Text>
+                <Text style={styles.emptyDeckTitle}>Pick a close friend first</Text>
+              </View>
+              <View style={styles.emptyBadge}>
+                <Text style={type.tinyMono}>NO FRIEND</Text>
+              </View>
+            </View>
+
             <Text style={type.bodyMuted}>
-              Add a close-circuit friend first. Pick someone from People, then send a Beep or
-              2-second Blink.
+              Your send screen will open here with Beep/Blink mode, reply slots, recent combos,
+              and the selected friend's widget preview.
             </Text>
+
+            <Text style={type.tinyMono}>SIGNAL TYPE</Text>
+            {modeSwitch}
+
+            <Text style={type.tinyMono}>DEFAULT SLOT DECK</Text>
+            <View style={styles.slotPreviewRow}>
+              {DEFAULT_SLOT_DECK.slice(0, 5).map((slot) => (
+                <View key={slot} style={styles.slotPreviewChip}>
+                  <Text style={styles.slotPreviewText}>{slot}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.recentPreview}>
+              <Text style={type.tinyMono}>RECENT COMBOS</Text>
+              <Text style={type.bodyMuted}>Add one friend and this becomes a one-tap send lane.</Text>
+            </View>
+
             <ActionButton
               label="OPEN PEOPLE"
               variant="dark"
               onPress={() => navigation.navigate("Main", { screen: "People" })}
             />
           </View>
-        </View>
+        </ScrollView>
       </AppSurface>
     );
   }
@@ -302,6 +341,31 @@ function ModeButton({
   );
 }
 
+function HeroBlock({
+  titleTop,
+  titleBottom,
+  copy,
+  badge,
+}: {
+  titleTop: string;
+  titleBottom: string;
+  copy: string;
+  badge: string;
+}) {
+  return (
+    <View style={styles.hero}>
+      <View style={styles.heroText}>
+        <Text style={styles.heroTitle}>{titleTop}</Text>
+        <Text style={styles.heroTitle}>{titleBottom}</Text>
+        <Text style={styles.heroCopy}>{copy}</Text>
+      </View>
+      <View style={styles.heroBadge}>
+        <Text style={styles.heroBadgeText}>{badge}</Text>
+      </View>
+    </View>
+  );
+}
+
 function friendNo(label?: string) {
   const digits = label?.replace(/\D/g, "");
   return digits?.slice(-2) || "01";
@@ -314,18 +378,55 @@ function reportError(err: unknown) {
 
 const styles = StyleSheet.create({
   deck: {
-    gap: spacing[3],
-    marginBottom: spacing[4],
+    gap: spacing[2],
+    marginBottom: spacing[3],
     marginHorizontal: spacing[5],
-    padding: spacing[4],
+    padding: spacing[3],
     borderWidth: 1,
     borderColor: colors.ruleStrong,
-    borderRadius: radius.control,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 12,
+    backgroundColor: colors.paperWarm,
+  },
+  hero: {
+    minHeight: 86,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: spacing[4],
+    marginBottom: spacing[2],
+  },
+  heroText: {
+    flex: 1,
+  },
+  heroTitle: {
+    ...type.screenTitle,
+    fontSize: 34,
+    lineHeight: 33,
+    letterSpacing: -0.8,
+  },
+  heroCopy: {
+    ...type.bodyMuted,
+    marginTop: spacing[2],
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  heroBadge: {
+    width: 50,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.ink,
+    backgroundColor: colors.lcd,
+  },
+  heroBadgeText: {
+    ...type.codeSmall,
+    fontSize: 18,
+    lineHeight: 20,
   },
   switcher: {
     alignSelf: "stretch",
-    backgroundColor: "rgba(10,10,10,0.04)",
+    backgroundColor: "rgba(10,10,10,0.03)",
     borderColor: colors.ruleStrong,
     borderRadius: radius.control,
     borderWidth: 1,
@@ -333,19 +434,66 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     padding: spacing[2],
   },
-  empty: {
-    flex: 1,
+  emptyContent: {
+    flexGrow: 1,
     justifyContent: "flex-start",
-    gap: spacing[4],
-    padding: spacing[6],
-    paddingTop: spacing[20] * 4,
+    padding: spacing[5],
+    paddingBottom: spacing[8],
+    gap: spacing[5],
   },
-  emptyPanel: {
+  emptyDeck: {
     gap: spacing[4],
     padding: spacing[5],
     borderWidth: 1,
     borderColor: colors.ruleStrong,
-    borderRadius: radius.control,
+    borderRadius: 12,
     backgroundColor: colors.paperWarm,
+  },
+  emptyDeckTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing[4],
+    paddingBottom: spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+  },
+  emptyDeckTitle: {
+    ...type.slipTitle,
+  },
+  emptyBadge: {
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.paper,
+  },
+  slotPreviewRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2],
+  },
+  slotPreviewChip: {
+    minHeight: 34,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.button,
+    paddingHorizontal: spacing[4],
+    backgroundColor: colors.paper,
+  },
+  slotPreviewText: {
+    ...type.buttonMono,
+    color: colors.ink,
+  },
+  recentPreview: {
+    gap: spacing[1],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: radius.control,
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
 });

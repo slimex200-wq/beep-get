@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     color: "rgba(242,237,228,0.48)",
   },
   sender: {
-    fontFamily: "Fraunces",
+    fontFamily: "Pretendard-Bold",
     fontSize: 48,
     lineHeight: 50,
     color: PAPER,
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   incoming: {
-    fontFamily: "Fraunces-Italic",
+    fontFamily: "Pretendard-Medium",
     fontSize: 34,
     color: INK,
   },

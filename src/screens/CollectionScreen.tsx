@@ -48,7 +48,7 @@ export function CollectionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   header: {
-    fontFamily: "Silkscreen",
+    fontFamily: "Pretendard-SemiBold",
     fontSize: 14,
     letterSpacing: 2,
     textAlign: "center",
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   counter: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 18,
     textAlign: "center",
     marginBottom: 16,

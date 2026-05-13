@@ -79,7 +79,7 @@ export function SkinShopScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   header: {
-    fontFamily: "Silkscreen",
+    fontFamily: "Pretendard-SemiBold",
     fontSize: 14,
     letterSpacing: 2,
     textAlign: "center",

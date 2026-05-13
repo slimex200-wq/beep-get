@@ -49,10 +49,10 @@ export const neumorphism = {
     round: 999,
   },
   fonts: {
-    lcd: "VT323",
-    pixel: "Silkscreen",
-    ui: "Inter",
-    mono: "SpaceMono",
+    lcd: "IBMPlexMono",
+    pixel: "Pretendard-SemiBold",
+    ui: "Pretendard",
+    mono: "IBMPlexMono",
   },
 } as const;
 

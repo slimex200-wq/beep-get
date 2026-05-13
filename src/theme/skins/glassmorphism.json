@@ -33,5 +33,5 @@
     }
   },
   "borderRadius": { "sm": 12, "md": 18, "lg": 24, "round": 999 },
-  "fonts": { "lcd": "VT323", "pixel": "Silkscreen", "ui": "Inter", "mono": "SpaceMono" }
+  "fonts": { "lcd": "IBMPlexMono", "pixel": "Pretendard-SemiBold", "ui": "Pretendard", "mono": "IBMPlexMono" }
 }

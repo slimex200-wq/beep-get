@@ -97,17 +97,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   previewCode: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 24,
     letterSpacing: 2,
   },
   previewSub: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 10,
     marginTop: 4,
   },
   name: {
-    fontFamily: "Silkscreen",
+    fontFamily: "Pretendard-SemiBold",
     fontSize: 11,
     marginTop: 8,
     textAlign: "center",
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   badge: {
-    fontFamily: "VT323",
+    fontFamily: "Pretendard",
     fontSize: 11,
   },
 });
