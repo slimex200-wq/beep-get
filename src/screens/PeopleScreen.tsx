@@ -97,9 +97,9 @@ export function PeopleScreen() {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HeroBlock
-          titleTop="Close"
-          titleBottom="Circuit"
-          copy="Widget priority and recent signals replace the decorative circuit map."
+          titleTop="Widget"
+          titleBottom="Circle"
+          copy="Recent widget senders, quick replies, and send shortcuts stay together."
           badge={slipFriends.length.toString().padStart(2, "0")}
         />
 
@@ -109,12 +109,12 @@ export function PeopleScreen() {
           onShare={profile ? shareMyBeepId : undefined}
         />
 
-        <SectionHeader label="WIDGET CIRCLE" hint="CLOSE CIRCUIT" />
+        <SectionHeader label="WIDGET CIRCLE" hint="RECENT SIGNALS" />
         <View style={styles.widgetCircle}>
           <View style={styles.circleSummary}>
             <View>
-              <Text style={type.metaValue}>홈 위젯 우선 친구</Text>
-              <Text style={type.tinyMono}>PINNED FRIENDS APPEAR FIRST</Text>
+              <Text style={type.metaValue}>Recent widget senders</Text>
+              <Text style={type.tinyMono}>LATEST SIGNALS APPEAR FIRST</Text>
             </View>
             <View style={styles.circleCount}>
               <Text style={type.monoValue}>{Math.min(slipFriends.length, 3).toString().padStart(2, "0")}</Text>
@@ -122,31 +122,30 @@ export function PeopleScreen() {
           </View>
           {slipFriends.length > 0 ? (
             slipFriends.slice(0, 3).map((friend, index) => (
-              <View key={friend.id} style={[styles.circleFriend, index === 0 && styles.circleFriendPinned]}>
+              <View key={friend.id} style={[styles.circleFriend, index === 0 && styles.circleFriendLatest]}>
                 <View style={styles.circleFriendText}>
                   <Text style={type.metaValue}>{friend.name}</Text>
                   <Text style={type.tinyMono} numberOfLines={1}>
-                    {index === 0 ? "PINNED / " : ""}
                     {lastSignalByFriend.get(friend.id) ?? "QUIET"}
                   </Text>
                 </View>
                 <View style={styles.circleActions}>
-                  <ActionButton label="B" mono flex onPress={() => navigateSend(friend, "beep")} />
-                  <ActionButton label="BL" mono flex onPress={() => navigateSend(friend, "blink")} />
+                  <ActionButton label="BEEP" mono flex onPress={() => navigateSend(friend, "beep")} />
+                  <ActionButton label="BLINK" mono flex onPress={() => navigateSend(friend, "blink")} />
                   <ActionButton
-                    label={index === 0 ? "ON" : "PIN"}
+                    label="WIDGET"
                     mono
                     flex
-                    variant={index === 0 ? "dark" : "ghost"}
-                    onPress={() => Alert.alert("Pinned", `${friend.name} is marked for the widget.`)}
+                    variant="ghost"
+                    onPress={() => navigation.navigate("WidgetStates", { size: "medium" })}
                   />
                 </View>
               </View>
             ))
           ) : (
             <View style={styles.softPanel}>
-              <Text style={type.metaValue}>No one is pinned to the home widget yet.</Text>
-              <Text style={type.bodyMuted}>Add one Beep ID below, then pin the first close friend here.</Text>
+              <Text style={type.metaValue}>No widget sender yet.</Text>
+              <Text style={type.bodyMuted}>Add a Beep ID below, then send or receive the first signal.</Text>
               <View style={styles.softActions}>
                 <ActionButton label="INVITE" flex onPress={focusInvite} />
                 <ActionButton label="SHARE ID" flex variant="dark" onPress={profile ? shareMyBeepId : focusInvite} />
@@ -166,7 +165,7 @@ export function PeopleScreen() {
                 onPress={() => navigateSend(friend, "beep")}
                 onSendBeep={() => navigateSend(friend, "beep")}
                 onSendBlink={() => navigateSend(friend, "blink")}
-                onPin={() => Alert.alert("Pinned", `${friend.name} is marked for the widget.`)}
+                onPin={() => navigation.navigate("WidgetStates", { size: "medium" })}
               />
             ))
           ) : (
@@ -398,7 +397,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     backgroundColor: "rgba(255,255,255,0.18)",
   },
-  circleFriendPinned: {
+  circleFriendLatest: {
     borderColor: colors.ruleStrong,
     backgroundColor: colors.paper,
   },
@@ -407,7 +406,7 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   circleActions: {
-    width: 118,
+    width: 212,
     flexDirection: "row",
     gap: spacing[2],
   },

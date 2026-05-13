@@ -2,19 +2,21 @@ import SwiftUI
 import WidgetKit
 
 struct SwissPaperSmallView: View {
+    let kind: String
     let code: String
     let fromName: String
-    let time: String       // "HH:mm"
-    let indexNo: String    // "04"
+    let time: String
+    let indexNo: String
     let isNew: Bool
+    let hasBlinkPreview: Bool
+    let openUrl: String?
 
     private let skin = BeepSkin.swissPaper
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top row: brand + time meta
             HStack {
-                Text("Beep")
+                Text(kind == "blink" ? "Blink" : "Beep")
                     .font(.custom(skin.displayFont, size: 13))
                     .fontWeight(.heavy)
                     .foregroundColor(skin.ink)
@@ -30,12 +32,12 @@ struct SwissPaperSmallView: View {
             .frame(height: 22)
             .overlay(horizontalRule, alignment: .bottom)
 
-            // Middle row: code (hero)
             ZStack {
                 Text(code)
                     .font(.custom(skin.monoMediumFont, size: 30))
                     .tracking(1.2)
                     .foregroundColor(skin.ink)
+                    .lineLimit(1)
 
                 if isNew {
                     VStack {
@@ -53,16 +55,16 @@ struct SwissPaperSmallView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Bottom row: from + index
             HStack {
                 Text(fromName)
                     .font(.custom(skin.displayItalicFont, size: 12))
                     .italic()
                     .foregroundColor(skin.ink)
+                    .lineLimit(1)
 
                 Spacer()
 
-                Text("N°\(indexNo)")
+                Text("NO.\(indexNo)")
                     .font(.custom(skin.monoFont, size: 10))
                     .tracking(0.8)
                     .foregroundColor(skin.mute)
@@ -80,11 +82,16 @@ struct SwissPaperSmallView: View {
         .containerBackground(for: .widget) {
             skin.paper
         }
+        .widgetURL(actionURL(openUrl))
     }
 
     private var horizontalRule: some View {
         Rectangle()
             .fill(skin.ink)
             .frame(height: skin.ruleWidth)
+    }
+
+    private func actionURL(_ raw: String?) -> URL {
+        URL(string: raw ?? "") ?? URL(string: "beepget://today")!
     }
 }

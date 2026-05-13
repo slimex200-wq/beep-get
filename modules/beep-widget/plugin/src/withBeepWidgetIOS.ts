@@ -57,11 +57,19 @@ const withWidgetExtensionFiles: ConfigPlugin = (config) => {
         path.join(moduleSrcDir, "NotificationService"),
         notifDstDir
       );
+      copySharedWidgetData(moduleSrcDir, widgetDstDir);
+      copySharedWidgetData(moduleSrcDir, notifDstDir);
 
       return mod;
     },
   ]);
 };
+
+function copySharedWidgetData(moduleSrcDir: string, dstDir: string): void {
+  const src = path.join(moduleSrcDir, "BeepWidgetData.swift");
+  if (!fs.existsSync(src)) return;
+  fs.copyFileSync(src, path.join(dstDir, "BeepWidgetData.swift"));
+}
 
 function copyDirSync(src: string, dst: string): void {
   if (!fs.existsSync(src)) return;
