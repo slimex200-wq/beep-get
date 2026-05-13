@@ -42,7 +42,7 @@ export default function App() {
   const { setSession, fetchProfile } = useAuthStore();
   const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
-  const [fontsLoaded] = useFonts(customFonts);
+  const [fontsLoaded, fontError] = useFonts(customFonts);
 
   // Handle widget deeplink actions
   useEffect(() => {
@@ -93,10 +93,16 @@ export default function App() {
   }, [quickReply, read, save]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchProfile();
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        if (session) fetchProfile();
+      })
+      .catch((err) => {
+        console.warn("Initial auth session failed", err?.message ?? err);
+        setSession(null);
+      });
 
     const {
       data: { subscription },
@@ -109,10 +115,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (fontsLoaded || fontError) SplashScreen.hideAsync();
+  }, [fontError, fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <ThemeProvider>
