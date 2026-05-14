@@ -54,6 +54,7 @@ Completed on 2026-05-15:
   - Apple secret is present.
 - App Store Server API secrets are set for `verify-iap` using Beep Get key ID `JQ6KM739V7` and `APP_BUNDLE_ID=com.hypeboyo.beepget`.
 - `verify-iap` was redeployed after setting the App Store Server API secrets.
+- iOS extension provisioning issue `#52` is resolved. EAS remote credentials now have active provisioning profiles for the app, widget extension, and notification service extension.
 
 ## P0 Stop-Ship
 
@@ -104,9 +105,9 @@ Completed on 2026-05-15:
 
    Close `#53` only after a real iOS device signs in with Apple and lands in the nickname/profile flow.
 
-5. Resolve iOS extension provisioning.
+5. Resolve iOS extension provisioning. DONE 2026-05-15.
 
-   Close `#52` only after EAS can provision/build:
+   Closed `#52` after EAS could provision/build:
 
    - `com.hypeboyo.beepget`
    - `com.hypeboyo.beepget.widget`
@@ -114,6 +115,12 @@ Completed on 2026-05-15:
    - App Group: `group.com.beepget.shared`
 
    This is required before claiming iOS WidgetKit support.
+
+   Verification build submitted:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/a6356f92-f6ae-4856-aa16-c9f48ee449fe
+   ```
 
 6. Create/confirm store products.
 
