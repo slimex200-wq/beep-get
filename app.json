@@ -24,6 +24,12 @@
       "expo-secure-store",
       "expo-font",
       [
+        "expo-notifications",
+        {
+          "color": "#D9342B"
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "BEEP-GET uses the camera to record 2 second Blink messages.",
