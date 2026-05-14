@@ -26,21 +26,7 @@ Patch Supabase with the generated secret without committing it:
 
 ```powershell
 $env:SUPABASE_ACCESS_TOKEN="<Supabase access token>"
-$env:PROJECT_REF="dyuzxilukcwiavtvbmci"
-$env:APPLE_CLIENT_SECRET="<output from apple-client-secret.mjs>"
-
-$body = @{
-  external_apple_enabled = $true
-  external_apple_client_id = "com.hypeboyo.beepget.signin"
-  external_apple_secret = $env:APPLE_CLIENT_SECRET
-} | ConvertTo-Json
-
-Invoke-RestMethod `
-  -Method Patch `
-  -Uri "https://api.supabase.com/v1/projects/$env:PROJECT_REF/config/auth" `
-  -Headers @{ Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN" } `
-  -ContentType "application/json" `
-  -Body $body
+npm run apple:supabase-provider
 ```
 
 Also add `beepget://auth/callback` to Supabase Auth redirect URLs if it is missing.
@@ -58,6 +44,18 @@ Create these as **Non-Consumable** in App Store Connect for Beep Get:
 
 The app already uses those IDs in `src/services/purchaseService.ts`.
 
+If an App Store Connect API key is available, create the products from CLI:
+
+```powershell
+$env:ASC_APP_ID="6769032098"
+$env:APP_STORE_CONNECT_ISSUER_ID="<issuer id>"
+$env:APP_STORE_CONNECT_KEY_ID="<key id>"
+$env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
+npm run apple:create-iaps
+```
+
+After creation, App Store Connect still needs pricing, availability, localizations, and review metadata/screenshots before review.
+
 ## App Store Server API Secrets
 
 Create an App Store Connect API key with In-App Purchase / App Store Server API access, then set these Supabase Edge Function secrets:
@@ -69,6 +67,15 @@ npx supabase secrets set `
   APP_STORE_CONNECT_KEY_ID="<key id>" `
   APP_STORE_CONNECT_PRIVATE_KEY="$(Get-Content -Raw C:\path\to\AuthKey_XXXXXXXXXX.p8)" `
   APP_BUNDLE_ID="com.hypeboyo.beepget"
+```
+
+or:
+
+```powershell
+$env:APP_STORE_CONNECT_ISSUER_ID="<issuer id>"
+$env:APP_STORE_CONNECT_KEY_ID="<key id>"
+$env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
+npm run apple:supabase-iap-secrets
 ```
 
 `verify-iap` uses Apple's Get Transaction Info endpoint for iOS strict mode. Do not set `IAP_VERIFICATION_MODE=passthrough-for-internal-testing` for production.
