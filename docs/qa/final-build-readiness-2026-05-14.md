@@ -25,9 +25,29 @@ The app code gate is healthy on `origin/master`, but the production path is bloc
   - `supabase.auth.signInWithIdToken({ provider: "apple" })`
 - Android/web auth remains Google OAuth.
 
+## Supabase Execution Update - 2026-05-14
+
+Completed after the initial audit:
+
+- Remote DB migrations are deployed through `20260514190000_revenue_push_cleanup_foundation.sql`.
+- `npm.cmd run supabase:dry-run` now reports `Remote database is up to date`.
+- Remote Edge Functions are active:
+  - `delete-account`
+  - `cleanup-expired-signals`
+  - `verify-iap`
+  - `send-signal-push`
+- Remote Edge Function secrets now include:
+  - `APP_BUNDLE_ID`
+  - `CLEANUP_SHARED_SECRET`
+
+Still not completed from the local CLI:
+
+- Supabase Apple provider enablement. The Apple `.p8` file exists locally, but `SUPABASE_ACCESS_TOKEN` is not present in env or `.env`, and using `supabase config push` is intentionally avoided because local `supabase/config.toml` does not represent the production auth-provider dashboard state.
+- App Store Server API secrets: `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, and `APP_STORE_CONNECT_PRIVATE_KEY` are not present locally, so iOS strict IAP verification is still not production-ready.
+
 ## P0 Stop-Ship
 
-1. Deploy pending Supabase migrations.
+1. Deploy pending Supabase migrations. DONE 2026-05-14.
 
    The app can already send short text slots and call purchase/push tables in code, but remote DB is behind. Run and verify:
 
@@ -39,7 +59,7 @@ The app code gate is healthy on `origin/master`, but the production path is bloc
 
    Expected final state: dry-run reports no pending migrations.
 
-2. Deploy new Supabase Edge Functions.
+2. Deploy new Supabase Edge Functions. DONE 2026-05-14.
 
    `verify-iap`, `send-signal-push`, and `cleanup-expired-signals` exist locally but are not active remotely. Deploy them before any build that exposes identity-pack unlock, push delivery, or Blink cleanup behavior.
 
@@ -50,15 +70,15 @@ The app code gate is healthy on `origin/master`, but the production path is bloc
    supabase functions list --project-ref dyuzxilukcwiavtvbmci
    ```
 
-3. Set production Edge Function secrets.
+3. Set production Edge Function secrets. PARTIAL 2026-05-14.
 
    Required before strict iOS IAP and cleanup:
 
    - `APP_STORE_CONNECT_ISSUER_ID`
    - `APP_STORE_CONNECT_KEY_ID`
    - `APP_STORE_CONNECT_PRIVATE_KEY`
-   - `APP_BUNDLE_ID=com.hypeboyo.beepget`
-   - `CLEANUP_SHARED_SECRET`
+   - `APP_BUNDLE_ID=com.hypeboyo.beepget` - done
+   - `CLEANUP_SHARED_SECRET` - done
 
    Do not set `IAP_VERIFICATION_MODE=passthrough-for-internal-testing` for production.
 
