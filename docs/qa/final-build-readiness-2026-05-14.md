@@ -54,6 +54,7 @@ Completed on 2026-05-15:
   - Apple secret is present.
 - App Store Server API secrets are set for `verify-iap` using Beep Get key ID `JQ6KM739V7` and `APP_BUNDLE_ID=com.hypeboyo.beepget`.
 - `verify-iap` was redeployed after setting the App Store Server API secrets.
+- iOS extension provisioning issue `#52` is resolved. EAS remote credentials now have active provisioning profiles for the app, widget extension, and notification service extension.
 
 ## P0 Stop-Ship
 
@@ -104,9 +105,9 @@ Completed on 2026-05-15:
 
    Close `#53` only after a real iOS device signs in with Apple and lands in the nickname/profile flow.
 
-5. Resolve iOS extension provisioning.
+5. Resolve iOS extension provisioning. DONE 2026-05-15.
 
-   Close `#52` only after EAS can provision/build:
+   Closed `#52` after EAS could provision all iOS targets:
 
    - `com.hypeboyo.beepget`
    - `com.hypeboyo.beepget.widget`
@@ -114,6 +115,25 @@ Completed on 2026-05-15:
    - App Group: `group.com.beepget.shared`
 
    This is required before claiming iOS WidgetKit support.
+
+   First verification build passed credentials setup, then failed in Prebuild on a separate `@expo/plist` / `@xmldom/xmldom` compatibility issue:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/a6356f92-f6ae-4856-aa16-c9f48ee449fe
+   ```
+
+   Follow-up package fix pins root/override `@xmldom/xmldom@0.8.13`, because `@expo/plist@0.5.3` calls `DOMParser.parseFromString(xml)` without an explicit mime type and `@bacons/xcode` imports `@xmldom/xmldom` directly. Replacement iOS build submitted:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/5a3b973b-596e-433e-85c0-5f696cf737d5
+   ```
+
+   That build then exposed iOS widget Swift compilation issues around iOS 17-only `containerBackground(for: .widget)` and invalid `.frame(width:maxHeight:)` usage. The widget now uses an availability-gated `beepWidgetBackground(...)` fallback and valid fixed-width frames. Final replacement iOS production build finished:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/b8a22a81-7cf4-43ca-b77f-fae108e2c25e
+   https://expo.dev/artifacts/eas/oNmWgM4mtgAJAB4ykuTQuN.ipa
+   ```
 
 6. Create/confirm store products.
 
@@ -203,10 +223,21 @@ npm.cmd run typecheck
 npm.cmd test -- --runInBand
 npx.cmd --yes expo-doctor
 npm.cmd audit --audit-level=high
+node -e "const plist=require('@expo/plist').default; plist.parse('<plist><dict></dict></plist>'); console.log('plist parse smoke passed')"
+npx.cmd expo config --type prebuild --json
 git diff --check
 npx.cmd expo prebuild --platform android --no-install
 android\gradlew.bat -p android :app:assembleDebug -PreactNativeArchitectures=x86_64 --console=plain --no-daemon
+npx.cmd eas-cli@latest build -p ios --profile production --non-interactive --no-wait
 ```
+
+Windows-only expected limitation:
+
+```bash
+npx.cmd expo prebuild --platform ios --no-install
+```
+
+This now passes config plugin loading and plist parsing, then stops at Expo's Windows iOS native sync limitation: `At least one platform must be enabled when syncing`.
 
 Blocked / not a code failure:
 
