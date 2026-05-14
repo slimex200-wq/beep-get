@@ -1,0 +1,107 @@
+// @ts-nocheck
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.101.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return json({ ok: true });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    return json({ error: "Push function is not configured." }, 500);
+  }
+
+  const authorization = req.headers.get("authorization") ?? "";
+  if (!authorization.toLowerCase().startsWith("bearer ")) {
+    return json({ error: "Missing bearer token." }, 401);
+  }
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authorization } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+  if (userError || !user) return json({ error: "Not authenticated." }, 401);
+
+  const body = await req.json().catch(() => ({}));
+  if (!body.signalId) return json({ error: "signalId is required." }, 400);
+
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: signal, error: signalError } = await admin
+    .from("signals")
+    .select("id, sender_id, receiver_id, kind, code, memo")
+    .eq("id", body.signalId)
+    .single();
+  if (signalError || !signal) return json({ error: signalError?.message ?? "Signal not found." }, 404);
+  if (signal.sender_id !== user.id) return json({ error: "Only the sender can notify this signal." }, 403);
+
+  const { data: tokens, error: tokenError } = await admin
+    .from("push_tokens")
+    .select("expo_push_token")
+    .eq("user_id", signal.receiver_id)
+    .eq("enabled", true);
+  if (tokenError) return json({ error: tokenError.message }, 500);
+
+  const pushTokens = [...new Set((tokens ?? []).map((row) => row.expo_push_token).filter(Boolean))];
+  if (pushTokens.length === 0) {
+    await admin.from("notification_deliveries").insert({
+      signal_id: signal.id,
+      receiver_id: signal.receiver_id,
+      status: "skipped",
+      response: { reason: "no_push_tokens" },
+    });
+    return json({ ok: true, sent: 0, skipped: true });
+  }
+
+  const messages = pushTokens.map((to) => ({
+    to,
+    sound: "default",
+    title: signal.kind === "blink" ? "Blink arrived" : "Beep arrived",
+    body: signal.code ? `NO. ${signal.code}` : "Open Beep Get",
+    data: { signalId: signal.id, kind: signal.kind },
+  }));
+
+  const response = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "Accept-Encoding": "gzip, deflate",
+    },
+    body: JSON.stringify(messages),
+  });
+  const payload = await response.json().catch(() => ({ status: response.status }));
+  const status = response.ok ? "sent" : "failed";
+
+  await admin.from("notification_deliveries").insert(
+    pushTokens.map((expoPushToken) => ({
+      signal_id: signal.id,
+      receiver_id: signal.receiver_id,
+      expo_push_token: expoPushToken,
+      status,
+      response: payload,
+      sent_at: response.ok ? new Date().toISOString() : null,
+    })),
+  );
+
+  return json({ ok: response.ok, sent: response.ok ? pushTokens.length : 0, response: payload }, response.ok ? 200 : 502);
+});
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
