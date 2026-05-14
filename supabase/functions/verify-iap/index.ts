@@ -52,11 +52,21 @@ Deno.serve(async (req) => {
   }
 
   const mode = Deno.env.get("IAP_VERIFICATION_MODE") ?? "strict";
-  if (mode !== "passthrough-for-internal-testing") {
+  let verificationPayload = body.rawPayload ?? body;
+  let transactionId = body.transactionId ?? body.purchaseToken;
+  let receiptEnvironment = body.environment ?? "internal";
+
+  if (mode !== "passthrough-for-internal-testing" && platform === "ios") {
+    const verified = await verifyAppleTransaction(body, productId);
+    if (!verified.ok) return json({ error: verified.error }, verified.status ?? 400);
+    verificationPayload = verified.payload;
+    transactionId = verified.transactionId;
+    receiptEnvironment = verified.environment;
+  } else if (mode !== "passthrough-for-internal-testing") {
     return json(
       {
         error:
-          "Store receipt verification is not configured. Set IAP_VERIFICATION_MODE only for internal TestFlight/Play tests, then replace this branch with App Store / Play receipt validation before launch.",
+          "Google Play receipt verification is not configured yet. iOS uses App Store Server API when APP_STORE_CONNECT_* secrets are set.",
       },
       501,
     );
@@ -65,8 +75,7 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const transactionId =
-    body.transactionId ?? body.purchaseToken ?? `${platform}:${productId}:${crypto.randomUUID()}`;
+  transactionId = transactionId ?? `${platform}:${productId}:${crypto.randomUUID()}`;
 
   const { error: receiptError } = await admin.from("purchase_receipts").insert({
     user_id: user.id,
@@ -75,8 +84,8 @@ Deno.serve(async (req) => {
     product_id: productId,
     store_transaction_id: transactionId,
     store_purchase_token: body.purchaseToken ?? null,
-    environment: body.environment ?? "internal",
-    raw_payload: body.rawPayload ?? body,
+    environment: receiptEnvironment,
+    raw_payload: verificationPayload,
   });
   if (receiptError && !/duplicate key/i.test(receiptError.message ?? "")) {
     return json({ error: receiptError.message }, 500);
@@ -100,6 +109,176 @@ Deno.serve(async (req) => {
 
   return json({ ok: true, packSlug, productId });
 });
+
+async function verifyAppleTransaction(body, expectedProductId) {
+  const transactionId = body.transactionId ?? body.purchaseToken;
+  if (!transactionId) {
+    return { ok: false, status: 400, error: "Apple transactionId is required." };
+  }
+
+  const bundleId = Deno.env.get("APP_BUNDLE_ID") ?? "com.hypeboyo.beepget";
+  const firstEnvironment = body.environment === "sandbox" ? "sandbox" : "production";
+  const first = await fetchAppleTransactionInfo(transactionId, firstEnvironment, bundleId);
+  const result =
+    first.status === 404 && firstEnvironment === "production"
+      ? await fetchAppleTransactionInfo(transactionId, "sandbox", bundleId)
+      : first;
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      status: result.status,
+      error: result.error ?? "Apple transaction verification failed.",
+    };
+  }
+
+  const signedTransactionInfo = result.payload?.signedTransactionInfo;
+  const transaction = decodeJwsPayload(signedTransactionInfo);
+  if (!transaction) {
+    return { ok: false, status: 400, error: "Apple transaction payload is invalid." };
+  }
+  if (transaction.productId !== expectedProductId) {
+    return { ok: false, status: 400, error: "Apple productId does not match this pack." };
+  }
+  if (transaction.bundleId !== bundleId) {
+    return { ok: false, status: 400, error: "Apple bundleId does not match this app." };
+  }
+  if (transaction.revocationDate) {
+    return { ok: false, status: 400, error: "Apple transaction has been revoked." };
+  }
+
+  return {
+    ok: true,
+    transactionId: transaction.transactionId ?? transactionId,
+    environment: result.environment,
+    payload: {
+      source: "app_store_server_api",
+      environment: result.environment,
+      transaction,
+      response: result.payload,
+    },
+  };
+}
+
+async function fetchAppleTransactionInfo(transactionId, environment, bundleId) {
+  const token = await createAppStoreServerToken(bundleId);
+  if (!token.ok) return token;
+
+  const host =
+    environment === "sandbox"
+      ? "https://api.storekit-sandbox.apple.com"
+      : "https://api.storekit.apple.com";
+  const response = await fetch(
+    `${host}/inApps/v1/transactions/${encodeURIComponent(transactionId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token.jwt}`,
+        Accept: "application/json",
+      },
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      error: payload?.errorMessage ?? payload?.errorCode ?? "Apple transaction lookup failed.",
+    };
+  }
+  return { ok: true, environment, payload };
+}
+
+async function createAppStoreServerToken(bundleId) {
+  try {
+    const issuerId = Deno.env.get("APP_STORE_CONNECT_ISSUER_ID");
+    const keyId = Deno.env.get("APP_STORE_CONNECT_KEY_ID");
+    const privateKey = Deno.env.get("APP_STORE_CONNECT_PRIVATE_KEY");
+    if (!issuerId || !keyId || !privateKey) {
+      return {
+        ok: false,
+        status: 500,
+        error:
+          "App Store Server API is not configured. Set APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_PRIVATE_KEY, and APP_BUNDLE_ID.",
+      };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const header = { alg: "ES256", kid: keyId, typ: "JWT" };
+    const claims = {
+      iss: issuerId,
+      iat: now,
+      exp: now + 900,
+      aud: "appstoreconnect-v1",
+      bid: bundleId,
+    };
+    const signingInput = `${base64UrlJson(header)}.${base64UrlJson(claims)}`;
+    const key = await crypto.subtle.importKey(
+      "pkcs8",
+      pemToPkcs8(privateKey),
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["sign"],
+    );
+    const signature = await crypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-256" },
+      key,
+      new TextEncoder().encode(signingInput),
+    );
+    return { ok: true, jwt: `${signingInput}.${base64UrlBytes(new Uint8Array(signature))}` };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 500,
+      error: err instanceof Error ? err.message : "Failed to create App Store Server API token.",
+    };
+  }
+}
+
+function decodeJwsPayload(jws) {
+  if (!jws || typeof jws !== "string") return null;
+  const [, payload] = jws.split(".");
+  if (!payload) return null;
+  try {
+    return JSON.parse(new TextDecoder().decode(base64UrlToBytes(payload)));
+  } catch {
+    return null;
+  }
+}
+
+function pemToPkcs8(value) {
+  const normalized = value.replace(/\\n/g, "\n");
+  const body = normalized
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\s+/g, "");
+  return base64ToBytes(body);
+}
+
+function base64UrlJson(value) {
+  return base64UrlBytes(new TextEncoder().encode(JSON.stringify(value)));
+}
+
+function base64UrlBytes(bytes) {
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value) {
+  return base64ToBytes(value.replace(/-/g, "+").replace(/_/g, "/"));
+}
+
+function base64ToBytes(value) {
+  const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
