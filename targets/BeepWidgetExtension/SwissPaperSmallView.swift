@@ -79,9 +79,7 @@ struct SwissPaperSmallView: View {
                 .stroke(skin.ink, lineWidth: skin.ruleWidth)
                 .padding(10)
         )
-        .containerBackground(for: .widget) {
-            skin.paper
-        }
+        .beepWidgetBackground(skin.paper)
         .widgetURL(actionURL(openUrl))
     }
 

@@ -21,7 +21,7 @@ struct SwissPaperMediumView: View {
                     .overlay(verticalRule, alignment: .trailing)
 
                 decorationCell
-                    .frame(width: 96, maxHeight: .infinity)
+                    .frame(minWidth: 96, maxWidth: 96, maxHeight: .infinity)
             }
             .frame(maxHeight: .infinity)
             .overlay(horizontalRule, alignment: .bottom)
@@ -32,7 +32,7 @@ struct SwissPaperMediumView: View {
                     .overlay(verticalRule, alignment: .trailing)
 
                 timeCell
-                    .frame(width: 96, maxHeight: .infinity)
+                    .frame(minWidth: 96, maxWidth: 96, maxHeight: .infinity)
             }
             .frame(height: 44)
 
@@ -45,9 +45,7 @@ struct SwissPaperMediumView: View {
                 .stroke(skin.ink, lineWidth: skin.ruleWidth)
                 .padding(10)
         )
-        .containerBackground(for: .widget) {
-            skin.paper
-        }
+        .beepWidgetBackground(skin.paper)
         .widgetURL(actionURL(actions?.openReplyRoomUrl))
     }
 
