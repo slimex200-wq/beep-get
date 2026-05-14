@@ -42,7 +42,6 @@ Completed after the initial audit:
 
 Still not completed from the local CLI:
 
-- App Store Server API secrets: `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, and `APP_STORE_CONNECT_PRIVATE_KEY` are not present locally, so iOS strict IAP verification is still not production-ready.
 - Apple Developer setup is ready for Supabase provider configuration: Services ID `com.hypeboyo.beepget.signin`, bundle ID `com.hypeboyo.beepget`, Team ID `YR267UY7UX`, Key ID `98ZCRX9Y55`, domain `dyuzxilukcwiavtvbmci.supabase.co`, callback URL `https://dyuzxilukcwiavtvbmci.supabase.co/auth/v1/callback`.
 - App Store Connect has draft non-consumable products for all four identity-pack product IDs. They still need price/availability, localization, and review screenshots before submission.
 
@@ -53,6 +52,8 @@ Completed on 2026-05-15:
   - `external_apple_enabled=true`
   - `external_apple_client_id=com.hypeboyo.beepget.signin,com.hypeboyo.beepget`
   - Apple secret is present.
+- App Store Server API secrets are set for `verify-iap` using Beep Get key ID `JQ6KM739V7` and `APP_BUNDLE_ID=com.hypeboyo.beepget`.
+- `verify-iap` was redeployed after setting the App Store Server API secrets.
 
 ## P0 Stop-Ship
 
@@ -79,13 +80,13 @@ Completed on 2026-05-15:
    supabase functions list --project-ref dyuzxilukcwiavtvbmci
    ```
 
-3. Set production Edge Function secrets. PARTIAL 2026-05-14.
+3. Set production Edge Function secrets. DONE 2026-05-15.
 
    Required before strict iOS IAP and cleanup:
 
-   - `APP_STORE_CONNECT_ISSUER_ID`
-   - `APP_STORE_CONNECT_KEY_ID`
-   - `APP_STORE_CONNECT_PRIVATE_KEY`
+   - `APP_STORE_CONNECT_ISSUER_ID` - done
+   - `APP_STORE_CONNECT_KEY_ID` - done
+   - `APP_STORE_CONNECT_PRIVATE_KEY` - done
    - `APP_BUNDLE_ID=com.hypeboyo.beepget` - done
    - `CLEANUP_SHARED_SECRET` - done
 

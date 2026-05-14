@@ -57,14 +57,16 @@ Current App Store Connect state:
 - The four non-consumable products exist as drafts.
 - Each product still needs price/availability, localization, and review screenshot metadata before review.
 - Existing Team Key: Issuer ID `fece44f0-aae6-44b0-ad23-188e30076da2`, Key ID `NASNC6QDQH`, name `[Expo] EAS Submit FZ_lkq586Z`, Admin role.
-- The `.p8` for that App Store Connect API key is not available locally. Without the private key, `verify-iap` cannot use App Store Server API yet.
+- Beep Get App Store Server API key: Key ID `JQ6KM739V7`, App Manager role, private key file `AuthKey_JQ6KM739V7.p8`.
+- Supabase Edge Function secrets are set for App Store Server API verification and `APP_BUNDLE_ID=com.hypeboyo.beepget`.
+- Revoked/unused key `824QSV86HA` should not be used. Delete any local `AuthKey_824QSV86HA.p8` copy to avoid confusion.
 
 If an App Store Connect API key is available, create the products from CLI:
 
 ```powershell
 $env:ASC_APP_ID="6769032098"
 $env:APP_STORE_CONNECT_ISSUER_ID="fece44f0-aae6-44b0-ad23-188e30076da2"
-$env:APP_STORE_CONNECT_KEY_ID="NASNC6QDQH"
+$env:APP_STORE_CONNECT_KEY_ID="JQ6KM739V7"
 $env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
 npm run apple:create-iaps
 ```
@@ -88,8 +90,9 @@ or:
 
 ```powershell
 $env:APP_STORE_CONNECT_ISSUER_ID="fece44f0-aae6-44b0-ad23-188e30076da2"
-$env:APP_STORE_CONNECT_KEY_ID="NASNC6QDQH"
-$env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
+$env:APP_STORE_CONNECT_KEY_ID="JQ6KM739V7"
+$env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\Users\slime\Downloads\AuthKey_JQ6KM739V7.p8"
+$env:APP_BUNDLE_ID="com.hypeboyo.beepget"
 npm run apple:supabase-iap-secrets
 ```
 
