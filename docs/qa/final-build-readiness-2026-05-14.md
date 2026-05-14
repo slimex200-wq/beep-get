@@ -44,6 +44,8 @@ Still not completed from the local CLI:
 
 - Supabase Apple provider enablement. The Apple `.p8` file exists locally, but `SUPABASE_ACCESS_TOKEN` is not present in env or `.env`, and using `supabase config push` is intentionally avoided because local `supabase/config.toml` does not represent the production auth-provider dashboard state.
 - App Store Server API secrets: `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, and `APP_STORE_CONNECT_PRIVATE_KEY` are not present locally, so iOS strict IAP verification is still not production-ready.
+- Apple Developer setup is ready for Supabase provider configuration: Services ID `com.hypeboyo.beepget.signin`, bundle ID `com.hypeboyo.beepget`, Team ID `YR267UY7UX`, Key ID `98ZCRX9Y55`, domain `dyuzxilukcwiavtvbmci.supabase.co`, callback URL `https://dyuzxilukcwiavtvbmci.supabase.co/auth/v1/callback`.
+- App Store Connect has draft non-consumable products for all four identity-pack product IDs. They still need price/availability, localization, and review screenshots before submission.
 
 ## P0 Stop-Ship
 
@@ -86,7 +88,8 @@ Still not completed from the local CLI:
 
    Native Apple login still needs Supabase Apple provider verification enabled server-side. Use:
 
-   - Client ID: `com.hypeboyo.beepget`
+   - Client ID list: `com.hypeboyo.beepget.signin,com.hypeboyo.beepget`
+   - Client secret JWT subject: `com.hypeboyo.beepget.signin`
    - Team ID: `YR267UY7UX`
    - Key ID: `98ZCRX9Y55`
    - `.p8`: keep local/secret only, never commit or paste into chat.
