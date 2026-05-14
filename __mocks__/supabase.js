@@ -45,6 +45,7 @@ module.exports = {
     auth: {
       signInWithOAuth: jest.fn().mockResolvedValue({ data: {}, error: null }),
       signInWithIdToken: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      updateUser: jest.fn().mockResolvedValue({ data: {}, error: null }),
       exchangeCodeForSession: jest.fn().mockResolvedValue({ data: {}, error: null }),
       signOut: jest.fn().mockResolvedValue({ error: null }),
       getSession: jest.fn().mockResolvedValue({

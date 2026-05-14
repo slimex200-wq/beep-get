@@ -5,6 +5,7 @@ module.exports = {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^react-native-url-polyfill/auto$": "<rootDir>/__mocks__/react-native-url-polyfill.js",
     "^../../modules/beep-widget$": "<rootDir>/__mocks__/beep-widget.js",
+    "^expo-apple-authentication$": "<rootDir>/__mocks__/expo-apple-authentication.js",
     "^expo-constants$": "<rootDir>/__mocks__/expo-constants.js",
     "^expo-contacts$": "<rootDir>/__mocks__/expo-contacts.js",
     "^expo-haptics$": "<rootDir>/__mocks__/expo-haptics.js",

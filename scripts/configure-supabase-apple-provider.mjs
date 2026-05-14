@@ -2,7 +2,10 @@ import { execFileSync } from "node:child_process";
 
 const projectRef = process.env.PROJECT_REF ?? "dyuzxilukcwiavtvbmci";
 const accessToken = required("SUPABASE_ACCESS_TOKEN");
-const clientId = process.env.APPLE_SERVICES_ID ?? "com.hypeboyo.beepget.signin";
+const clientId =
+  process.env.APPLE_CLIENT_ID ??
+  process.env.APPLE_SERVICES_ID ??
+  "com.hypeboyo.beepget";
 const clientSecret =
   process.env.APPLE_CLIENT_SECRET ?? run("node", ["scripts/apple-client-secret.mjs"]).trim();
 

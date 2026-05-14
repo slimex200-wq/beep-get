@@ -1,5 +1,6 @@
 const { supabase } = require("@/lib/supabase");
 const Linking = require("expo-linking");
+const AppleAuthentication = require("expo-apple-authentication");
 import {
   createUserProfile,
   exchangeOAuthCodeFromUrl,
@@ -76,26 +77,83 @@ describe("signInWithGoogle", () => {
 });
 
 describe("signInWithApple", () => {
-  it("calls signInWithOAuth and returns data", async () => {
-    const mockData = { url: "https://appleid.apple.com/auth" };
-    supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
+  it("uses native Apple auth and exchanges the identity token with Supabase", async () => {
+    const mockData = { session: { access_token: "session" } };
+    supabase.auth.signInWithIdToken.mockResolvedValue({ data: mockData, error: null });
 
     await expect(signInWithApple()).resolves.toEqual(mockData);
-    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+    expect(AppleAuthentication.signInAsync).toHaveBeenCalledWith({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+    expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
       provider: "apple",
-      options: {
-        redirectTo: "beepget://auth/callback",
-        skipBrowserRedirect: true,
+      token: "apple-id-token",
+    });
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({
+      data: {
+        full_name: "Beepy Tester",
+        name: "Beepy Tester",
       },
     });
-    expect(Linking.openURL).toHaveBeenCalledWith("https://appleid.apple.com/auth");
+    expect(Linking.openURL).not.toHaveBeenCalled();
+    expect(supabase.auth.signInWithOAuth).not.toHaveBeenCalled();
   });
 
-  it("throws on error", async () => {
+  it("does not require Apple fullName because Apple only returns it once", async () => {
+    AppleAuthentication.signInAsync.mockResolvedValueOnce({
+      identityToken: "apple-id-token",
+      fullName: null,
+    });
+    supabase.auth.signInWithIdToken.mockResolvedValue({ data: {}, error: null });
+
+    await signInWithApple();
+
+    expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
+      provider: "apple",
+      token: "apple-id-token",
+    });
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("does not fail login when Apple metadata update fails", async () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    supabase.auth.signInWithIdToken.mockResolvedValue({ data: { session: {} }, error: null });
+    supabase.auth.updateUser.mockResolvedValueOnce({
+      data: null,
+      error: { message: "metadata failed" },
+    });
+
+    await expect(signInWithApple()).resolves.toEqual({ session: {} });
+    expect(supabase.auth.updateUser).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("throws on Supabase token exchange error", async () => {
     const err = { message: "apple sign in failed" };
-    supabase.auth.signInWithOAuth.mockResolvedValue({ data: null, error: err });
+    supabase.auth.signInWithIdToken.mockResolvedValue({ data: null, error: err });
 
     await expect(signInWithApple()).rejects.toEqual(err);
+  });
+
+  it("throws when native Apple sign-in fails", async () => {
+    const err = new Error("native cancelled");
+    AppleAuthentication.signInAsync.mockRejectedValueOnce(err);
+
+    await expect(signInWithApple()).rejects.toThrow("native cancelled");
+    expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled();
+  });
+
+  it("throws when Apple does not return an identity token", async () => {
+    AppleAuthentication.signInAsync.mockResolvedValueOnce({
+      identityToken: null,
+      fullName: null,
+    });
+
+    await expect(signInWithApple()).rejects.toThrow("identity token");
+    expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled();
   });
 });
 
