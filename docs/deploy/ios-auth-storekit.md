@@ -9,15 +9,18 @@ The iOS app uses native `expo-apple-authentication` and exchanges the Apple `ide
 Required Apple Developer values for the native app path:
 
 - App ID / bundle ID: `com.hypeboyo.beepget`
-- Apple signing key `.p8`, Team ID, and Key ID.
+- Services ID: `com.hypeboyo.beepget.signin`
+- Apple signing key `.p8`, Team ID `YR267UY7UX`, and Key ID `98ZCRX9Y55`.
+- Supabase callback URL for the Services ID: `https://dyuzxilukcwiavtvbmci.supabase.co/auth/v1/callback`
 
 Generate the Apple client secret locally:
 
 ```powershell
-$env:APPLE_TEAM_ID="<Apple Team ID>"
-$env:APPLE_CLIENT_ID="com.hypeboyo.beepget"
-$env:APPLE_KEY_ID="<Apple Sign in key ID>"
-$env:APPLE_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
+$env:APPLE_TEAM_ID="YR267UY7UX"
+$env:APPLE_KEY_ID="98ZCRX9Y55"
+$env:APPLE_PRIVATE_KEY_PATH="C:\Users\slime\Downloads\AuthKey_98ZCRX9Y55.p8"
+$env:APPLE_CLIENT_ID="com.hypeboyo.beepget.signin,com.hypeboyo.beepget"
+$env:APPLE_CLIENT_SECRET_SUB="com.hypeboyo.beepget.signin"
 node scripts/apple-client-secret.mjs
 ```
 
@@ -25,10 +28,15 @@ Patch Supabase with the generated secret without committing it:
 
 ```powershell
 $env:SUPABASE_ACCESS_TOKEN="<Supabase access token>"
+$env:APPLE_TEAM_ID="YR267UY7UX"
+$env:APPLE_KEY_ID="98ZCRX9Y55"
+$env:APPLE_PRIVATE_KEY_PATH="C:\Users\slime\Downloads\AuthKey_98ZCRX9Y55.p8"
+$env:APPLE_CLIENT_ID="com.hypeboyo.beepget.signin,com.hypeboyo.beepget"
+$env:APPLE_CLIENT_SECRET_SUB="com.hypeboyo.beepget.signin"
 npm run apple:supabase-provider
 ```
 
-If a web OAuth fallback is ever added, create a separate Apple Services ID and callback URL. The current iOS app login path does not require the web redirect flow.
+The Supabase provider client ID list includes both the Services ID and the native bundle ID. The client secret JWT `sub` uses the Services ID.
 
 ## StoreKit Products
 
@@ -43,12 +51,20 @@ Create these as **Non-Consumable** in App Store Connect for Beep Get:
 
 The app already uses those IDs in `src/services/purchaseService.ts`.
 
+Current App Store Connect state:
+
+- App ID: `6769032098`
+- The four non-consumable products exist as drafts.
+- Each product still needs price/availability, localization, and review screenshot metadata before review.
+- Existing Team Key: Issuer ID `fece44f0-aae6-44b0-ad23-188e30076da2`, Key ID `NASNC6QDQH`, name `[Expo] EAS Submit FZ_lkq586Z`, Admin role.
+- The `.p8` for that App Store Connect API key is not available locally. Without the private key, `verify-iap` cannot use App Store Server API yet.
+
 If an App Store Connect API key is available, create the products from CLI:
 
 ```powershell
 $env:ASC_APP_ID="6769032098"
-$env:APP_STORE_CONNECT_ISSUER_ID="<issuer id>"
-$env:APP_STORE_CONNECT_KEY_ID="<key id>"
+$env:APP_STORE_CONNECT_ISSUER_ID="fece44f0-aae6-44b0-ad23-188e30076da2"
+$env:APP_STORE_CONNECT_KEY_ID="NASNC6QDQH"
 $env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
 npm run apple:create-iaps
 ```
@@ -71,8 +87,8 @@ npx supabase secrets set `
 or:
 
 ```powershell
-$env:APP_STORE_CONNECT_ISSUER_ID="<issuer id>"
-$env:APP_STORE_CONNECT_KEY_ID="<key id>"
+$env:APP_STORE_CONNECT_ISSUER_ID="fece44f0-aae6-44b0-ad23-188e30076da2"
+$env:APP_STORE_CONNECT_KEY_ID="NASNC6QDQH"
 $env:APP_STORE_CONNECT_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
 npm run apple:supabase-iap-secrets
 ```

@@ -2,10 +2,15 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 
 const teamId = required("APPLE_TEAM_ID");
-const clientId =
+const configuredClientIds =
   process.env.APPLE_CLIENT_ID ??
+  process.env.APPLE_PROVIDER_CLIENT_IDS ??
   process.env.APPLE_SERVICES_ID ??
-  "com.hypeboyo.beepget";
+  "com.hypeboyo.beepget.signin";
+const clientSecretSubject =
+  process.env.APPLE_CLIENT_SECRET_SUB ??
+  process.env.APPLE_SERVICES_ID ??
+  configuredClientIds.split(",")[0].trim();
 const keyId = required("APPLE_KEY_ID");
 const privateKeyPath = required("APPLE_PRIVATE_KEY_PATH");
 const privateKey = fs.readFileSync(privateKeyPath, "utf8");
@@ -17,7 +22,7 @@ const payload = {
   iat: now,
   exp: now + 60 * 60 * 24 * 180,
   aud: "https://appleid.apple.com",
-  sub: clientId,
+  sub: clientSecretSubject,
 };
 
 const signingInput = `${base64UrlJson(header)}.${base64UrlJson(payload)}`;

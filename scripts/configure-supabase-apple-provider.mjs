@@ -4,8 +4,8 @@ const projectRef = process.env.PROJECT_REF ?? "dyuzxilukcwiavtvbmci";
 const accessToken = required("SUPABASE_ACCESS_TOKEN");
 const clientId =
   process.env.APPLE_CLIENT_ID ??
-  process.env.APPLE_SERVICES_ID ??
-  "com.hypeboyo.beepget";
+  process.env.APPLE_PROVIDER_CLIENT_IDS ??
+  "com.hypeboyo.beepget.signin,com.hypeboyo.beepget";
 const clientSecret =
   process.env.APPLE_CLIENT_SECRET ?? run("node", ["scripts/apple-client-secret.mjs"]).trim();
 
