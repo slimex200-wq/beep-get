@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { BEEP_ID_LENGTH, MAX_BEEP_ID_RETRIES } from "@/lib/constants";
+import * as AppleAuthentication from "expo-apple-authentication";
 import * as Linking from "expo-linking";
 
 export type UserProfile = {
@@ -27,7 +28,35 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithApple() {
-  return signInWithOAuthProvider("apple");
+  const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+  });
+
+  if (!credential.identityToken) {
+    throw new Error("Apple sign-in did not return an identity token.");
+  }
+
+  const fullName = formatAppleFullName(credential.fullName);
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "apple",
+    token: credential.identityToken,
+  });
+  if (error) throw error;
+  if (fullName) {
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        full_name: fullName,
+        name: fullName,
+      },
+    });
+    if (metadataError) {
+      console.warn("Apple profile metadata update failed", metadataError.message);
+    }
+  }
+  return data;
 }
 
 export async function exchangeOAuthCodeFromUrl(url: string): Promise<boolean> {
@@ -117,4 +146,19 @@ function readProfile(data: unknown): UserProfile | null {
 function readQueryParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
+}
+
+function formatAppleFullName(
+  fullName: AppleAuthentication.AppleAuthenticationFullName | null
+) {
+  if (!fullName) return null;
+  const value = [
+    fullName.givenName,
+    fullName.middleName,
+    fullName.familyName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return value || null;
 }

@@ -1,22 +1,21 @@
 # iOS Auth and StoreKit Setup
 
-## Apple OAuth in Supabase
+## Native Apple Login in Supabase
 
 Use the Supabase project `beep-get-prod` (`dyuzxilukcwiavtvbmci`).
 
-Required Apple Developer values:
+The iOS app uses native `expo-apple-authentication` and exchanges the Apple `identityToken` with Supabase via `signInWithIdToken`.
+
+Required Apple Developer values for the native app path:
 
 - App ID / bundle ID: `com.hypeboyo.beepget`
-- Services ID: recommended `com.hypeboyo.beepget.signin`
-- Website domain for the Services ID: `dyuzxilukcwiavtvbmci.supabase.co`
-- Return URL for the Services ID: `https://dyuzxilukcwiavtvbmci.supabase.co/auth/v1/callback`
 - Apple signing key `.p8`, Team ID, and Key ID.
 
 Generate the Apple client secret locally:
 
 ```powershell
 $env:APPLE_TEAM_ID="<Apple Team ID>"
-$env:APPLE_SERVICES_ID="com.hypeboyo.beepget.signin"
+$env:APPLE_CLIENT_ID="com.hypeboyo.beepget"
 $env:APPLE_KEY_ID="<Apple Sign in key ID>"
 $env:APPLE_PRIVATE_KEY_PATH="C:\path\to\AuthKey_XXXXXXXXXX.p8"
 node scripts/apple-client-secret.mjs
@@ -29,7 +28,7 @@ $env:SUPABASE_ACCESS_TOKEN="<Supabase access token>"
 npm run apple:supabase-provider
 ```
 
-Also add `beepget://auth/callback` to Supabase Auth redirect URLs if it is missing.
+If a web OAuth fallback is ever added, create a separate Apple Services ID and callback URL. The current iOS app login path does not require the web redirect flow.
 
 ## StoreKit Products
 
