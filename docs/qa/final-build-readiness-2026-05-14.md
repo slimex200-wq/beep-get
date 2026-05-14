@@ -107,7 +107,7 @@ Completed on 2026-05-15:
 
 5. Resolve iOS extension provisioning. DONE 2026-05-15.
 
-   Closed `#52` after EAS could provision/build:
+   Closed `#52` after EAS could provision all iOS targets:
 
    - `com.hypeboyo.beepget`
    - `com.hypeboyo.beepget.widget`
@@ -116,10 +116,16 @@ Completed on 2026-05-15:
 
    This is required before claiming iOS WidgetKit support.
 
-   Verification build submitted:
+   First verification build passed credentials setup, then failed in Prebuild on a separate `@expo/plist` / `@xmldom/xmldom` compatibility issue:
 
    ```text
    https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/a6356f92-f6ae-4856-aa16-c9f48ee449fe
+   ```
+
+   Follow-up package fix pins root/override `@xmldom/xmldom@0.8.13`, because `@expo/plist@0.5.3` calls `DOMParser.parseFromString(xml)` without an explicit mime type and `@bacons/xcode` imports `@xmldom/xmldom` directly. Replacement iOS build submitted:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/5a3b973b-596e-433e-85c0-5f696cf737d5
    ```
 
 6. Create/confirm store products.
@@ -210,10 +216,20 @@ npm.cmd run typecheck
 npm.cmd test -- --runInBand
 npx.cmd --yes expo-doctor
 npm.cmd audit --audit-level=high
+node -e "const plist=require('@expo/plist').default; plist.parse('<plist><dict></dict></plist>'); console.log('plist parse smoke passed')"
+npx.cmd expo config --type prebuild --json
 git diff --check
 npx.cmd expo prebuild --platform android --no-install
 android\gradlew.bat -p android :app:assembleDebug -PreactNativeArchitectures=x86_64 --console=plain --no-daemon
 ```
+
+Windows-only expected limitation:
+
+```bash
+npx.cmd expo prebuild --platform ios --no-install
+```
+
+This now passes config plugin loading and plist parsing, then stops at Expo's Windows iOS native sync limitation: `At least one platform must be enabled when syncing`.
 
 Blocked / not a code failure:
 
