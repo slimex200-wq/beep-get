@@ -42,10 +42,17 @@ Completed after the initial audit:
 
 Still not completed from the local CLI:
 
-- Supabase Apple provider enablement. The Apple `.p8` file exists locally, but `SUPABASE_ACCESS_TOKEN` is not present in env or `.env`, and using `supabase config push` is intentionally avoided because local `supabase/config.toml` does not represent the production auth-provider dashboard state.
 - App Store Server API secrets: `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, and `APP_STORE_CONNECT_PRIVATE_KEY` are not present locally, so iOS strict IAP verification is still not production-ready.
 - Apple Developer setup is ready for Supabase provider configuration: Services ID `com.hypeboyo.beepget.signin`, bundle ID `com.hypeboyo.beepget`, Team ID `YR267UY7UX`, Key ID `98ZCRX9Y55`, domain `dyuzxilukcwiavtvbmci.supabase.co`, callback URL `https://dyuzxilukcwiavtvbmci.supabase.co/auth/v1/callback`.
 - App Store Connect has draft non-consumable products for all four identity-pack product IDs. They still need price/availability, localization, and review screenshots before submission.
+
+Completed on 2026-05-15:
+
+- Supabase Apple provider is enabled on `beep-get-prod`.
+- Verified safe auth config fields through the Management API:
+  - `external_apple_enabled=true`
+  - `external_apple_client_id=com.hypeboyo.beepget.signin,com.hypeboyo.beepget`
+  - Apple secret is present.
 
 ## P0 Stop-Ship
 
@@ -84,7 +91,7 @@ Still not completed from the local CLI:
 
    Do not set `IAP_VERIFICATION_MODE=passthrough-for-internal-testing` for production.
 
-4. Enable Supabase Apple provider for native iOS login.
+4. Enable Supabase Apple provider for native iOS login. DONE 2026-05-15.
 
    Native Apple login still needs Supabase Apple provider verification enabled server-side. Use:
 
