@@ -128,6 +128,13 @@ Completed on 2026-05-15:
    https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/5a3b973b-596e-433e-85c0-5f696cf737d5
    ```
 
+   That build then exposed iOS widget Swift compilation issues around iOS 17-only `containerBackground(for: .widget)` and invalid `.frame(width:maxHeight:)` usage. The widget now uses an availability-gated `beepWidgetBackground(...)` fallback and valid fixed-width frames. Final replacement iOS production build finished:
+
+   ```text
+   https://expo.dev/accounts/hypeboyo/projects/beep-get/builds/b8a22a81-7cf4-43ca-b77f-fae108e2c25e
+   https://expo.dev/artifacts/eas/oNmWgM4mtgAJAB4ykuTQuN.ipa
+   ```
+
 6. Create/confirm store products.
 
    App code maps paid packs to:
@@ -221,6 +228,7 @@ npx.cmd expo config --type prebuild --json
 git diff --check
 npx.cmd expo prebuild --platform android --no-install
 android\gradlew.bat -p android :app:assembleDebug -PreactNativeArchitectures=x86_64 --console=plain --no-daemon
+npx.cmd eas-cli@latest build -p ios --profile production --non-interactive --no-wait
 ```
 
 Windows-only expected limitation:
