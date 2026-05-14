@@ -11,6 +11,7 @@ import { font, type } from "@/design/typography";
 import { identityPacks, type IdentityPack, type IdentityPackExpression, type IdentityPackTone } from "@/lib/identityPacks";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
+import { getOwnedIdentityPackSlugs, purchaseIdentityPack } from "@/services/purchaseService";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 
@@ -28,12 +29,17 @@ export function MyScreen() {
   const { profile } = useAuthStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const [selectedSlug, setSelectedSlug] = useState(DEFAULT_PACK);
+  const [ownedPackSlugs, setOwnedPackSlugs] = useState<Set<string>>(new Set());
+  const [purchaseBusy, setPurchaseBusy] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const detailYRef = useRef(0);
 
   useEffect(() => {
     if (!profile) return;
     fetchDictionary(profile.id).catch(reportError);
+    getOwnedIdentityPackSlugs(profile.id)
+      .then(setOwnedPackSlugs)
+      .catch(reportError);
   }, [profile?.id, fetchDictionary]);
 
   const selectedPack = useMemo(
@@ -51,16 +57,25 @@ export function MyScreen() {
     await Share.share({ message: generateShareText(profile.beep_id, profile.nickname) });
   };
 
-  const handleApply = () => {
-    if (selectedPack.isFree) {
-      Alert.alert("Classic Paper 적용됨", "현재 빌드에서는 무료 기본 스킨만 실제 적용 상태로 둡니다.");
+  const handleApply = async () => {
+    if (purchaseBusy) return;
+    const owned = Boolean(selectedPack.isFree || ownedPackSlugs.has(selectedPack.slug));
+
+    if (owned) {
+      Alert.alert(selectedPack.name, "이미 사용할 수 있는 pack입니다.");
       return;
     }
 
-    Alert.alert(
-      selectedPack.name,
-      "지금은 미리보기 단계입니다. 결제는 StoreKit / Google Play Billing 설계 후 별도 PR에서 붙입니다.",
-    );
+    try {
+      setPurchaseBusy(true);
+      await purchaseIdentityPack(selectedPack.slug);
+      setOwnedPackSlugs((current) => new Set([...current, selectedPack.slug]));
+      Alert.alert(selectedPack.name, "Pack unlocked.");
+    } catch (err: any) {
+      Alert.alert(selectedPack.name, err?.message ?? "Purchase failed.");
+    } finally {
+      setPurchaseBusy(false);
+    }
   };
 
   const handleSelectPack = (slug: string) => {
@@ -119,7 +134,13 @@ export function MyScreen() {
         </View>
 
         <View onLayout={(event) => (detailYRef.current = event.nativeEvent.layout.y)}>
-          <PackDetail pack={selectedPack} replySlots={replySlots} onApply={handleApply} />
+          <PackDetail
+            pack={selectedPack}
+            replySlots={replySlots}
+            owned={Boolean(selectedPack.isFree || ownedPackSlugs.has(selectedPack.slug))}
+            busy={purchaseBusy}
+            onApply={handleApply}
+          />
         </View>
 
         <View style={styles.toolPanel}>
@@ -361,10 +382,14 @@ function PackTicket({
 function PackDetail({
   pack,
   replySlots,
+  owned,
+  busy,
   onApply,
 }: {
   pack: IdentityPack;
   replySlots: string[];
+  owned: boolean;
+  busy: boolean;
   onApply: () => void;
 }) {
   const dark = pack.tone === "night";
@@ -438,7 +463,9 @@ function PackDetail({
           onPress={onApply}
           style={({ pressed }) => [styles.applyButton, dark && styles.applyButtonDark, pressed && styles.pressed]}
         >
-          <Text style={[styles.applyText, dark && styles.glowText]}>{pack.isFree ? "EQUIPPED" : "PREVIEW LOCKED PACK"}</Text>
+          <Text style={[styles.applyText, dark && styles.glowText]}>
+            {busy ? "CONNECTING STORE" : owned ? "EQUIPPED" : "UNLOCK PACK"}
+          </Text>
         </Pressable>
       </View>
     </View>

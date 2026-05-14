@@ -12,8 +12,10 @@ import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
 import { exchangeOAuthCodeFromUrl } from "@/services/authService";
+import { getNotificationSignalId, registerPushToken } from "@/services/pushService";
 import { customFonts } from "@/theme/fonts";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import * as Notifications from "expo-notifications";
 
 void SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Splash prevent auto-hide failed", err?.message ?? err);
@@ -148,6 +150,21 @@ export default function App() {
     setPendingWidgetUrl(null);
     handleWidgetUrl(url);
   }, [canHandleWidgetActions, handleWidgetUrl, pendingWidgetUrl]);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    registerPushToken(profile.id).catch((err) =>
+      console.warn("Push registration failed", err?.message ?? err),
+    );
+  }, [profile?.id]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const signalId = getNotificationSignalId(response);
+      if (signalId) navigationRef.current?.navigate("ReplyRoom", { signalId });
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     supabase.auth

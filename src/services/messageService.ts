@@ -5,6 +5,7 @@ import {
   BLINK_ORIGINALS_BUCKET,
   BLINK_THUMBS_BUCKET,
 } from "@/services/mediaStorage";
+import { notifySignal } from "@/services/pushService";
 
 interface ValidationResult {
   valid: boolean;
@@ -99,7 +100,11 @@ export async function sendMessage(
   });
 
   if (error) throw error;
-  return mapSignalToLegacyMessage(data as SignalRow);
+  const message = mapSignalToLegacyMessage(data as SignalRow);
+  notifySignal(message.id).catch((err) =>
+    console.warn("Signal push failed", err?.message ?? err),
+  );
+  return message;
 }
 
 export async function sendQuickReplyToMessage(
@@ -124,7 +129,11 @@ export async function sendQuickReplyToMessage(
   });
 
   if (error) throw error;
-  return mapSignalToLegacyMessage(data as SignalRow);
+  const message = mapSignalToLegacyMessage(data as SignalRow);
+  notifySignal(message.id).catch((err) =>
+    console.warn("Reply push failed", err?.message ?? err),
+  );
+  return message;
 }
 
 export async function getReceivedMessages(userId: string) {
