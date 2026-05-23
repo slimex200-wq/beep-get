@@ -88,10 +88,11 @@ function TabLabel({ label, focused, color }: { label: string; focused: boolean; 
 
 export function RootNavigator() {
   const { session, profile } = useAuthStore();
+  const needsOnboarding = !session || !profile || !profile.nickname?.trim();
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!session || !profile ? (
+      {needsOnboarding ? (
         <Stack.Screen name="Auth" component={AuthScreen} />
       ) : (
         <>

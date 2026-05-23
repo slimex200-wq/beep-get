@@ -116,6 +116,9 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   if (!profile || profile.id !== userId) {
     throw new Error("Profile not found");
   }
+  if (!profile.nickname.trim()) {
+    throw new Error("Profile incomplete");
+  }
   return profile;
 }
 
