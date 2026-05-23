@@ -13,6 +13,7 @@ import { RecentSignalCombos, type RecentSignalCombo } from "@/components/RecentS
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
+import { isDemoFriend } from "@/lib/demoFriend";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { sendBlinkVideo } from "@/services/blinkSendService";
 import { useAuthStore } from "@/stores/authStore";
@@ -165,6 +166,14 @@ export function SendSignalScreen() {
 
   const sendBeep = async () => {
     if (!profile || !recipient || !code || sending) return;
+    if (isDemoFriend(recipient.id)) {
+      Alert.alert(
+        "Beepy is a demo friend",
+        `${code} 송신 시연이에요. 진짜 친구는 PEOPLE 에서 Beep ID 로 추가하세요.`,
+      );
+      setMemo("");
+      return;
+    }
     setSending(true);
     try {
       await send(profile.id, recipient.id, code, memo || undefined);
@@ -179,6 +188,14 @@ export function SendSignalScreen() {
 
   const sendBlink = async () => {
     if (!profile || !recipient || !code || sending || recording) return;
+
+    if (isDemoFriend(recipient.id)) {
+      Alert.alert(
+        "Beepy is a demo friend",
+        "Blink 시연은 진짜 친구가 추가된 뒤에 가능합니다.",
+      );
+      return;
+    }
 
     if (previewMode) {
       Alert.alert("Blink preview", `2 sec Blink previewed to ${recipient.name}`);
