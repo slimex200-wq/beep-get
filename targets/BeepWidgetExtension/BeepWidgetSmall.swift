@@ -62,15 +62,6 @@ struct PlaceholderSmallView: View {
     }
 }
 
-struct BeepWidgetSmallWidget: Widget {
-    let kind = "BeepWidgetSmall"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
-            BeepWidgetSmallView(entry: entry)
-        }
-        .configurationDisplayName("Beep Get")
-        .description("Latest Beep or Blink code.")
-        .supportedFamilies([.systemSmall])
-    }
-}
+// Widget struct removed — the single BeepWidget in BeepWidget.swift now hosts
+// both systemSmall and systemMedium and routes them to BeepWidgetSmallView /
+// BeepWidgetMediumView through BeepWidgetEntryView.

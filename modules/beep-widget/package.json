@@ -1,0 +1,10 @@
+{
+  "name": "beep-widget",
+  "version": "0.1.0",
+  "description": "Beep-get iOS/Android home-screen widget native module",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "hypeboyo",
+  "private": true,
+  "keywords": ["expo-module"]
+}
