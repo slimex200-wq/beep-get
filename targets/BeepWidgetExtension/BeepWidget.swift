@@ -47,10 +47,36 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
     }
 }
 
+struct BeepWidget: Widget {
+    let kind = "BeepWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
+            BeepWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Beep Get")
+        .description("Latest Beep or Blink with quick reply.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct BeepWidgetEntryView: View {
+    let entry: BeepWidgetEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        switch family {
+        case .systemMedium:
+            BeepWidgetMediumView(entry: entry)
+        default:
+            BeepWidgetSmallView(entry: entry)
+        }
+    }
+}
+
 @main
 struct BeepWidgetBundle: WidgetBundle {
     var body: some Widget {
-        BeepWidgetSmallWidget()
-        BeepWidgetMediumWidget()
+        BeepWidget()
     }
 }
