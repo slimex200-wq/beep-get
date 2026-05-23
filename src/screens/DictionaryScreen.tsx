@@ -1,12 +1,18 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, FlatList, StyleSheet, TextInput, Alert } from "react-native";
-import { useTheme } from "@/theme/ThemeProvider";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppSurface } from "@/components/AppSurface";
 import { BeepButton } from "@/components/BeepButton";
+import { HeaderBar } from "@/components/HeaderBar";
+import { useTheme } from "@/theme/ThemeProvider";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 
 export function DictionaryScreen() {
   const theme = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { entries, loading, fetch, add, remove } = useDictionaryStore();
   const [code, setCode] = useState("");
@@ -25,6 +31,14 @@ export function DictionaryScreen() {
     } catch (err: any) {
       Alert.alert("오류", err.message);
     }
+  };
+
+  const close = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "My" });
   };
 
   const styles = useMemo(() => StyleSheet.create({
@@ -88,38 +102,41 @@ export function DictionaryScreen() {
   }), [theme]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>CODES</Text>
-      <View style={styles.form}>
-        <TextInput
-          style={styles.codeInput}
-          value={code}
-          onChangeText={(t) => setCode(t.replace(/[^0-9]/g, ""))}
-          placeholder="숫자 코드"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="number-pad"
-          maxLength={20}
+    <AppSurface>
+      <HeaderBar title="CODES" left="CLOSE" onLeftPress={close} />
+      <View style={styles.container}>
+        <Text style={styles.header}>내 코드 사전</Text>
+        <View style={styles.form}>
+          <TextInput
+            style={styles.codeInput}
+            value={code}
+            onChangeText={(t) => setCode(t.replace(/[^0-9]/g, ""))}
+            placeholder="숫자 코드"
+            placeholderTextColor={theme.colors.textSecondary}
+            keyboardType="number-pad"
+            maxLength={20}
+          />
+          <TextInput
+            style={styles.meaningInput}
+            value={meaning}
+            onChangeText={setMeaning}
+            placeholder="의미"
+            placeholderTextColor={theme.colors.textSecondary}
+            maxLength={50}
+          />
+          <BeepButton title="등록" onPress={handleAdd} />
+        </View>
+        <FlatList
+          data={entries}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.entry}>
+              <Text style={styles.entryCode}>{item.code}</Text>
+              <Text style={styles.entryMeaning}>{item.meaning}</Text>
+            </View>
+          )}
         />
-        <TextInput
-          style={styles.meaningInput}
-          value={meaning}
-          onChangeText={setMeaning}
-          placeholder="의미"
-          placeholderTextColor={theme.colors.textSecondary}
-          maxLength={50}
-        />
-        <BeepButton title="등록" onPress={handleAdd} />
       </View>
-      <FlatList
-        data={entries}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.entry}>
-            <Text style={styles.entryCode}>{item.code}</Text>
-            <Text style={styles.entryMeaning}>{item.meaning}</Text>
-          </View>
-        )}
-      />
-    </View>
+    </AppSurface>
   );
 }

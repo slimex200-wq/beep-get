@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { colors } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
+import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { FirstRunScreen } from "@/screens/FirstRunScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -28,6 +29,7 @@ export type RootStackParamList = {
   Logs: undefined;
   StudioTools: undefined;
   Account: undefined;
+  Dictionary: undefined;
 };
 
 export type MainTabParamList = {
@@ -126,6 +128,11 @@ export function RootNavigator() {
           <Stack.Screen
             name="Account"
             component={SettingsScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="Dictionary"
+            component={DictionaryScreen}
             options={{ presentation: "modal" }}
           />
         </>
