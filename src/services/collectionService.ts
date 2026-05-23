@@ -1,20 +1,28 @@
+import { supabase } from "@/lib/supabase";
+import type { UserProfile } from "@/services/authService";
+
+export type IconRarity = "common" | "rare" | "epic" | "legendary";
+
+export type DropConditionType = "streak" | "friends" | "messages_sent";
+
 export interface DropCondition {
-  type: "streak" | "friends" | "messages_sent";
+  type: DropConditionType;
   days?: number;
   count?: number;
 }
 
 export type CollectionIcon = {
   id: string;
+  slug: string;
   name: string;
-  image_url: string;
-  rarity: string;
-  drop_condition: unknown;
-  season_id: string | null;
+  image_url: string | null;
+  rarity: IconRarity;
+  drop_condition: DropCondition | null;
+  is_default: boolean;
+  status_icon_value: string;
 };
 
 export type UserCollectionIcon = {
-  id: string;
   user_id: string;
   icon_id: string;
   acquired_at: string;
@@ -58,15 +66,49 @@ export function getRarityColor(rarity: string): string {
 }
 
 export async function getAllIcons(): Promise<CollectionIcon[]> {
-  return [];
+  const { data, error } = await supabase
+    .from("icons")
+    .select("id, slug, name, image_url, rarity, drop_condition, is_default, status_icon_value")
+    .order("rarity")
+    .order("name");
+  if (error) throw error;
+  return (data ?? []).map(normalizeIcon);
 }
 
 export async function getUserIcons(userId: string): Promise<UserCollectionIcon[]> {
-  void userId;
-  return [];
+  const { data, error } = await supabase
+    .from("user_icons")
+    .select("user_id, icon_id, acquired_at, icon:icons(id, slug, name, image_url, rarity, drop_condition, is_default, status_icon_value)")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return (data ?? []).map((row: any) => ({
+    user_id: row.user_id,
+    icon_id: row.icon_id,
+    acquired_at: row.acquired_at,
+    icon: normalizeIcon(row.icon),
+  }));
 }
 
-export async function grantIcon(userId: string, iconId: string) {
-  void userId;
-  void iconId;
+export async function grantIcon(slug: string): Promise<void> {
+  const { error } = await supabase.rpc("grant_icon", { p_slug: slug });
+  if (error) throw error;
+}
+
+export async function equipStatusIcon(slug: string): Promise<UserProfile> {
+  const { data, error } = await supabase.rpc("equip_status_icon", { p_slug: slug });
+  if (error) throw error;
+  return data as UserProfile;
+}
+
+function normalizeIcon(row: any): CollectionIcon {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    image_url: row.image_url ?? null,
+    rarity: row.rarity as IconRarity,
+    drop_condition: row.drop_condition ?? null,
+    is_default: Boolean(row.is_default),
+    status_icon_value: row.status_icon_value,
+  };
 }

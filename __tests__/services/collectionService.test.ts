@@ -1,11 +1,15 @@
+const { supabase } = require("@/lib/supabase");
 import {
   checkDropCondition,
+  equipStatusIcon,
   getAllIcons,
   getRarityColor,
   getRarityLabel,
   getUserIcons,
   grantIcon,
 } from "@/services/collectionService";
+
+beforeEach(() => jest.clearAllMocks());
 
 describe("checkDropCondition", () => {
   const stats = { streakDays: 7, friendCount: 3, messagesSent: 50 };
@@ -58,13 +62,106 @@ describe("getRarityColor", () => {
   });
 });
 
-describe("v2 collection compatibility", () => {
-  it("returns no production icons while icon collections are not in the v2 schema", async () => {
-    await expect(getAllIcons()).resolves.toEqual([]);
-    await expect(getUserIcons("u1")).resolves.toEqual([]);
+describe("collection RPC layer", () => {
+  it("returns icons catalog from the v2 schema", async () => {
+    const row = {
+      id: "icon-1",
+      slug: "online",
+      name: "Online",
+      image_url: null,
+      rarity: "common",
+      drop_condition: null,
+      is_default: true,
+      status_icon_value: "online",
+    };
+    const order2 = jest.fn().mockResolvedValue({ data: [row], error: null });
+    const order1 = jest.fn().mockReturnValue({ order: order2 });
+    const select = jest.fn().mockReturnValue({ order: order1 });
+    supabase.from.mockReturnValueOnce({ select });
+
+    const result = await getAllIcons();
+
+    expect(supabase.from).toHaveBeenCalledWith("icons");
+    expect(result).toEqual([
+      {
+        id: "icon-1",
+        slug: "online",
+        name: "Online",
+        image_url: null,
+        rarity: "common",
+        drop_condition: null,
+        is_default: true,
+        status_icon_value: "online",
+      },
+    ]);
   });
 
-  it("keeps icon grants as a no-op until the rewards schema returns", async () => {
-    await expect(grantIcon("u1", "i1")).resolves.toBeUndefined();
+  it("joins user_icons with the icon row", async () => {
+    const eq = jest.fn().mockResolvedValue({
+      data: [
+        {
+          user_id: "u1",
+          icon_id: "icon-1",
+          acquired_at: "2026-05-24T00:00:00Z",
+          icon: {
+            id: "icon-1",
+            slug: "online",
+            name: "Online",
+            image_url: null,
+            rarity: "common",
+            drop_condition: null,
+            is_default: true,
+            status_icon_value: "online",
+          },
+        },
+      ],
+      error: null,
+    });
+    const select = jest.fn().mockReturnValue({ eq });
+    supabase.from.mockReturnValueOnce({ select });
+
+    const result = await getUserIcons("u1");
+
+    expect(supabase.from).toHaveBeenCalledWith("user_icons");
+    expect(eq).toHaveBeenCalledWith("user_id", "u1");
+    expect(result[0].icon.slug).toBe("online");
+  });
+
+  it("calls grant_icon RPC with the slug", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
+
+    await grantIcon("streak-3");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("grant_icon", { p_slug: "streak-3" });
+  });
+
+  it("surfaces grant_icon RPC errors", async () => {
+    const err = { code: "42501", message: "Streak not met: 1 < 3" };
+    supabase.rpc.mockResolvedValue({ data: null, error: err });
+
+    await expect(grantIcon("streak-3")).rejects.toEqual(err);
+  });
+
+  it("equips a status icon through the equip_status_icon RPC", async () => {
+    const updated = {
+      id: "u1",
+      beep_id: "12345678",
+      nickname: "Mina",
+      status_icon: "focus",
+      active_skin_id: null,
+    };
+    supabase.rpc.mockResolvedValue({ data: updated, error: null });
+
+    const result = await equipStatusIcon("focus");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("equip_status_icon", { p_slug: "focus" });
+    expect(result.status_icon).toBe("focus");
+  });
+
+  it("surfaces equip_status_icon RPC errors", async () => {
+    const err = { code: "42501", message: "Icon not owned: streak-3" };
+    supabase.rpc.mockResolvedValue({ data: null, error: err });
+
+    await expect(equipStatusIcon("streak-3")).rejects.toEqual(err);
   });
 });
