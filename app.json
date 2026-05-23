@@ -82,6 +82,12 @@
         "projectId": "2c41736e-942b-4593-8fcd-53373d03ee53"
       }
     },
+    "updates": {
+      "url": "https://u.expo.dev/2c41736e-942b-4593-8fcd-53373d03ee53"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "owner": "hypeboyo"
   }
 }
