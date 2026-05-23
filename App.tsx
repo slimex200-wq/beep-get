@@ -15,7 +15,10 @@ import { exchangeOAuthCodeFromUrl } from "@/services/authService";
 import { getNotificationSignalId, registerPushToken } from "@/services/pushService";
 import { customFonts } from "@/theme/fonts";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import { UpdateBannerSlip } from "@/components/UpdateBannerSlip";
 import * as Notifications from "expo-notifications";
+import * as Updates from "expo-updates";
+import { useUpdates } from "expo-updates";
 
 void SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Splash prevent auto-hide failed", err?.message ?? err);
@@ -78,8 +81,24 @@ export default function App() {
   const [startupTimedOut, setStartupTimedOut] = useState(false);
   const [navigationReady, setNavigationReady] = useState(false);
   const [pendingWidgetUrl, setPendingWidgetUrl] = useState<string | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [updateReloading, setUpdateReloading] = useState(false);
   const appReady = fontsLoaded || Boolean(fontError) || startupTimedOut;
   const canHandleWidgetActions = Boolean(appReady && navigationReady && session && profile);
+  const updatesState = useUpdates();
+  const showUpdateBanner =
+    Boolean(updatesState.isUpdatePending) && !updateDismissed;
+
+  const applyUpdate = useCallback(async () => {
+    if (updateReloading) return;
+    setUpdateReloading(true);
+    try {
+      await Updates.reloadAsync();
+    } catch (err: any) {
+      console.warn("Update reload failed", err?.message ?? err);
+      setUpdateReloading(false);
+    }
+  }, [updateReloading]);
 
   const handleWidgetUrl = useCallback(
     async (url: string) => {
@@ -213,6 +232,12 @@ export default function App() {
         >
           <RootNavigator />
         </NavigationContainer>
+        <UpdateBannerSlip
+          visible={showUpdateBanner}
+          onReload={applyUpdate}
+          onDismiss={() => setUpdateDismissed(true)}
+          busy={updateReloading}
+        />
       </ThemeProvider>
     </StartupErrorBoundary>
   );
