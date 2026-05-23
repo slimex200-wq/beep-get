@@ -44,7 +44,8 @@
         }
       ],
       "./modules/beep-widget/plugin/build/index",
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "expo-updates"
     ],
     "ios": {
       "bundleIdentifier": "com.hypeboyo.beepget",
