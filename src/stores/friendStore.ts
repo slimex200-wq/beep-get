@@ -8,6 +8,7 @@ import {
   updateVibrationPattern,
 } from "@/services/friendService";
 import { isUiPreviewUser, uiPreviewFriends } from "@/lib/uiPreview";
+import { buildDemoFriend, DEMO_FRIEND_ID } from "@/lib/demoFriend";
 
 interface Friend {
   id: string;
@@ -48,7 +49,8 @@ export const useFriendStore = create<FriendState>((set, get) => ({
       return;
     }
     set({ loading: true });
-    const friends = await getFriends(userId);
+    const remote = await getFriends(userId);
+    const friends = [buildDemoFriend(userId), ...remote];
     set({ friends, loading: false });
   },
 
