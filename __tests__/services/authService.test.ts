@@ -277,6 +277,21 @@ describe("getUserProfile", () => {
 
     await expect(getUserProfile("u1")).rejects.toThrow("Profile not found");
   });
+
+  it("throws when the row exists but nickname is blank", async () => {
+    supabase.rpc.mockResolvedValue({
+      data: {
+        id: "u1",
+        beep_id: "12345678",
+        nickname: "   ",
+        status_icon: "online",
+        active_skin_id: null,
+      },
+      error: null,
+    });
+
+    await expect(getUserProfile("u1")).rejects.toThrow("Profile incomplete");
+  });
 });
 
 describe("signOut", () => {
