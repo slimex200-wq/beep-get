@@ -1,37 +1,29 @@
 import { create } from "zustand";
-import { getAllIcons, getUserIcons, grantIcon } from "@/services/collectionService";
+import {
+  equipStatusIcon,
+  getAllIcons,
+  getUserIcons,
+  grantIcon,
+  type CollectionIcon,
+  type UserCollectionIcon,
+} from "@/services/collectionService";
 import {
   isUiPreviewUser,
   uiPreviewIcons,
   uiPreviewOwnedIcons,
 } from "@/lib/uiPreview";
 import { isSupabaseConfigured } from "@/lib/supabase";
-
-interface Icon {
-  id: string;
-  name: string;
-  image_url: string;
-  rarity: string;
-  drop_condition: any;
-  season_id: string | null;
-}
-
-interface UserIcon {
-  id: string;
-  user_id: string;
-  icon_id: string;
-  acquired_at: string;
-  icon: Icon;
-}
+import { useAuthStore } from "@/stores/authStore";
 
 interface CollectionState {
-  allIcons: Icon[];
-  ownedIcons: UserIcon[];
+  allIcons: CollectionIcon[];
+  ownedIcons: UserCollectionIcon[];
   ownedIconIds: Set<string>;
   loading: boolean;
   fetchAll: () => Promise<void>;
   fetchOwned: (userId: string) => Promise<void>;
-  grant: (userId: string, iconId: string) => Promise<void>;
+  grant: (slug: string, userId?: string) => Promise<void>;
+  equip: (slug: string) => Promise<void>;
   isOwned: (iconId: string) => boolean;
 }
 
@@ -63,17 +55,16 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     set({ ownedIcons, ownedIconIds: new Set(ownedIcons.map((ui) => ui.icon_id)) });
   },
 
-  grant: async (userId, iconId) => {
-    if (isUiPreviewUser(userId)) {
-      const icon = uiPreviewIcons.find((item) => item.id === iconId);
+  grant: async (slug, userId) => {
+    if (userId && isUiPreviewUser(userId)) {
+      const icon = uiPreviewIcons.find((item) => item.slug === slug);
       if (icon) {
         set((state) => {
           const ownedIcons = [
             ...state.ownedIcons,
             {
-              id: `owned-${iconId}`,
               user_id: userId,
-              icon_id: iconId,
+              icon_id: icon.id,
               acquired_at: new Date().toISOString(),
               icon,
             },
@@ -86,11 +77,18 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
       }
       return;
     }
-    await grantIcon(userId, iconId);
-    await get().fetchOwned(userId);
+
+    await grantIcon(slug);
+    const currentUser = userId ?? useAuthStore.getState().user?.id;
+    if (currentUser) {
+      await get().fetchOwned(currentUser);
+    }
   },
 
-  isOwned: (iconId) => {
-    return get().ownedIconIds.has(iconId);
+  equip: async (slug) => {
+    const profile = await equipStatusIcon(slug);
+    useAuthStore.setState({ profile });
   },
+
+  isOwned: (iconId) => get().ownedIconIds.has(iconId),
 }));

@@ -1,65 +1,219 @@
-import React, { useEffect } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
-import { useTheme } from "@/theme/ThemeProvider";
+import React, { useEffect, useMemo } from "react";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppSurface } from "@/components/AppSurface";
+import { HeaderBar } from "@/components/HeaderBar";
 import { IconCard } from "@/components/IconCard";
+import { colors, radius, spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
+import type { RootStackParamList } from "@/navigation/RootNavigator";
+import { getRarityLabel, type CollectionIcon } from "@/services/collectionService";
 import { useAuthStore } from "@/stores/authStore";
 import { useCollectionStore } from "@/stores/collectionStore";
 
+const DROP_LABELS: Record<string, (value: number) => string> = {
+  streak: (days) => `${days}일 연속 사용`,
+  friends: (count) => `친구 ${count}명`,
+  messages_sent: (count) => `Beep ${count}개 전송`,
+};
+
+function formatDropCondition(icon: CollectionIcon): string {
+  if (icon.is_default) return "기본 제공";
+  if (!icon.drop_condition) return "조건 미정";
+  const { type, days, count } = icon.drop_condition;
+  const formatter = DROP_LABELS[type];
+  if (!formatter) return "특수 조건";
+  return formatter(days ?? count ?? 0);
+}
+
 export function CollectionScreen() {
-  const theme = useTheme();
-  const { profile } = useAuthStore();
-  const { allIcons, ownedIcons, fetchAll, fetchOwned, isOwned } =
-    useCollectionStore();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { profile, user } = useAuthStore();
+  const {
+    allIcons,
+    ownedIcons,
+    loading,
+    fetchAll,
+    fetchOwned,
+    grant,
+    equip,
+    isOwned,
+  } = useCollectionStore();
 
   useEffect(() => {
-    fetchAll();
-    if (profile) fetchOwned(profile.id);
-  }, [profile?.id]);
+    fetchAll().catch(reportError);
+    if (profile) fetchOwned(profile.id).catch(reportError);
+  }, [profile?.id, fetchAll, fetchOwned]);
 
   const ownedCount = ownedIcons.length;
   const totalCount = allIcons.length;
+  const activeSlug = profile?.status_icon ?? null;
+
+  const sortedIcons = useMemo(() => {
+    const rarityOrder: Record<string, number> = {
+      common: 0,
+      rare: 1,
+      epic: 2,
+      legendary: 3,
+    };
+    return [...allIcons].sort(
+      (a, b) => (rarityOrder[a.rarity] ?? 99) - (rarityOrder[b.rarity] ?? 99),
+    );
+  }, [allIcons]);
+
+  const handleClaim = async (icon: CollectionIcon) => {
+    try {
+      await grant(icon.slug, user?.id);
+      Alert.alert("Unlocked", `${icon.name} (${getRarityLabel(icon.rarity)})`);
+    } catch (err: any) {
+      Alert.alert("Locked", err?.message ?? "조건을 채우지 못했어요.");
+    }
+  };
+
+  const handleEquip = async (icon: CollectionIcon) => {
+    try {
+      await equip(icon.slug);
+      Alert.alert("Equipped", `${icon.name} status icon applied.`);
+    } catch (err: any) {
+      Alert.alert("Equip failed", err?.message ?? "Try again.");
+    }
+  };
+
+  const close = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate("Main", { screen: "My" });
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.header, { color: theme.colors.textSecondary }]}>
-        COLLECTION
-      </Text>
-      <Text style={[styles.counter, { color: theme.colors.primary }]}>
-        {ownedCount}/{totalCount}
-      </Text>
+    <AppSurface>
+      <HeaderBar title="COLLECTION" left="CLOSE" onLeftPress={close} />
+      <View style={styles.summary}>
+        <Text style={type.tinyMono}>도감</Text>
+        <Text style={styles.counter}>
+          {String(ownedCount).padStart(2, "0")} / {String(totalCount).padStart(2, "0")}
+        </Text>
+        {loading ? <Text style={type.bodyMuted}>Loading…</Text> : null}
+      </View>
       <FlatList
-        data={allIcons}
+        contentContainerStyle={styles.list}
+        data={sortedIcons}
         keyExtractor={(item) => item.id}
-        numColumns={3}
+        numColumns={2}
         columnWrapperStyle={styles.row}
-        renderItem={({ item }) => (
-          <IconCard
-            name={item.name}
-            imageUrl={item.image_url}
-            rarity={item.rarity}
-            isOwned={isOwned(item.id)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const owned = isOwned(item.id);
+          const equipped = owned && activeSlug === item.status_icon_value;
+          return (
+            <Pressable
+              onPress={() => (owned ? handleEquip(item) : handleClaim(item))}
+              style={({ pressed }) => [
+                styles.cell,
+                pressed && styles.cellPressed,
+              ]}
+            >
+              <IconCard
+                name={item.name}
+                imageUrl={item.image_url ?? ""}
+                rarity={item.rarity}
+                isOwned={owned}
+              />
+              <Text style={styles.dropText} numberOfLines={1}>
+                {formatDropCondition(item)}
+              </Text>
+              {equipped ? (
+                <Text style={styles.equippedTag}>EQUIPPED</Text>
+              ) : owned ? (
+                <Text style={styles.equipHint}>TAP TO EQUIP</Text>
+              ) : (
+                <Text style={styles.claimHint}>TAP TO CLAIM</Text>
+              )}
+            </Pressable>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={type.bodyMuted}>
+              {loading ? "Loading collection..." : "Collection is empty."}
+            </Text>
+          </View>
+        }
       />
-    </View>
+    </AppSurface>
   );
 }
 
+function reportError(err: unknown) {
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === "object" && "message" in err
+        ? String((err as { message?: unknown }).message)
+        : "Unexpected error";
+  console.warn("CollectionScreen", message);
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  header: {
-    fontFamily: "Pretendard-SemiBold",
-    fontSize: 14,
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: 4,
-    marginTop: 32,
+  summary: {
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[4],
+    gap: spacing[1],
   },
   counter: {
-    fontFamily: "Pretendard",
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 16,
+    ...type.codeMedium,
+    color: colors.ink,
   },
-  row: { justifyContent: "space-between" },
+  list: {
+    paddingHorizontal: spacing[5],
+    paddingBottom: spacing[8],
+    gap: spacing[3],
+  },
+  row: {
+    gap: spacing[3],
+  },
+  cell: {
+    flex: 1,
+    gap: spacing[1],
+    paddingBottom: spacing[2],
+    borderRadius: radius.control,
+  },
+  cellPressed: {
+    opacity: 0.7,
+  },
+  dropText: {
+    ...type.tinyMono,
+    color: colors.muted,
+    paddingHorizontal: spacing[2],
+  },
+  equippedTag: {
+    ...type.tinyMono,
+    color: colors.red,
+    paddingHorizontal: spacing[2],
+  },
+  equipHint: {
+    ...type.tinyMono,
+    color: colors.ink,
+    paddingHorizontal: spacing[2],
+  },
+  claimHint: {
+    ...type.tinyMono,
+    color: colors.faint,
+    paddingHorizontal: spacing[2],
+  },
+  empty: {
+    minHeight: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing[6],
+  },
 });
