@@ -107,6 +107,7 @@ export function syncWidgetData(received: Message[], friends: Friend[]): void {
   try {
     const data = buildWidgetData(received, friends);
     updateWidgetData(data);
+    reloadWidgets();
   } catch {
     // Native module not available (e.g. web, test)
   }
