@@ -14,6 +14,11 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { syncWidgetData } from "@/services/widgetService";
 import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
 import { buildQuickReplyActionKey } from "@/lib/widgetActions";
+import {
+  buildDemoWelcomeMessage,
+  DEMO_WELCOME_SIGNAL_ID,
+  isDemoSignal,
+} from "@/lib/demoFriend";
 
 type Message = LegacyMessage;
 
@@ -47,7 +52,10 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       return;
     }
     set({ loading: true });
-    const received = await getReceivedMessages(userId);
+    const remote = await getReceivedMessages(userId);
+    const localDemo = get().received.find((m) => isDemoSignal(m.id));
+    const demoWelcome = localDemo ?? buildDemoWelcomeMessage(userId);
+    const received = [demoWelcome as Message, ...remote];
     set({ received, loading: false });
     syncWidgetData(received, friends ?? []);
   },
@@ -103,6 +111,15 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }));
 
     try {
+      if (isDemoSignal(messageId)) {
+        set((state) => ({
+          received: state.received.map((m) =>
+            m.id === messageId ? { ...m, is_read: true } : m
+          ),
+        }));
+        return;
+      }
+
       if (isUiPreviewUser(sourceMessage.to_user)) {
         const sentAt = new Date().toISOString();
         const previewReply = {
@@ -145,7 +162,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
   read: async (messageId) => {
     const msg = get().received.find((m) => m.id === messageId);
-    if (msg && isUiPreviewUser(msg.to_user)) {
+    if (isDemoSignal(messageId) || (msg && isUiPreviewUser(msg.to_user))) {
       set((state) => ({
         received: state.received.map((m) =>
           m.id === messageId ? { ...m, is_read: true } : m
@@ -164,14 +181,15 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
   save: async (messageId) => {
     const msg = get().received.find((m) => m.id === messageId);
-    if (msg && isUiPreviewUser(msg.to_user)) {
+    if (isDemoSignal(messageId) || (msg && isUiPreviewUser(msg.to_user))) {
+      const target = msg ?? { ...buildDemoWelcomeMessage(""), is_saved: true };
       set((state) => ({
         received: state.received.map((m) =>
           m.id === messageId ? { ...m, is_saved: true } : m
         ),
         saved: state.saved.some((m) => m.id === messageId)
           ? state.saved
-          : [{ ...msg, is_saved: true }, ...state.saved],
+          : [{ ...target, is_saved: true }, ...state.saved],
       }));
       return;
     }

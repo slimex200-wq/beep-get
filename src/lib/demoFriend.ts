@@ -9,9 +9,33 @@
 
 export const DEMO_FRIEND_ID = "beepy-demo-friend";
 export const DEMO_FRIEND_BEEP_ID = "00000001";
+export const DEMO_WELCOME_SIGNAL_ID = "demo-welcome-beep";
 
 export function isDemoFriend(id: string | null | undefined): boolean {
   return id === DEMO_FRIEND_ID;
+}
+
+export function isDemoSignal(id: string | null | undefined): boolean {
+  return id === DEMO_WELCOME_SIGNAL_ID;
+}
+
+export function buildDemoWelcomeMessage(ownerId: string) {
+  const now = new Date().toISOString();
+  return {
+    id: DEMO_WELCOME_SIGNAL_ID,
+    from_user: DEMO_FRIEND_ID,
+    to_user: ownerId,
+    number_code: "486",
+    memo: "Welcome to BEEP-GET",
+    is_read: false,
+    is_saved: false,
+    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+    created_at: now,
+    from_user_profile: {
+      nickname: "Beepy",
+      beep_id: DEMO_FRIEND_BEEP_ID,
+    },
+  };
 }
 
 export function buildDemoFriend(ownerId: string) {
