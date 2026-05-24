@@ -9,86 +9,188 @@ struct SwissPaperSmallView: View {
     let indexNo: String
     let isNew: Bool
     let hasBlinkPreview: Bool
+    let stripFrameUris: [String]
     let openUrl: String?
 
     private let skin = BeepSkin.swissPaper
 
     var body: some View {
+        Group {
+            if kind == "blink" {
+                blinkBody
+            } else {
+                beepBody
+            }
+        }
+        .beepWidgetBackground(skin.paper)
+        .widgetURL(actionURL(openUrl))
+    }
+
+    private var hDivider: some View {
+        Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
+    }
+
+    // ===== Beep =====
+    private var beepBody: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(kind == "blink" ? "Blink" : "Beep")
-                    .font(.custom(skin.displayFont, size: 13))
+                Text("Beep")
+                    .font(.custom(skin.displayFont, size: 17))
                     .fontWeight(.heavy)
                     .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Spacer()
 
                 Text(time)
-                    .font(.custom(skin.monoFont, size: 9))
+                    .font(.custom(skin.monoFont, size: 10))
                     .tracking(0.6)
                     .foregroundColor(skin.mute)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 22)
-            .overlay(horizontalRule, alignment: .bottom)
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .overlay(alignment: .bottom) { hDivider }
 
-            ZStack {
+            VStack(spacing: 6) {
+                Spacer(minLength: 0)
                 Text(code)
-                    .font(.custom(skin.monoMediumFont, size: 30))
-                    .tracking(1.2)
+                    .font(.custom(skin.monoBoldFont, size: 44))
+                    .tracking(1)
                     .foregroundColor(skin.ink)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.6)
 
-                if isNew {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Circle()
-                                .fill(skin.accent)
-                                .frame(width: 6, height: 6)
-                        }
-                        Spacer()
-                    }
-                    .padding(.top, 10)
-                    .padding(.trailing, 10)
+                HStack(spacing: 4) {
+                    Text("FROM.")
+                        .font(.custom(skin.monoFont, size: 9))
+                        .tracking(1.4)
+                        .foregroundColor(skin.mute)
+                        .textCase(.uppercase)
+                    Text(fromName)
+                        .font(.custom(skin.monoBoldFont, size: 12))
+                        .tracking(0.4)
+                        .foregroundColor(skin.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
+                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             HStack {
-                Text(fromName)
-                    .font(.custom(skin.displayItalicFont, size: 12))
-                    .italic()
-                    .foregroundColor(skin.ink)
+                Text("NO.\(indexNo)")
+                    .font(.custom(skin.monoFont, size: 10))
+                    .tracking(1.2)
+                    .foregroundColor(skin.mute)
                     .lineLimit(1)
 
                 Spacer()
 
-                Text("NO.\(indexNo)")
-                    .font(.custom(skin.monoFont, size: 10))
-                    .tracking(0.8)
-                    .foregroundColor(skin.mute)
+                if isNew {
+                    Circle()
+                        .fill(skin.accent)
+                        .frame(width: 8, height: 8)
+                }
             }
-            .padding(.horizontal, 12)
-            .frame(height: 28)
-            .overlay(horizontalRule, alignment: .top)
+            .padding(.horizontal, 14)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .overlay(alignment: .top) { hDivider }
         }
-        .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: skin.innerRadius, style: .continuous)
-                .stroke(skin.ink, lineWidth: skin.ruleWidth)
-                .padding(10)
-        )
-        .containerBackground(for: .widget) {
-            skin.paper
-        }
-        .widgetURL(actionURL(openUrl))
     }
 
-    private var horizontalRule: some View {
-        Rectangle()
-            .fill(skin.ink)
-            .frame(height: skin.ruleWidth)
+    // ===== Blink =====
+    private var blinkBody: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Blink")
+                    .font(.custom(skin.displayItalicFont, size: 18))
+                    .italic()
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Spacer()
+
+                Text(time)
+                    .font(.custom(skin.monoFont, size: 10))
+                    .tracking(0.6)
+                    .foregroundColor(skin.mute)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .overlay(alignment: .bottom) { hDivider }
+
+            blinkStrip
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            HStack(alignment: .firstTextBaseline) {
+                Text(code)
+                    .font(.custom(skin.monoBoldFont, size: 20))
+                    .tracking(1)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+
+                Spacer()
+
+                Text(fromName)
+                    .font(.custom(skin.monoBoldFont, size: 12))
+                    .tracking(0.4)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .overlay(alignment: .top) { hDivider }
+        }
+    }
+
+    private var blinkStrip: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<3, id: \.self) { index in
+                let uri = index < stripFrameUris.count ? stripFrameUris[index] : ""
+                Group {
+                    if let url = URL(string: uri), !uri.isEmpty {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image.resizable().scaledToFill()
+                            default:
+                                stripPlaceholder
+                            }
+                        }
+                    } else {
+                        stripPlaceholder
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .overlay(
+                    Rectangle()
+                        .stroke(skin.ink, lineWidth: skin.ruleWidth)
+                )
+            }
+        }
+    }
+
+    private var stripPlaceholder: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [Color(red: 0.84, green: 0.78, blue: 0.70), Color(red: 0.70, green: 0.62, blue: 0.51)]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private func actionURL(_ raw: String?) -> URL {

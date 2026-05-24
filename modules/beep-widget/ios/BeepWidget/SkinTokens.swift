@@ -68,3 +68,16 @@ struct BeepSkin: Sendable {
         decoration: .dotCircle
     )
 }
+
+extension View {
+    @ViewBuilder
+    func beepWidgetBackground(_ color: Color) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            self.containerBackground(for: .widget) {
+                color
+            }
+        } else {
+            self.background(color)
+        }
+    }
+}

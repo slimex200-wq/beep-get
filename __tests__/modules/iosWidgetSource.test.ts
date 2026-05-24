@@ -32,7 +32,8 @@ describe("iOS widget source", () => {
   });
 
   it("routes widget taps through app-owned deep links", () => {
-    expect(mediumSource).toContain("Link(destination:");
+    // v6 redesign uses widgetURL only (Link removed for the simpler
+    // single-tap-to-open Reply Room behavior).
     expect(mediumSource).toContain(".widgetURL");
     expect(smallSource).toContain(".widgetURL");
   });

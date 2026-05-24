@@ -14,7 +14,10 @@ struct BeepWidgetMediumView: View {
                 indexNo: formatIndex(msg),
                 isNew: !msg.isRead,
                 hasBlinkPreview: msg.teaser != nil,
-                actions: msg.actions
+                stripFrameUris: msg.teaser?.stripFrameUris ?? [],
+                openUrl: msg.actions?.openReplyRoomUrl,
+                totalReceived: entry.totalReceived,
+                newCount: entry.newCount
             )
         } else {
             PlaceholderMediumView()
@@ -23,7 +26,19 @@ struct BeepWidgetMediumView: View {
 
     private func formatTime(_ isoString: String) -> String {
         let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else { return "--:--" }
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: isoString) {
+            return formatDisplayTime(date)
+        }
+        let fallback = ISO8601DateFormatter()
+        fallback.formatOptions = [.withInternetDateTime]
+        if let date = fallback.date(from: isoString) {
+            return formatDisplayTime(date)
+        }
+        return "--:--"
+    }
+
+    private func formatDisplayTime(_ date: Date) -> String {
         let displayFormatter = DateFormatter()
         displayFormatter.dateFormat = "HH:mm"
         displayFormatter.locale = Locale(identifier: "ko_KR")
@@ -31,8 +46,10 @@ struct BeepWidgetMediumView: View {
     }
 
     private func formatIndex(_ msg: WidgetMessage) -> String {
-        let suffix = String(msg.messageId.suffix(2))
-        return suffix.isEmpty ? "01" : suffix
+        if msg.messageId.hasPrefix("demo-") { return "01" }
+        let suffix = String(msg.messageId.suffix(2)).uppercased()
+        let cleaned = suffix.filter { $0.isLetter || $0.isNumber }
+        return cleaned.isEmpty ? "01" : cleaned
     }
 }
 
@@ -58,21 +75,10 @@ struct PlaceholderMediumView: View {
                 .stroke(skin.ink, lineWidth: skin.ruleWidth)
                 .padding(10)
         )
-        .containerBackground(for: .widget) {
-            skin.paper
-        }
+        .beepWidgetBackground(skin.paper)
     }
 }
 
-struct BeepWidgetMediumWidget: Widget {
-    let kind = "BeepWidgetMedium"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
-            BeepWidgetMediumView(entry: entry)
-        }
-        .configurationDisplayName("Beep Get Medium")
-        .description("Latest Beep or Blink with quick reply links.")
-        .supportedFamilies([.systemMedium])
-    }
-}
+// Widget struct removed — the single BeepWidget in BeepWidget.swift now hosts
+// both systemSmall and systemMedium and routes them to BeepWidgetSmallView /
+// BeepWidgetMediumView through BeepWidgetEntryView.

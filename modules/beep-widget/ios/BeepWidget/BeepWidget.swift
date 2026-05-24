@@ -5,6 +5,9 @@ struct BeepWidgetEntry: TimelineEntry {
     let date: Date
     let latestMessage: WidgetMessage?
     let recentSenders: [RecentSender]
+    // v7.A stack meta - inbox depth (capped 999) and unread count (capped 99).
+    let totalReceived: Int
+    let newCount: Int
 }
 
 struct BeepWidgetTimelineProvider: TimelineProvider {
@@ -19,7 +22,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
                 receivedAt: "",
                 isRead: false
             ),
-            recentSenders: []
+            recentSenders: [],
+            totalReceived: 1,
+            newCount: 1
         )
     }
 
@@ -28,7 +33,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
         let entry = BeepWidgetEntry(
             date: .now,
             latestMessage: data?.latestMessage,
-            recentSenders: data?.recentSenders ?? []
+            recentSenders: data?.recentSenders ?? [],
+            totalReceived: data?.totalReceived ?? 0,
+            newCount: data?.newCount ?? 0
         )
         completion(entry)
     }
@@ -38,7 +45,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
         let entry = BeepWidgetEntry(
             date: .now,
             latestMessage: data?.latestMessage,
-            recentSenders: data?.recentSenders ?? []
+            recentSenders: data?.recentSenders ?? [],
+            totalReceived: data?.totalReceived ?? 0,
+            newCount: data?.newCount ?? 0
         )
         // Refresh every 15 minutes as fallback
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: .now)!
@@ -47,10 +56,36 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
     }
 }
 
+struct BeepWidget: Widget {
+    let kind = "BeepWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
+            BeepWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Beep Get")
+        .description("Latest Beep or Blink with quick reply.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct BeepWidgetEntryView: View {
+    let entry: BeepWidgetEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        switch family {
+        case .systemMedium:
+            BeepWidgetMediumView(entry: entry)
+        default:
+            BeepWidgetSmallView(entry: entry)
+        }
+    }
+}
+
 @main
 struct BeepWidgetBundle: WidgetBundle {
     var body: some Widget {
-        BeepWidgetSmallWidget()
-        BeepWidgetMediumWidget()
+        BeepWidget()
     }
 }
