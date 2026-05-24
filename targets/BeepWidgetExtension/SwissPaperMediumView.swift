@@ -11,6 +11,8 @@ struct SwissPaperMediumView: View {
     let hasBlinkPreview: Bool
     let stripFrameUris: [String]
     let openUrl: String?
+    var totalReceived: Int = 0
+    var newCount: Int = 0
 
     private let skin = BeepSkin.swissPaper
 
@@ -37,6 +39,13 @@ struct SwissPaperMediumView: View {
 
     private var hDivider: some View {
         Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
+    }
+
+    private var headMetaText: String {
+        if totalReceived > 1 {
+            return "NO.\(indexNo) OF \(totalReceived) · \(time)"
+        }
+        return "NO.\(indexNo) · \(time)"
     }
     private var vDivider: some View {
         Rectangle().fill(skin.ink).frame(width: skin.ruleWidth)
@@ -150,12 +159,21 @@ struct SwissPaperMediumView: View {
 
             Spacer()
 
-            Text("NO.\(indexNo) · \(time)")
-                .font(.custom(skin.monoBoldFont, size: 11))
-                .tracking(1.2)
-                .foregroundColor(skin.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            HStack(spacing: 5) {
+                Text(headMetaText)
+                    .font(.custom(skin.monoBoldFont, size: 11))
+                    .tracking(1.2)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                if newCount > 0 {
+                    Text("+\(newCount) NEW")
+                        .font(.custom(skin.monoBoldFont, size: 10))
+                        .tracking(1.4)
+                        .foregroundColor(skin.accent)
+                        .lineLimit(1)
+                }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)

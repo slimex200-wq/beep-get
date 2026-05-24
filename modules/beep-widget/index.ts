@@ -40,6 +40,10 @@ export interface RecentSender {
 export interface WidgetData {
   latestMessage: WidgetMessage | null;
   recentSenders: RecentSender[];
+  /** Inbox depth (total received, capped at 999). v7.A stack meta. */
+  totalReceived?: number;
+  /** Unread signals (capped at 99). v7.A stack meta. */
+  newCount?: number;
 }
 
 export function updateWidgetData(data: WidgetData): void {

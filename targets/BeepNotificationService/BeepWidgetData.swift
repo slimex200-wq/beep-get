@@ -62,6 +62,8 @@ struct RecentSender: Codable {
 struct WidgetData: Codable {
     let latestMessage: WidgetMessage?
     let recentSenders: [RecentSender]
+    let totalReceived: Int?
+    let newCount: Int?
 }
 
 class BeepWidgetDataManager {

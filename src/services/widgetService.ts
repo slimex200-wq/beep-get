@@ -77,7 +77,10 @@ export function buildWidgetData(
     });
   }
 
-  return { latestMessage, recentSenders };
+  const totalReceived = Math.min(received.length, 999);
+  const newCount = Math.min(received.filter((m) => !m.is_read).length, 99);
+
+  return { latestMessage, recentSenders, totalReceived, newCount };
 }
 
 function buildWidgetTeaser(message: Message): WidgetSignalTeaser | undefined {

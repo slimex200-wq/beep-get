@@ -12,11 +12,13 @@ class NotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
         bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
-        // Extract beep data from push payload
-        if let beepData = request.content.userInfo["beep_data"] as? [String: Any] {
-            BeepWidgetDataManager.updateFromPush(beepData)
-
-            // Trigger widget reload
+        // B4 (security P1): the plaintext `beep_data` payload path is gated
+        // off. send-signal-push intentionally does NOT include `beep_data`
+        // today; turning this back on requires APNs payload encryption +
+        // shared Keychain key so sender nickname / code don't end up on the
+        // lock screen or in iCloud device backups. Until then we only refresh
+        // timelines from the App-Group UserDefaults the host app writes.
+        if request.content.userInfo["beep_data"] != nil {
             if #available(iOS 14.0, *) {
                 WidgetCenter.shared.reloadAllTimelines()
             }
