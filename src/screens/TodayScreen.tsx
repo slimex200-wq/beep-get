@@ -8,6 +8,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendPulseRow } from "@/components/FriendPulseRow";
 import { HeaderBar } from "@/components/HeaderBar";
+import { SectionHeader } from "@/components/SectionHeader";
 import { SignalSlip } from "@/components/SignalSlip";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import { StatusDot } from "@/components/StatusDot";
@@ -265,15 +266,6 @@ export function TodayScreen() {
   );
 }
 
-function SectionHeader({ label, hint }: { label: string; hint: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={type.tinyMono}>{label}</Text>
-      <View style={styles.sectionLine} />
-      <Text style={type.tinyMono}>{hint}</Text>
-    </View>
-  );
-}
 
 function reportError(err: unknown) {
   const message =

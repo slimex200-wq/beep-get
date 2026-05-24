@@ -3,6 +3,7 @@ import { Alert, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } fr
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
+import { SectionHeader } from "@/components/SectionHeader";
 import { BeepyMascot } from "@/components/BeepyMascot";
 import { BlinkPersonStrip } from "@/components/BlinkPersonStrip";
 import { StatusDot } from "@/components/StatusDot";
@@ -474,15 +475,6 @@ function PackDetail({
   );
 }
 
-function SectionHeader({ label, hint }: { label: string; hint: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionLabel}>{label}</Text>
-      <View style={styles.sectionLine} />
-      <Text style={styles.sectionHint}>{hint}</Text>
-    </View>
-  );
-}
 
 function WidgetHeader({
   title,
