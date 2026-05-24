@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>BEEP-GET Widget Redesign v6 — Grid Divider + No Truncation</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Fraunces:ital,wght@0,800;0,900;1,800&family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper:       #F4EFE5;
+    --ink:         #0A0A0A;
+    --mute:        #6B6259;
+    --rule:        rgba(10, 10, 10, 0.22);
+    --rule-strong: rgba(10, 10, 10, 0.42);
+    --red:         #D8361E;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Fraunces', serif;
+    --ui: 'Pretendard', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #f0e8da 0%, #d8cebc 100%);
+    min-height: 100vh;
+    font-family: var(--ui);
+    padding: 32px 16px 96px;
+  }
+  h1 { font-family: var(--display); font-weight: 900; font-size: 28px; text-align: center; margin-bottom: 6px; }
+  .subtitle { text-align: center; font-family: var(--mono); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #555; margin-bottom: 40px; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; margin-bottom: 48px; }
+  .case { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .case-label { font-family: var(--mono); font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; background: rgba(255,255,255,0.6); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--rule); }
+  .ios-bg { background: linear-gradient(135deg, #e8dccd 0%, #c9bda8 100%); padding: 18px; border-radius: 28px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05), 0 12px 30px rgba(0,0,0,0.18); }
+  .widget { background: var(--paper); overflow: hidden; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
+  .widget.small { width: 158px; height: 158px; border-radius: 22px; }
+  .widget.medium { width: 338px; height: 158px; border-radius: 22px; }
+  .compare { background: rgba(255,255,255,0.5); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 18px; max-width: 820px; margin: 0 auto 32px; font-family: var(--mono); font-size: 12px; color: #333; line-height: 1.7; }
+  .compare h3 { font-family: var(--display); font-weight: 800; font-size: 16px; margin-bottom: 8px; }
+  .compare ul { padding-left: 18px; }
+  .compare li { margin-bottom: 4px; }
+  .compare code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  .compare .change { color: var(--red); font-weight: 700; }
+  .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+
+  /* ============= SMALL — BEEP v6 (Incoming 제거, head 1단어만) ============= */
+  .small-beep-v6 { height: 100%; display: grid; grid-template-rows: auto 1fr auto; }
+  .small-beep-v6 .row-head {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .small-beep-v6 .row-head .kind {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .small-beep-v6 .row-head .time {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 10px;
+    color: var(--mute);
+  }
+  .small-beep-v6 .row-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  .small-beep-v6 .row-body .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 46px;
+    color: var(--ink);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .small-beep-v6 .row-body .from {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .small-beep-v6 .row-foot {
+    padding: 6px 14px 10px;
+    border-top: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  /* ============= SMALL — BLINK v6 (Incoming 제거, foot 단순) ============= */
+  .small-blink-v6 { height: 100%; display: grid; grid-template-rows: auto 1fr auto; }
+  .small-blink-v6 .row-head {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .small-blink-v6 .row-head .kind {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .small-blink-v6 .row-head .time {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 10px;
+    color: var(--mute);
+  }
+  .small-blink-v6 .row-strip {
+    padding: 8px 10px;
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .small-blink-v6 .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #b39e83);
+    border: 1px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+  .small-blink-v6 .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.4), transparent 60%);
+  }
+  .small-blink-v6 .row-foot {
+    padding: 6px 14px 10px;
+    border-top: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .small-blink-v6 .row-foot .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--ink);
+  }
+  .small-blink-v6 .row-foot .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+
+  /* ============= MEDIUM — BEEP v6 (kicker만 굵게, meta 단순, foot 제거) ============= */
+  .medium-beep-v6 { height: 100%; display: grid; grid-template-columns: 1fr 128px; grid-template-rows: auto 1fr; }
+  .medium-beep-v6 .row-head {
+    grid-column: 1 / 3;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .medium-beep-v6 .row-head .kind {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 19px;
+  }
+  .medium-beep-v6 .row-head .kind em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-beep-v6 .row-head .no {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 1.2px;
+  }
+  .medium-beep-v6 .cell-code {
+    grid-column: 1;
+    grid-row: 2;
+    border-right: 1px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
+  }
+  .medium-beep-v6 .cell-code .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 54px;
+    color: var(--ink);
+    letter-spacing: 1.2px;
+    line-height: 1;
+  }
+  .medium-beep-v6 .cell-meta {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 14px;
+  }
+  .medium-beep-v6 .cell-meta .from-label {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 9px;
+    color: var(--mute);
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+  }
+  .medium-beep-v6 .cell-meta .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+  .medium-beep-v6 .row-foot {
+    grid-column: 1 / 3;
+    padding: 10px 16px;
+    border-top: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--mute);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .medium-beep-v6 .row-foot .time {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.4px;
+  }
+  .medium-beep-v6 .unread {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  /* ============= MEDIUM — BLINK v6 (strip 200px — frame 확대, foot 제거) ============= */
+  .medium-blink-v6 { height: 100%; display: grid; grid-template-columns: 1fr 200px; grid-template-rows: auto 1fr; }
+  .medium-blink-v6 .row-head {
+    grid-column: 1 / 3;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .medium-blink-v6 .row-head .kind {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 19px;
+  }
+  .medium-blink-v6 .row-head .kind em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-blink-v6 .row-head .no {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 1.2px;
+  }
+  .medium-blink-v6 .cell-info {
+    grid-column: 1;
+    grid-row: 2;
+    border-right: 1px solid var(--ink);
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .medium-blink-v6 .cell-info .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--ink);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .medium-blink-v6 .cell-info .from {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mute);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .medium-blink-v6 .cell-info .from .sender {
+    color: var(--ink);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .medium-blink-v6 .cell-info .duration {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--mute);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .medium-blink-v6 .cell-strip {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 10px;
+    display: flex;
+    gap: 4px;
+  }
+  .medium-blink-v6 .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #a89378);
+    border: 1px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+  .medium-blink-v6 .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.45), transparent 65%);
+  }
+  .medium-blink-v6 .row-foot {
+    grid-column: 1 / 3;
+    padding: 10px 16px;
+    border-top: 1px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--mute);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .medium-blink-v6 .row-foot .time {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.4px;
+  }
+  .medium-blink-v6 .unread {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+</style>
+</head>
+<body>
+
+<h1>Widget Redesign v6 — Grid Divider + No Truncation</h1>
+<div class="subtitle">outer rule 제거 · 내부 라인 · 정보량 축소 (build 20 잘림 직접 fix)</div>
+
+<div class="compare">
+  <h3>build 20 잘림 진단</h3>
+  <ul>
+    <li><span class="change">Small Beep</span>: <code>IN... B... 1...</code> — Incoming + Beep + time 셋 다 한 줄에 안 들어감</li>
+    <li><span class="change">Small Blink</span>: <code>IN... ...</code> + foot <code>8... Bee...</code></li>
+    <li><span class="change">Medium Blink</span>: 좌측 영역이 strip 168px에 밀려 너무 좁음 → <code>INC... BL...</code>, code, <code>FROM Be...</code>, <code>2... · M... · 12</code> 모두 ellipsis</li>
+    <li>원인: SwiftUI <code>Text.lineLimit(1)</code> 은 HTML flexbox처럼 자연 wrap 안 함 — 무조건 ellipsis</li>
+  </ul>
+</div>
+
+<div class="compare">
+  <h3>v6 fix 방향</h3>
+  <ul>
+    <li><span class="change">Small</span>: head 에서 <code>Incoming</code> 제거. <code>Beep</code> 또는 <code>Blink</code> 한 단어만 + time</li>
+    <li><span class="change">Medium Blink strip column</span> 168 → 200px (frame 확대, code 34px로 좁힘)</li>
+    <li><span class="change">Medium foot 행 제거</span>: <code>TAP TO OPEN · 18:17</code> 잘림 → head 우측 <code>NO.04 · 18:17</code> 1행 통합 (158px height 안에 head+body 만)</li>
+    <li><span class="change">outer 박스 제거</span>: paper 가득. 내부 1px ink line 으로 grid 분할</li>
+    <li>SwiftUI 구현 시 <code>minimumScaleFactor(0.85)</code> 추가 → 폰트가 width 안 맞으면 자동 축소 (truncation 방지 안전망)</li>
+  </ul>
+</div>
+
+<div class="row">
+  <div class="case">
+    <span class="case-label">Small · Beep v6</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="small-beep-v6">
+          <div class="row-head">
+            <span class="kind">Beep</span>
+            <span class="time">18:17</span>
+          </div>
+          <div class="row-body">
+            <div class="code">486</div>
+            <div class="from">BEEPY</div>
+          </div>
+          <div class="row-foot">
+            <span>NO.01</span>
+            <span class="unread-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="case">
+    <span class="case-label">Small · Blink v6</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="small-blink-v6">
+          <div class="row-head">
+            <span class="kind">Blink</span>
+            <span class="time">18:17</span>
+          </div>
+          <div class="row-strip">
+            <div class="frame"></div>
+            <div class="frame"></div>
+            <div class="frame"></div>
+          </div>
+          <div class="row-foot">
+            <span class="code">8282</span>
+            <span class="sender">MINA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="case">
+    <span class="case-label">Medium · Beep v6</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="medium-beep-v6">
+          <div class="row-head">
+            <span class="kind">Incoming <em>Beep</em></span>
+            <span class="no">NO.01 · 18:17</span>
+          </div>
+          <div class="cell-code">
+            <div class="code">486</div>
+          </div>
+          <div class="cell-meta">
+            <span class="from-label">FROM.</span>
+            <span class="sender">BEEPY</span>
+          </div>
+        </div>
+        <span class="unread"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="case">
+    <span class="case-label">Medium · Blink v6 (strip 200px — frame 확대)</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="medium-blink-v6">
+          <div class="row-head">
+            <span class="kind">Incoming <em>Blink</em></span>
+            <span class="no">NO.04 · 18:17</span>
+          </div>
+          <div class="cell-info">
+            <div class="code">8282</div>
+            <div class="from">FROM <span class="sender">MINA</span></div>
+            <div class="duration">2.0s · MUTE</div>
+          </div>
+          <div class="cell-strip">
+            <div class="frame"></div>
+            <div class="frame"></div>
+            <div class="frame"></div>
+          </div>
+        </div>
+        <span class="unread"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="compare">
+  <h3>핵심 정리</h3>
+  <ul>
+    <li>outer 박스 → 내부 1px ink line grid (NYT/Linear editorial)</li>
+    <li>Small에서 <code>Incoming</code> 제거 (158px width 부족 사고)</li>
+    <li>Medium Blink strip 138px (좌측 ~190px 확보, code + sender + duration 모두 fit)</li>
+    <li>SwiftUI 구현 시 <code>.minimumScaleFactor(0.85)</code> + <code>.lineLimit(1)</code> 안전망 추가 → 실 device에서 절대 잘림 X</li>
+  </ul>
+</div>
+
+</body>
+</html>
