@@ -62,7 +62,7 @@ export type LegacyMessage = {
     status: SignalMediaStatus;
     thumbnailUri?: string | null;
     stripFrameUris?: string[] | null;
-    playbackUri?: string | null;
+    playbackUri?: string | number | null;
   } | null;
 };
 
@@ -210,7 +210,10 @@ async function resolveSignedBlinkMediaUrl(message: LegacyMessage) {
         signStorageKey(BLINK_THUMBS_BUCKET, uri)
       )
     ),
-    signStorageKey(BLINK_ORIGINALS_BUCKET, media.playbackUri),
+    signStorageKey(
+      BLINK_ORIGINALS_BUCKET,
+      typeof media.playbackUri === "string" ? media.playbackUri : null
+    ),
   ]);
 
   return {

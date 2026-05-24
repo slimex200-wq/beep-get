@@ -61,7 +61,7 @@ export function buildDemoBlinkMessage(ownerId: string) {
       status: "processed" as const,
       thumbnailUri: "",
       stripFrameUris: [] as string[],
-      playbackUri: "",
+      playbackUri: require("../../assets/demo/beepy-blink.mp4") as number,
     },
   };
 }
