@@ -27,6 +27,7 @@ interface Friend {
 interface FriendState {
   friends: Friend[];
   loading: boolean;
+  reset: () => void;
   fetch: (userId: string) => Promise<void>;
   add: (
     userId: string,
@@ -42,6 +43,8 @@ interface FriendState {
 export const useFriendStore = create<FriendState>((set, get) => ({
   friends: [],
   loading: false,
+
+  reset: () => set({ friends: [], loading: false }),
 
   fetch: async (userId) => {
     if (isUiPreviewUser(userId)) {

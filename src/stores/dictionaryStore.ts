@@ -18,6 +18,7 @@ interface DictionaryEntry {
 interface DictionaryState {
   entries: DictionaryEntry[];
   loading: boolean;
+  reset: () => void;
   fetch: (userId: string) => Promise<void>;
   add: (userId: string, code: string, meaning: string) => Promise<void>;
   update: (entryId: string, code: string, meaning: string) => Promise<void>;
@@ -27,6 +28,8 @@ interface DictionaryState {
 export const useDictionaryStore = create<DictionaryState>((set, get) => ({
   entries: [],
   loading: false,
+
+  reset: () => set({ entries: [], loading: false }),
 
   fetch: async (userId) => {
     if (isUiPreviewUser(userId)) {

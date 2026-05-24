@@ -101,9 +101,10 @@ export async function sendMessage(
 
   if (error) throw error;
   const message = mapSignalToLegacyMessage(data as SignalRow);
-  notifySignal(message.id).catch((err) =>
-    console.warn("Signal push failed", err?.message ?? err),
-  );
+  // Push notification is a non-blocking nicety - the signal is already in
+  // the DB and the receiver will see it on next fetch / realtime. Silent
+  // catch is intentional; surface via Supabase logs / Sentry when wired.
+  notifySignal(message.id).catch(() => {});
   return message;
 }
 
@@ -130,9 +131,9 @@ export async function sendQuickReplyToMessage(
 
   if (error) throw error;
   const message = mapSignalToLegacyMessage(data as SignalRow);
-  notifySignal(message.id).catch((err) =>
-    console.warn("Reply push failed", err?.message ?? err),
-  );
+  // Same as sendMessage: push is non-blocking, receiver picks up the
+  // reply on next fetch / realtime if the push call itself errors.
+  notifySignal(message.id).catch(() => {});
   return message;
 }
 

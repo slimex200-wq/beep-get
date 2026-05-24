@@ -20,6 +20,7 @@ interface CollectionState {
   ownedIcons: UserCollectionIcon[];
   ownedIconIds: Set<string>;
   loading: boolean;
+  reset: () => void;
   fetchAll: () => Promise<void>;
   fetchOwned: (userId: string) => Promise<void>;
   grant: (slug: string, userId?: string) => Promise<void>;
@@ -32,6 +33,14 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   ownedIcons: [],
   ownedIconIds: new Set(),
   loading: false,
+
+  reset: () =>
+    set({
+      allIcons: [],
+      ownedIcons: [],
+      ownedIconIds: new Set(),
+      loading: false,
+    }),
 
   fetchAll: async () => {
     if (!isSupabaseConfigured) {

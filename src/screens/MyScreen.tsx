@@ -824,7 +824,8 @@ function ToolButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 function reportError(err: unknown) {
-  console.warn(err);
+  const message = err instanceof Error ? err.message : "Unexpected error";
+  Alert.alert("BEEP-GET", message);
 }
 
 const packTileToneStyle = StyleSheet.create({
