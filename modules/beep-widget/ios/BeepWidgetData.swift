@@ -62,6 +62,25 @@ struct RecentSender: Codable {
 struct WidgetData: Codable {
     let latestMessage: WidgetMessage?
     let recentSenders: [RecentSender]
+    // v7.A stack meta. Optional so older JS bundles without these fields
+    // (pre-build-24) still decode without crashing.
+    let totalReceived: Int?
+    let newCount: Int?
+
+    // Explicit init with defaults so existing callers that pre-date v7.A
+    // (e.g. WidgetData(latestMessage: nil, recentSenders: [])) keep
+    // compiling without having to touch every call site.
+    init(
+        latestMessage: WidgetMessage?,
+        recentSenders: [RecentSender],
+        totalReceived: Int? = nil,
+        newCount: Int? = nil
+    ) {
+        self.latestMessage = latestMessage
+        self.recentSenders = recentSenders
+        self.totalReceived = totalReceived
+        self.newCount = newCount
+    }
 }
 
 class BeepWidgetDataManager {

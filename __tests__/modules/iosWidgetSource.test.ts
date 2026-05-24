@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import path from "path";
 
 describe("iOS widget source", () => {
-  const widgetDir = path.join(process.cwd(), "modules/beep-widget/ios/BeepWidget");
+  const widgetDir = path.join(process.cwd(), "targets/BeepWidgetExtension");
   const dataSource = readFileSync(
     path.join(process.cwd(), "modules/beep-widget/ios/BeepWidgetData.swift"),
     "utf8"
