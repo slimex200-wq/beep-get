@@ -1,16 +1,36 @@
 // @ts-nocheck
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.101.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Web origins that are allowed to call this Edge Function. Mobile clients
+// ignore CORS entirely, so leaving this empty keeps mobile working while
+// blocking arbitrary web pages from invoking the function with a leaked
+// Bearer token (security-auditor P1).
+const ALLOWED_ORIGINS = new Set<string>([
+  // "https://beep-get.com",
+]);
+
+function buildCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "";
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 const confirmation = "DELETE_ACCOUNT";
 const mediaBuckets = ["blink-originals", "blink-thumbs"];
 
 Deno.serve(async (req) => {
+  const cors = buildCorsHeaders(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+
   if (req.method === "OPTIONS") {
     return json({ ok: true });
   }
@@ -181,12 +201,3 @@ async function sha256(value) {
     .join("");
 }
 
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "application/json",
-    },
-  });
-}
