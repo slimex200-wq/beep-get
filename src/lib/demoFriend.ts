@@ -10,13 +10,14 @@
 export const DEMO_FRIEND_ID = "beepy-demo-friend";
 export const DEMO_FRIEND_BEEP_ID = "00000001";
 export const DEMO_WELCOME_SIGNAL_ID = "demo-welcome-beep";
+export const DEMO_BLINK_SIGNAL_ID = "demo-welcome-blink";
 
 export function isDemoFriend(id: string | null | undefined): boolean {
   return id === DEMO_FRIEND_ID;
 }
 
 export function isDemoSignal(id: string | null | undefined): boolean {
-  return id === DEMO_WELCOME_SIGNAL_ID;
+  return id === DEMO_WELCOME_SIGNAL_ID || id === DEMO_BLINK_SIGNAL_ID;
 }
 
 export function buildDemoWelcomeMessage(ownerId: string) {
@@ -34,6 +35,33 @@ export function buildDemoWelcomeMessage(ownerId: string) {
     from_user_profile: {
       nickname: "Beepy",
       beep_id: DEMO_FRIEND_BEEP_ID,
+    },
+  };
+}
+
+export function buildDemoBlinkMessage(ownerId: string) {
+  const now = new Date(Date.now() + 1000).toISOString();
+  return {
+    id: DEMO_BLINK_SIGNAL_ID,
+    from_user: DEMO_FRIEND_ID,
+    to_user: ownerId,
+    kind: "blink" as const,
+    number_code: "8282",
+    memo: "Demo Blink — 2초 영상 시연",
+    is_read: false,
+    is_saved: false,
+    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+    created_at: now,
+    from_user_profile: {
+      nickname: "Beepy",
+      beep_id: DEMO_FRIEND_BEEP_ID,
+    },
+    media: {
+      durationMs: 2000,
+      status: "processed" as const,
+      thumbnailUri: "",
+      stripFrameUris: [] as string[],
+      playbackUri: "",
     },
   };
 }
