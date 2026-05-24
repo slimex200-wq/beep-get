@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { spacing } from "@/design/tokens";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { colors, radius, spacing } from "@/design/tokens";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { BlinkStrip } from "@/components/BlinkStrip";
@@ -35,6 +36,12 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
     [received, saved, fetchedMessage, signalId]
   );
   const signal = useMemo(() => (message ? messageToSlipSignal(message) : null), [message]);
+  const playbackUri = message?.media?.playbackUri ?? null;
+  const player = useVideoPlayer(playbackUri, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
 
   const returnToToday = () => {
     if (navigation.canGoBack()) {
@@ -82,7 +89,18 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SignalSlip signal={signal} title={signal.hasBlink ? "Incoming Blink" : "Incoming Beep"} />
-        {signal.hasBlink ? <BlinkStrip frameUris={message.media?.stripFrameUris} /> : null}
+        {signal.hasBlink ? (
+          playbackUri ? (
+            <VideoView
+              player={player}
+              style={styles.video}
+              nativeControls={false}
+              contentFit="cover"
+            />
+          ) : (
+            <BlinkStrip frameUris={message.media?.stripFrameUris} />
+          )
+        ) : null}
         <View style={styles.replyRow}>
           <ActionButton label="OK" mono flex onPress={() => read(message.id).catch(reportError)} />
           <ActionButton label="8282" mono flex onPress={() => sendQuickReply("8282")} />
@@ -128,5 +146,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: spacing[5],
+  },
+  video: {
+    width: "100%",
+    aspectRatio: 9 / 16,
+    borderRadius: radius.control,
+    overflow: "hidden",
+    backgroundColor: colors.ink,
   },
 });
