@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, Modal } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useTheme } from "@/theme/ThemeProvider";
-import { BeepButton } from "@/components/BeepButton";
+import { ActionButton } from "@/components/ActionButton";
 import { isValidBeepId } from "@/services/authService";
 
 interface QrScannerProps {
@@ -54,8 +54,8 @@ export function QrScanner({ visible, onClose, onScan }: QrScannerProps) {
       <Modal visible={visible} onRequestClose={onClose}>
         <View style={styles.center}>
           <Text style={styles.text}>카메라 권한이 필요합니다</Text>
-          <BeepButton title="권한 허용" onPress={requestPermission} />
-          <BeepButton title="닫기" onPress={onClose} variant="secondary" />
+          <ActionButton label="권한 허용" variant="dark" onPress={requestPermission} />
+          <ActionButton label="닫기" variant="ghost" onPress={onClose} />
         </View>
       </Modal>
     );
@@ -69,7 +69,7 @@ export function QrScanner({ visible, onClose, onScan }: QrScannerProps) {
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
       <View style={styles.overlay}>
-        <BeepButton title="닫기" onPress={onClose} variant="danger" />
+        <ActionButton label="닫기" variant="danger" onPress={onClose} />
       </View>
     </Modal>
   );

@@ -9,7 +9,6 @@ import { type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
 import { CollectionScreen } from "@/screens/CollectionScreen";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
-import { FirstRunScreen } from "@/screens/FirstRunScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
 import { PeopleScreen } from "@/screens/PeopleScreen";
@@ -23,7 +22,6 @@ import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 export type RootStackParamList = {
   Auth: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
-  FirstRun: undefined;
   Send: { friendId: string; friendName: string; friendNo?: string; mode?: "beep" | "blink" };
   ReplyRoom: { signalId: string };
   WidgetStates: { size?: "small" | "medium" } | undefined;
@@ -101,7 +99,6 @@ export function RootNavigator() {
       ) : (
         <>
           <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen name="FirstRun" component={FirstRunScreen} />
           <Stack.Screen
             name="Send"
             component={SendSignalScreen}

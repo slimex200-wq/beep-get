@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TextInput, Alert } from "react-native
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
-import { BeepButton } from "@/components/BeepButton";
+import { ActionButton } from "@/components/ActionButton";
 import { HeaderBar } from "@/components/HeaderBar";
 import { useTheme } from "@/theme/ThemeProvider";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
@@ -124,7 +124,7 @@ export function DictionaryScreen() {
             placeholderTextColor={theme.colors.textSecondary}
             maxLength={50}
           />
-          <BeepButton title="등록" onPress={handleAdd} />
+          <ActionButton label="등록" variant="dark" onPress={handleAdd} />
         </View>
         <FlatList
           data={entries}
