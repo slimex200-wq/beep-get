@@ -8,6 +8,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendCard } from "@/components/FriendCard";
 import { HeaderBar } from "@/components/HeaderBar";
+import { SectionHeader } from "@/components/SectionHeader";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { relationshipToSlipFriend } from "@/lib/slipUiModels";
 import { generateShareText } from "@/services/contactService";
@@ -210,15 +211,6 @@ export function PeopleScreen() {
   );
 }
 
-function SectionHeader({ label, hint }: { label: string; hint: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={type.tinyMono}>{label}</Text>
-      <View style={styles.sectionLine} />
-      <Text style={type.tinyMono}>{hint}</Text>
-    </View>
-  );
-}
 
 function HeroBlock({
   titleTop,
