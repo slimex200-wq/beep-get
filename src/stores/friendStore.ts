@@ -8,7 +8,7 @@ import {
   updateVibrationPattern,
 } from "@/services/friendService";
 import { isUiPreviewUser, uiPreviewFriends } from "@/lib/uiPreview";
-import { buildDemoFriend, DEMO_FRIEND_ID } from "@/lib/demoFriend";
+import { buildDemoFriend, DEMO_FRIEND_ID, isDemoFriend } from "@/lib/demoFriend";
 
 interface Friend {
   id: string;
@@ -79,6 +79,12 @@ export const useFriendStore = create<FriendState>((set, get) => ({
   },
 
   remove: async (userId, friendId) => {
+    if (isDemoFriend(friendId)) {
+      set((state) => ({
+        friends: state.friends.filter((f) => f.friend_id !== friendId),
+      }));
+      return;
+    }
     await removeFriend(userId, friendId);
     set((state) => ({
       friends: state.friends.filter((f) => f.friend_id !== friendId),

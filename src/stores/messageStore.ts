@@ -21,6 +21,7 @@ import {
   DEMO_WELCOME_SIGNAL_ID,
   isDemoSignal,
 } from "@/lib/demoFriend";
+import { useFriendStore } from "./friendStore";
 
 type Message = LegacyMessage;
 
@@ -109,6 +110,16 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
     if (!sourceMessage) throw new Error("Signal is not available for quick reply");
 
+    if (isDemoSignal(messageId)) {
+      set((state) => ({
+        received: state.received.map((m) =>
+          m.id === messageId ? { ...m, is_read: true } : m
+        ),
+      }));
+      syncWidgetData(get().received, useFriendStore.getState().friends);
+      return;
+    }
+
     const actionKey = buildQuickReplyActionKey(messageId, code);
     if (get().quickReplyActionKeys.includes(actionKey)) return;
 
@@ -117,15 +128,6 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }));
 
     try {
-      if (isDemoSignal(messageId)) {
-        set((state) => ({
-          received: state.received.map((m) =>
-            m.id === messageId ? { ...m, is_read: true } : m
-          ),
-        }));
-        return;
-      }
-
       if (isUiPreviewUser(sourceMessage.to_user)) {
         const sentAt = new Date().toISOString();
         const previewReply = {
@@ -174,6 +176,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
           m.id === messageId ? { ...m, is_read: true } : m
         ),
       }));
+      syncWidgetData(get().received, useFriendStore.getState().friends);
       return;
     }
 
@@ -183,6 +186,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         m.id === messageId ? { ...m, is_read: true } : m
       ),
     }));
+    syncWidgetData(get().received, useFriendStore.getState().friends);
   },
 
   save: async (messageId) => {
@@ -197,6 +201,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
           ? state.saved
           : [{ ...target, is_saved: true }, ...state.saved],
       }));
+      syncWidgetData(get().received, useFriendStore.getState().friends);
       return;
     }
 
@@ -208,6 +213,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         ),
         saved: [{ ...msg, is_saved: true }, ...state.saved],
       }));
+      syncWidgetData(get().received, useFriendStore.getState().friends);
     }
   },
 
