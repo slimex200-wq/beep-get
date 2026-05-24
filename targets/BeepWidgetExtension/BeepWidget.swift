@@ -5,6 +5,9 @@ struct BeepWidgetEntry: TimelineEntry {
     let date: Date
     let latestMessage: WidgetMessage?
     let recentSenders: [RecentSender]
+    // v7.A stack meta - inbox depth (capped 999) and unread count (capped 99).
+    let totalReceived: Int
+    let newCount: Int
 }
 
 struct BeepWidgetTimelineProvider: TimelineProvider {
@@ -19,7 +22,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
                 receivedAt: "",
                 isRead: false
             ),
-            recentSenders: []
+            recentSenders: [],
+            totalReceived: 1,
+            newCount: 1
         )
     }
 
@@ -28,7 +33,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
         let entry = BeepWidgetEntry(
             date: .now,
             latestMessage: data?.latestMessage,
-            recentSenders: data?.recentSenders ?? []
+            recentSenders: data?.recentSenders ?? [],
+            totalReceived: data?.totalReceived ?? 0,
+            newCount: data?.newCount ?? 0
         )
         completion(entry)
     }
@@ -38,7 +45,9 @@ struct BeepWidgetTimelineProvider: TimelineProvider {
         let entry = BeepWidgetEntry(
             date: .now,
             latestMessage: data?.latestMessage,
-            recentSenders: data?.recentSenders ?? []
+            recentSenders: data?.recentSenders ?? [],
+            totalReceived: data?.totalReceived ?? 0,
+            newCount: data?.newCount ?? 0
         )
         // Refresh every 15 minutes as fallback
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: .now)!

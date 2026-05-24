@@ -15,7 +15,9 @@ struct BeepWidgetMediumView: View {
                 isNew: !msg.isRead,
                 hasBlinkPreview: msg.teaser != nil,
                 stripFrameUris: msg.teaser?.stripFrameUris ?? [],
-                openUrl: msg.actions?.openReplyRoomUrl
+                openUrl: msg.actions?.openReplyRoomUrl,
+                totalReceived: entry.totalReceived,
+                newCount: entry.newCount
             )
         } else {
             PlaceholderMediumView()
