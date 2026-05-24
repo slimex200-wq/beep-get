@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>BEEP-GET Widget Redesign v4</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Fraunces:ital,wght@0,800;0,900;1,800&family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper:       #F4EFE5;
+    --paper-deep:  #E8DDCD;
+    --ink:         #0A0A0A;
+    --mute:        #6B6259;
+    --rule:        rgba(10, 10, 10, 0.22);
+    --rule-strong: rgba(10, 10, 10, 0.42);
+    --red:         #D8361E;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Fraunces', serif;
+    --ui: 'Pretendard', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #f0e8da 0%, #d8cebc 100%);
+    min-height: 100vh;
+    font-family: var(--ui);
+    padding: 32px 16px 96px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 40px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+  .case {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .case-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.6);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+  }
+  .ios-bg {
+    background: linear-gradient(135deg, #e8dccd 0%, #c9bda8 100%);
+    padding: 18px;
+    border-radius: 28px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05), 0 12px 30px rgba(0,0,0,0.18);
+  }
+  .widget {
+    background: var(--paper);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  }
+  .widget.small { width: 158px; height: 158px; border-radius: 22px; }
+  .widget.medium { width: 338px; height: 158px; border-radius: 22px; }
+  .compare {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 800px;
+    margin: 0 auto 32px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #333;
+    line-height: 1.7;
+  }
+  .compare h3 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .compare ul { padding-left: 18px; }
+  .compare li { margin-bottom: 4px; }
+  .compare code {
+    background: rgba(0,0,0,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .compare .change {
+    color: var(--red);
+    font-weight: 700;
+  }
+  .unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  /* ============= SMALL — BEEP v4 (outer rule 안에서 깔끔) ============= */
+  .small-beep-v4-wrap {
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .small-beep-v4-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid var(--ink);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .small-beep-v4 {
+    padding: 4px 6px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .small-beep-v4 .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+  }
+  .small-beep-v4 .head .time {
+    font-weight: 500;
+    color: var(--mute);
+    font-size: 10px;
+  }
+  .small-beep-v4 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 42px;
+    text-align: center;
+    line-height: 1;
+    margin-top: 6px;
+  }
+  .small-beep-v4 .from-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+  }
+  .small-beep-v4 .from-line .from-label {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+  .small-beep-v4 .from-line .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .small-beep-v4 .foot {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  /* ============= SMALL — BLINK v4 (변경 없음) ============= */
+  .small-blink-v4-wrap {
+    padding: 18px;
+    height: 100%;
+    position: relative;
+  }
+  .small-blink-v4-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid var(--ink);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .small-blink-v4 {
+    padding: 4px 6px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+  }
+  .small-blink-v4 .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+  }
+  .small-blink-v4 .head em {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .small-blink-v4 .head .time {
+    font-weight: 500;
+    color: var(--mute);
+    font-size: 10px;
+  }
+  .small-blink-v4 .strip {
+    display: flex;
+    gap: 3px;
+    height: 56px;
+    margin: 2px 0;
+  }
+  .small-blink-v4 .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #b39e83);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .small-blink-v4 .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.4), transparent 60%);
+  }
+  .small-blink-v4 .code-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .small-blink-v4 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .small-blink-v4 .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--ink);
+    text-align: right;
+    letter-spacing: 0.5px;
+  }
+
+  /* ============= MEDIUM — BEEP v4 (chip border 제거 + meta 단순화) ============= */
+  .medium-beep-v4-wrap {
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .medium-beep-v4-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid var(--ink);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .medium-beep-v4 {
+    flex: 1;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+  .medium-beep-v4 .top {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .medium-beep-v4 .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .medium-beep-v4 .kicker {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .medium-beep-v4 .kicker em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-beep-v4 .code-block {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .medium-beep-v4 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .medium-beep-v4 .sender-strong {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .medium-beep-v4 .meta {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--mute);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .medium-beep-v4 .meta .no { color: var(--ink); font-weight: 700; }
+  .medium-beep-v4 .meta .time {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.4px;
+  }
+  .medium-beep-v4 .actions-borderless {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-top: 2px;
+    border-top: 1px dashed var(--rule-strong);
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-top: 4px;
+  }
+  .medium-beep-v4 .chip {
+    flex: 1;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .medium-beep-v4 .chip + .chip {
+    border-left: 1px solid var(--rule);
+  }
+  .medium-beep-v4 .chip.dark {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px;
+    border-left: none !important;
+  }
+  .medium-beep-v4 .unread {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  /* ============= MEDIUM — BLINK v4 (chip borderless + strip clean + timestamps 제거) ============= */
+  .medium-blink-v4-wrap {
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .medium-blink-v4-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid var(--ink);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .medium-blink-v4 {
+    flex: 1;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+  .medium-blink-v4 .top {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 168px;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .medium-blink-v4 .left {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .medium-blink-v4 .kicker {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .medium-blink-v4 .kicker em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-blink-v4 .codeRow {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .medium-blink-v4 .indexBox {
+    border: 1px solid var(--ink);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .medium-blink-v4 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: 1px;
+  }
+  .medium-blink-v4 .meta-stack {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    color: var(--mute);
+    text-transform: uppercase;
+    line-height: 1.7;
+  }
+  .medium-blink-v4 .meta-stack .sender {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .medium-blink-v4 .strip {
+    display: flex;
+    gap: 4px;
+    height: 100%;
+  }
+  .medium-blink-v4 .strip .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #a89378);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .medium-blink-v4 .strip .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.45), transparent 65%);
+  }
+  .medium-blink-v4 .actions-borderless {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-top: 2px;
+    border-top: 1px dashed var(--rule-strong);
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-top: 4px;
+  }
+  .medium-blink-v4 .chip {
+    flex: 1;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 1px;
+  }
+  .medium-blink-v4 .chip + .chip {
+    border-left: 1px solid var(--rule);
+  }
+  .medium-blink-v4 .chip.dark {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px;
+    border-left: none !important;
+  }
+  .medium-blink-v4 .unread {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+</style>
+</head>
+<body>
+
+<h1>BEEP-GET Widget Redesign v4</h1>
+<div class="subtitle">v3 문제점 직접 진단 → fix · chip border 제거 · meta 단순화</div>
+
+<div class="compare">
+  <h3>v3 → v4 변경 (Claude 직접 진단)</h3>
+  <ul>
+    <li><span class="change">두 겹 박스 해결</span>: action chips border 완전 제거 → text + 좌우 hairline separator만. OPEN만 dark fill 유지 (primary action 강조)</li>
+    <li><span class="change">outer rule padding 확대</span>: chip/strip이 outer rule과 충분히 떨어지도록</li>
+    <li><span class="change">Medium Beep meta 단순화</span>: <code>NO.01 / ARRIVED / 18:17</code> 3줄 → <code>NO.01 / 18:17</code> 2줄. ARRIVED 라벨 제거</li>
+    <li><span class="change">Medium Beep code/sender</span>: 16px → 18px. dot separator 약하게</li>
+    <li><span class="change">Medium Blink 타임스탬프 제거</span>: <code>0.0s / 0.7s / 1.3s</code> 7px 텍스트 — 안 보임 + 정보 가치 약함. 제거</li>
+    <li><span class="change">Medium Blink meta 2줄 분리</span>: <code>FROM / MINA · 2.0s</code> 한 줄 → sender 위주 (MINA) + 2.0s 메타 줄 분리</li>
+  </ul>
+</div>
+
+<div class="row">
+
+  <!-- Small Beep v4 -->
+  <div class="case">
+    <span class="case-label">Small · Beep v4</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="small-beep-v4-wrap">
+          <div class="small-beep-v4">
+            <div class="head">
+              <span>BEEP</span>
+              <span class="time">18:17</span>
+            </div>
+            <div class="code">486</div>
+            <div class="from-line">
+              <span class="from-label">FROM.</span>
+              <span class="sender">BEEPY</span>
+            </div>
+            <div class="foot">
+              <span>NO.01</span>
+              <span class="unread-dot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Small Blink v4 -->
+  <div class="case">
+    <span class="case-label">Small · Blink v4</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="small-blink-v4-wrap">
+          <div class="small-blink-v4">
+            <div class="head">
+              <em>Blink</em>
+              <span class="time">18:17</span>
+            </div>
+            <div class="strip">
+              <div class="frame"></div>
+              <div class="frame"></div>
+              <div class="frame"></div>
+            </div>
+            <div class="code-row">
+              <span class="code">8282</span>
+              <span class="sender">MINA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row">
+
+  <!-- Medium Beep v4 -->
+  <div class="case">
+    <span class="case-label">Medium · Beep v4 (chip 박스 제거)</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="medium-beep-v4-wrap">
+          <div class="medium-beep-v4">
+            <div class="top">
+              <div class="hero">
+                <div class="kicker">Incoming <em>Beep</em></div>
+                <div class="code-block">
+                  <div class="code">486</div>
+                  <div class="sender-strong">· BEEPY</div>
+                </div>
+              </div>
+              <div class="meta">
+                <div class="no">NO.01</div>
+                <div class="time">18:17</div>
+              </div>
+            </div>
+            <div class="actions-borderless">
+              <div class="chip">OK</div>
+              <div class="chip">8282</div>
+              <div class="chip dark">OPEN</div>
+            </div>
+          </div>
+          <span class="unread"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medium Blink v4 -->
+  <div class="case">
+    <span class="case-label">Medium · Blink v4 (clean strip)</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="medium-blink-v4-wrap">
+          <div class="medium-blink-v4">
+            <div class="top">
+              <div class="left">
+                <div class="kicker">Incoming <em>Blink</em></div>
+                <div class="codeRow">
+                  <div class="indexBox">04</div>
+                  <div class="code">8282</div>
+                </div>
+                <div class="meta-stack">
+                  <div><span>FROM</span> <span class="sender">MINA</span></div>
+                  <div>2.0s · MUTE</div>
+                </div>
+              </div>
+              <div class="strip">
+                <div class="frame"></div>
+                <div class="frame"></div>
+                <div class="frame"></div>
+              </div>
+            </div>
+            <div class="actions-borderless">
+              <div class="chip">OK</div>
+              <div class="chip">8282</div>
+              <div class="chip dark">OPEN</div>
+            </div>
+          </div>
+          <span class="unread"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="compare">
+  <h3>핵심 변경 — action chips 시각 처리</h3>
+  <ul>
+    <li>border 있는 box 3개 → <strong>borderless text + hairline divider</strong> (cf. NYT editorial 글 끝의 chapter divider 패턴)</li>
+    <li>OPEN만 dark fill 유지 → primary action 강조 (다른 두 개는 secondary)</li>
+    <li>chips 영역 위쪽에 dashed top border (Swiss Paper 의 typical separator) — 박스 안 박스 느낌 X</li>
+    <li>iOS picker 한 카드에서 small/medium swipe 가능 (build 19 기준)</li>
+  </ul>
+</div>
+
+</body>
+</html>

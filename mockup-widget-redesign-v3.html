@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>BEEP-GET Widget Redesign v3</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Fraunces:ital,wght@0,800;0,900;1,800&family=Pretendard:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper:       #F4EFE5;
+    --ink:         #0A0A0A;
+    --mute:        #6B6259;
+    --rule:        rgba(10, 10, 10, 0.22);
+    --rule-strong: rgba(10, 10, 10, 0.42);
+    --red:         #D8361E;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Fraunces', serif;
+    --ui: 'Pretendard', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #f0e8da 0%, #d8cebc 100%);
+    min-height: 100vh;
+    font-family: var(--ui);
+    padding: 32px 16px 96px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 40px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+  .case {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .case-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.6);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+  }
+  .ios-bg {
+    background: linear-gradient(135deg, #e8dccd 0%, #c9bda8 100%);
+    padding: 18px;
+    border-radius: 28px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05), 0 12px 30px rgba(0,0,0,0.18);
+  }
+  .widget {
+    background: var(--paper);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  }
+  .widget.small { width: 158px; height: 158px; border-radius: 22px; }
+  .widget.medium { width: 338px; height: 158px; border-radius: 22px; }
+  .inset-rule {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--ink);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+  .compare {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 760px;
+    margin: 0 auto 32px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #333;
+    line-height: 1.7;
+  }
+  .compare h3 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .compare ul { padding-left: 18px; }
+  .compare li { margin-bottom: 4px; }
+  .compare code {
+    background: rgba(0,0,0,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .compare .change {
+    color: var(--red);
+    font-weight: 700;
+  }
+  .unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  /* ============= SMALL — BEEP v3 ============= */
+  .small-beep-v3 {
+    padding: 14px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 6px;
+  }
+  .small-beep-v3 .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+  }
+  .small-beep-v3 .head .time {
+    font-weight: 500;
+    color: var(--mute);
+    font-size: 10px;
+  }
+  .small-beep-v3 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 42px;
+    text-align: center;
+    line-height: 1;
+    margin-top: 4px;
+  }
+  .small-beep-v3 .from-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .small-beep-v3 .from-line .from-label {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+  .small-beep-v3 .from-line .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .small-beep-v3 .foot {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  /* ============= SMALL — BLINK v3 (변경 없음, v2 유지) ============= */
+  .small-blink-v3 {
+    padding: 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 6px;
+  }
+  .small-blink-v3 .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+  }
+  .small-blink-v3 .head em {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .small-blink-v3 .head .time {
+    font-weight: 500;
+    color: var(--mute);
+    font-size: 10px;
+  }
+  .small-blink-v3 .strip {
+    display: flex;
+    gap: 3px;
+    height: 60px;
+    margin: 2px 0;
+  }
+  .small-blink-v3 .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #b39e83);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .small-blink-v3 .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.4), transparent 60%);
+  }
+  .small-blink-v3 .code-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .small-blink-v3 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .small-blink-v3 .sender {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--ink);
+    text-align: right;
+    letter-spacing: 0.5px;
+  }
+
+  /* ============= MEDIUM — BEEP v3 (시간 라벨 유지) ============= */
+  .medium-beep-v3 {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
+    padding: 14px 14px 12px;
+  }
+  .medium-beep-v3 .top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .medium-beep-v3 .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .medium-beep-v3 .kicker {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .medium-beep-v3 .kicker em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-beep-v3 .code-block {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .medium-beep-v3 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .medium-beep-v3 .sender-strong {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .medium-beep-v3 .meta {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--mute);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .medium-beep-v3 .meta .from-no { color: var(--ink); }
+  .medium-beep-v3 .meta .arrived {
+    color: var(--mute);
+    font-size: 8px;
+    margin-bottom: 2px;
+  }
+  .medium-beep-v3 .meta .time {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+  }
+  .medium-beep-v3 .divider {
+    border-top: 1px solid var(--rule-strong);
+    margin: 10px 0 8px;
+  }
+  .medium-beep-v3 .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .medium-beep-v3 .chip {
+    flex: 1;
+    height: 26px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
+  .medium-beep-v3 .chip.dark {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .medium-beep-v3 .unread {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  /* ============= MEDIUM — BLINK v3 (strip-actions gap 확보) ============= */
+  .medium-blink-v3 {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100%;
+    padding: 12px 14px 14px;  /* bottom 12→14 */
+  }
+  .medium-blink-v3 .top {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .medium-blink-v3 .left {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 4px;
+  }
+  .medium-blink-v3 .kicker {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 17px;
+    line-height: 1;
+  }
+  .medium-blink-v3 .kicker em {
+    font-style: italic;
+    font-weight: 800;
+  }
+  .medium-blink-v3 .codeRow {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .medium-blink-v3 .indexBox {
+    border: 1px solid var(--ink);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .medium-blink-v3 .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+  .medium-blink-v3 .from {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+  .medium-blink-v3 .strip {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 6px; /* strip 자체 하단 여백 추가 */
+  }
+  .medium-blink-v3 .strip .frames {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+    max-height: 64px;  /* strip 박스 살짝 축소 → action 쪽 여유 */
+  }
+  .medium-blink-v3 .strip .frame {
+    flex: 1;
+    background: linear-gradient(135deg, #d6c7b3, #a89378);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .medium-blink-v3 .strip .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.45), transparent 65%);
+  }
+  .medium-blink-v3 .strip .meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: var(--mute);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .medium-blink-v3 .divider {
+    border-top: 1px solid var(--rule-strong);
+    margin: 12px 0 10px; /* 위아래 margin 늘림 */
+  }
+  .medium-blink-v3 .actions {
+    display: flex;
+    gap: 6px;
+  }
+  .medium-blink-v3 .chip {
+    flex: 1;
+    height: 26px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
+  .medium-blink-v3 .chip.dark {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .medium-blink-v3 .unread {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+</style>
+</head>
+<body>
+
+<h1>BEEP-GET Widget Redesign v3</h1>
+<div class="subtitle">v2 피드백 반영 · sender label 명시 + strip gap 확보</div>
+
+<div class="compare">
+  <h3>v2 → v3 변경</h3>
+  <ul>
+    <li><span class="change">Small Beep</span>: 486 밑에 <code>FROM. BEEPY</code> 라벨 명시 (FROM prefix + sender 15px 큰 글씨) — sender 명확하게 표시. NO.01과 unread dot은 foot 유지</li>
+    <li><span class="change">Medium Blink</span>: strip-actions 간격 확보 (strip 박스 max-height 64px로 축소 + divider 위아래 margin 늘림 + 위젯 padding-bottom 12→14px). 사진 영역은 그대로 180px 유지</li>
+    <li>Small Blink + Medium Beep: 변경 없음 (v2 유지)</li>
+  </ul>
+</div>
+
+<div class="row">
+
+  <!-- Small Beep v3 -->
+  <div class="case">
+    <span class="case-label">Small · Beep v3</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="inset-rule"></div>
+        <div class="small-beep-v3">
+          <div class="head">
+            <span>BEEP</span>
+            <span class="time">18:17</span>
+          </div>
+          <div class="code">486</div>
+          <div class="from-line">
+            <span class="from-label">FROM.</span>
+            <span class="sender">BEEPY</span>
+          </div>
+          <div class="foot">
+            <span>NO.01</span>
+            <span class="unread-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Small Blink v3 (=v2) -->
+  <div class="case">
+    <span class="case-label">Small · Blink v3</span>
+    <div class="ios-bg">
+      <div class="widget small">
+        <div class="inset-rule"></div>
+        <div class="small-blink-v3">
+          <div class="head">
+            <em>Blink</em>
+            <span class="time">18:17</span>
+          </div>
+          <div class="strip">
+            <div class="frame"></div>
+            <div class="frame"></div>
+            <div class="frame"></div>
+          </div>
+          <div class="code-row">
+            <span class="code">8282</span>
+            <span class="sender">MINA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row">
+
+  <!-- Medium Beep v3 (=v2) -->
+  <div class="case">
+    <span class="case-label">Medium · Beep v3</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="inset-rule"></div>
+        <div class="medium-beep-v3">
+          <div class="top">
+            <div class="hero">
+              <div class="kicker">Incoming <em>Beep</em></div>
+              <div class="code-block">
+                <div class="code">486</div>
+                <div class="sender-strong">· BEEPY</div>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="from-no">NO.01</div>
+              <div>
+                <div class="arrived">ARRIVED</div>
+                <div class="time">18:17</div>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="actions">
+            <div class="chip">OK</div>
+            <div class="chip">8282</div>
+            <div class="chip dark">OPEN</div>
+          </div>
+        </div>
+        <span class="unread"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medium Blink v3 (strip-actions gap fix) -->
+  <div class="case">
+    <span class="case-label">Medium · Blink v3 (gap fix)</span>
+    <div class="ios-bg">
+      <div class="widget medium">
+        <div class="inset-rule"></div>
+        <div class="medium-blink-v3">
+          <div class="top">
+            <div class="left">
+              <div class="kicker">Incoming <em>Blink</em></div>
+              <div class="codeRow">
+                <div class="indexBox">04</div>
+                <div class="code">8282</div>
+              </div>
+              <div class="from">FROM / MINA · 2.0s</div>
+            </div>
+            <div class="strip">
+              <div class="frames">
+                <div class="frame"></div>
+                <div class="frame"></div>
+                <div class="frame"></div>
+              </div>
+              <div class="meta">
+                <span>0.0s</span>
+                <span>0.7s</span>
+                <span>1.3s</span>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="actions">
+            <div class="chip">OK</div>
+            <div class="chip">8282</div>
+            <div class="chip dark">OPEN</div>
+          </div>
+        </div>
+        <span class="unread"></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="compare">
+  <h3>결정 받기</h3>
+  <ul>
+    <li>v3 OK → swift 수정 + build 20</li>
+    <li>Small Beep <code>FROM.</code> prefix는 살리는 게 명확하지만 widget 좁아서 답답할 수 있음. 위치/크기 추가 조정 가능</li>
+    <li>Medium Blink: 사진 영역 더 키울지 (180→200) vs 지금 정도 유지</li>
+  </ul>
+</div>
+
+</body>
+</html>
