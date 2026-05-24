@@ -81,6 +81,30 @@ Deno.serve(async (req) => {
     return json({ ok: true, sent: 0, skipped: true });
   }
 
+  // Dedupe (B2): bulk insert 'queued' rows for every (signal_id, token).
+  // Partial unique index notification_deliveries_signal_token_active_idx
+  // guarantees at most one queued/sent row per (signal_id, expo_push_token);
+  // any concurrent invocation trips 23505 and short-circuits without
+  // re-pushing. failed/skipped rows are excluded from the index so retries
+  // remain possible.
+  const { error: reserveError } = await admin
+    .from("notification_deliveries")
+    .insert(
+      pushTokens.map((expoPushToken) => ({
+        signal_id: signal.id,
+        receiver_id: signal.receiver_id,
+        expo_push_token: expoPushToken,
+        status: "queued",
+        response: {},
+      })),
+    );
+  if (reserveError) {
+    if (reserveError.code === "23505") {
+      return json({ ok: true, sent: 0, alreadyDelivered: true });
+    }
+    return json({ error: reserveError.message }, 500);
+  }
+
   const messages = pushTokens.map((to) => ({
     to,
     sound: "default",
@@ -101,16 +125,18 @@ Deno.serve(async (req) => {
   const payload = await response.json().catch(() => ({ status: response.status }));
   const status = response.ok ? "sent" : "failed";
 
-  await admin.from("notification_deliveries").insert(
-    pushTokens.map((expoPushToken) => ({
-      signal_id: signal.id,
-      receiver_id: signal.receiver_id,
-      expo_push_token: expoPushToken,
+  // Update the previously reserved 'queued' rows in place rather than
+  // inserting again - the partial unique index forbids two queued/sent
+  // rows for the same (signal_id, expo_push_token).
+  await admin
+    .from("notification_deliveries")
+    .update({
       status,
       response: payload,
       sent_at: response.ok ? new Date().toISOString() : null,
-    })),
-  );
+    })
+    .eq("signal_id", signal.id)
+    .eq("status", "queued");
 
   return json({ ok: response.ok, sent: response.ok ? pushTokens.length : 0, response: payload }, response.ok ? 200 : 502);
 });
