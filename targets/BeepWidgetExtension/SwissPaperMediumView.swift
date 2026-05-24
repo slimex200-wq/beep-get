@@ -22,131 +22,78 @@ struct SwissPaperMediumView: View {
                 beepBody
             }
         }
-        .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: skin.innerRadius, style: .continuous)
-                .stroke(skin.ink, lineWidth: skin.ruleWidth)
-                .padding(10)
-        )
         .beepWidgetBackground(skin.paper)
         .widgetURL(actionURL(openUrl))
+        .overlay(alignment: .topTrailing) {
+            if isNew {
+                Circle()
+                    .fill(skin.accent)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 14)
+                    .padding(.trailing, 14)
+            }
+        }
+    }
+
+    private var hDivider: some View {
+        Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
+    }
+    private var vDivider: some View {
+        Rectangle().fill(skin.ink).frame(width: skin.ruleWidth)
     }
 
     // ===== Beep =====
     private var beepBody: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top) {
-                HStack(spacing: 5) {
-                    Text("Incoming")
-                        .font(.custom(skin.monoBoldFont, size: 10))
-                        .tracking(1.4)
-                        .foregroundColor(skin.mute)
-                        .textCase(.uppercase)
-                    Text("Beep")
-                        .font(.custom(skin.displayFont, size: 17))
-                        .fontWeight(.heavy)
+            head(kindLabel: "Beep", italic: false)
+            HStack(spacing: 0) {
+                VStack {
+                    Spacer(minLength: 0)
+                    Text(code)
+                        .font(.custom(skin.monoBoldFont, size: 54))
+                        .tracking(1.2)
                         .foregroundColor(skin.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    Spacer(minLength: 0)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 16)
+                .overlay(alignment: .trailing) { vDivider }
 
-                Spacer()
-
-                Text("NO.\(indexNo)")
-                    .font(.custom(skin.monoBoldFont, size: 11))
-                    .tracking(1.2)
-                    .foregroundColor(skin.ink)
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
-
-            Spacer(minLength: 0)
-
-            HStack(alignment: .firstTextBaseline, spacing: 18) {
-                Text(code)
-                    .font(.custom(skin.monoBoldFont, size: 46))
-                    .tracking(1)
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("FROM.")
                         .font(.custom(skin.monoFont, size: 9))
                         .tracking(1.4)
                         .foregroundColor(skin.mute)
                         .textCase(.uppercase)
                     Text(fromName)
-                        .font(.custom(skin.monoBoldFont, size: 18))
-                        .tracking(0.4)
+                        .font(.custom(skin.monoBoldFont, size: 16))
+                        .tracking(0.5)
                         .foregroundColor(skin.ink)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
-
-                Spacer()
+                .frame(width: 128, alignment: .leading)
+                .padding(.horizontal, 14)
             }
-            .padding(.horizontal, 18)
-
-            Spacer(minLength: 0)
-
-            HStack {
-                Text("TAP TO OPEN")
-                    .font(.custom(skin.monoFont, size: 9))
-                    .tracking(1.4)
-                    .foregroundColor(skin.mute)
-                    .textCase(.uppercase)
-
-                Spacer()
-
-                if isNew {
-                    Circle()
-                        .fill(skin.accent)
-                        .frame(width: 8, height: 8)
-                        .padding(.trailing, 8)
-                }
-
-                Text(time)
-                    .font(.custom(skin.monoBoldFont, size: 12))
-                    .tracking(1.4)
-                    .foregroundColor(skin.ink)
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 16)
         }
     }
 
     // ===== Blink =====
     private var blinkBody: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 5) {
-                    Text("Incoming")
-                        .font(.custom(skin.monoBoldFont, size: 10))
-                        .tracking(1.4)
-                        .foregroundColor(skin.mute)
-                        .textCase(.uppercase)
-                    Text("Blink")
-                        .font(.custom(skin.displayItalicFont, size: 17))
-                        .italic()
-                        .foregroundColor(skin.ink)
-                }
-
-                Spacer(minLength: 0)
-
-                HStack(alignment: .center, spacing: 10) {
-                    Text(indexNo)
-                        .font(.custom(skin.monoBoldFont, size: 11))
-                        .foregroundColor(skin.ink)
-                        .frame(width: 24, height: 24)
-                        .overlay(Rectangle().stroke(skin.ink, lineWidth: skin.ruleWidth))
-
+        VStack(spacing: 0) {
+            head(kindLabel: "Blink", italic: true)
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Spacer(minLength: 0)
                     Text(code)
-                        .font(.custom(skin.monoBoldFont, size: 32))
+                        .font(.custom(skin.monoBoldFont, size: 34))
                         .tracking(1)
                         .foregroundColor(skin.ink)
                         .lineLimit(1)
-                }
+                        .minimumScaleFactor(0.6)
 
-                Spacer(minLength: 0)
-
-                VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 5) {
                         Text("FROM")
                             .font(.custom(skin.monoFont, size: 9))
@@ -154,48 +101,66 @@ struct SwissPaperMediumView: View {
                             .foregroundColor(skin.mute)
                             .textCase(.uppercase)
                         Text(fromName)
-                            .font(.custom(skin.monoBoldFont, size: 13))
-                            .tracking(0.4)
+                            .font(.custom(skin.monoBoldFont, size: 11))
+                            .tracking(0.5)
                             .foregroundColor(skin.ink)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
-                    HStack(spacing: 4) {
-                        Text("2.0s")
-                            .font(.custom(skin.monoFont, size: 9))
-                            .tracking(1.2)
-                            .foregroundColor(skin.mute)
-                        Text("·")
-                            .foregroundColor(skin.mute)
-                        Text("MUTE")
-                            .font(.custom(skin.monoFont, size: 9))
-                            .tracking(1.2)
-                            .foregroundColor(skin.mute)
-                        Text("·")
-                            .foregroundColor(skin.mute)
-                        Text(time)
-                            .font(.custom(skin.monoBoldFont, size: 9))
-                            .tracking(1.2)
-                            .foregroundColor(skin.ink)
-                    }
+
+                    Text("2.0s · MUTE")
+                        .font(.custom(skin.monoFont, size: 9))
+                        .tracking(1.2)
+                        .foregroundColor(skin.mute)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .overlay(alignment: .trailing) { vDivider }
+
+                blinkStrip
+                    .padding(10)
+                    .frame(width: 200)
+            }
+        }
+    }
+
+    private func head(kindLabel: String, italic: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            HStack(spacing: 5) {
+                Text("Incoming")
+                    .font(.custom(skin.displayFont, size: 17))
+                    .fontWeight(.heavy)
+                    .foregroundColor(skin.ink)
+                if italic {
+                    Text(kindLabel)
+                        .font(.custom(skin.displayItalicFont, size: 17))
+                        .italic()
+                        .foregroundColor(skin.ink)
+                } else {
+                    Text(kindLabel)
+                        .font(.custom(skin.displayFont, size: 17))
+                        .fontWeight(.heavy)
+                        .foregroundColor(skin.ink)
                 }
             }
-            .padding(.vertical, 16)
-            .padding(.leading, 18)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
 
-            blinkStrip
-                .frame(width: 168)
-                .padding(.vertical, 16)
-                .padding(.trailing, 18)
+            Spacer()
+
+            Text("NO.\(indexNo) · \(time)")
+                .font(.custom(skin.monoBoldFont, size: 11))
+                .tracking(1.2)
+                .foregroundColor(skin.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
-        .overlay(alignment: .topTrailing) {
-            if isNew {
-                Circle()
-                    .fill(skin.accent)
-                    .frame(width: 8, height: 8)
-                    .padding(.top, 18)
-                    .padding(.trailing, 22)
-            }
-        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+        .overlay(alignment: .bottom) { hDivider }
     }
 
     private var blinkStrip: some View {
@@ -219,10 +184,9 @@ struct SwissPaperMediumView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    Rectangle()
                         .stroke(skin.ink, lineWidth: skin.ruleWidth)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
         }
     }
