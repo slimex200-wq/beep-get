@@ -15,7 +15,9 @@ import { syncWidgetData } from "@/services/widgetService";
 import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
 import { buildQuickReplyActionKey } from "@/lib/widgetActions";
 import {
+  buildDemoBlinkMessage,
   buildDemoWelcomeMessage,
+  DEMO_BLINK_SIGNAL_ID,
   DEMO_WELCOME_SIGNAL_ID,
   isDemoSignal,
 } from "@/lib/demoFriend";
@@ -53,9 +55,13 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
     set({ loading: true });
     const remote = await getReceivedMessages(userId);
-    const localDemo = get().received.find((m) => isDemoSignal(m.id));
-    const demoWelcome = localDemo ?? buildDemoWelcomeMessage(userId);
-    const received = [demoWelcome as Message, ...remote];
+    const previous = get().received;
+    const localBlink = previous.find((m) => m.id === DEMO_BLINK_SIGNAL_ID);
+    const localBeep = previous.find((m) => m.id === DEMO_WELCOME_SIGNAL_ID);
+    const demoBlink = localBlink ?? buildDemoBlinkMessage(userId);
+    const demoBeep = localBeep ?? buildDemoWelcomeMessage(userId);
+    // Blink first so the widget's latestMessage shows the 3-frame strip demo.
+    const received = [demoBlink as Message, demoBeep as Message, ...remote];
     set({ received, loading: false });
     syncWidgetData(received, friends ?? []);
   },
