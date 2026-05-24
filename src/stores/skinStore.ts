@@ -37,6 +37,7 @@ interface SkinState {
   ownedSkins: UserSkin[];
   activeSkinSlug: string;
   loading: boolean;
+  reset: () => void;
   fetchAll: () => Promise<void>;
   fetchOwned: (userId: string) => Promise<void>;
   fetchActiveSkin: (userId: string) => Promise<void>;
@@ -49,6 +50,14 @@ export const useSkinStore = create<SkinState>((set, get) => ({
   ownedSkins: [],
   activeSkinSlug: "swiss-paper",
   loading: false,
+
+  reset: () =>
+    set({
+      allSkins: [],
+      ownedSkins: [],
+      activeSkinSlug: "swiss-paper",
+      loading: false,
+    }),
 
   fetchAll: async () => {
     if (!isSupabaseConfigured) {

@@ -13,6 +13,19 @@ import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
 import { signOut } from "@/services/authService";
 import { useAuthStore } from "@/stores/authStore";
+import { useMessageStore } from "@/stores/messageStore";
+import { useFriendStore } from "@/stores/friendStore";
+import { useDictionaryStore } from "@/stores/dictionaryStore";
+import { useCollectionStore } from "@/stores/collectionStore";
+import { useSkinStore } from "@/stores/skinStore";
+
+function resetUserStores() {
+  useMessageStore.getState().reset();
+  useFriendStore.getState().reset();
+  useDictionaryStore.getState().reset();
+  useCollectionStore.getState().reset();
+  useSkinStore.getState().reset();
+}
 
 const PRIVACY_POLICY_URL =
   process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://hypeboyo.com/beep-get/privacy";
@@ -49,6 +62,7 @@ export function SettingsScreen() {
     try {
       setBusy(true);
       await signOut();
+      resetUserStores();
       setSession(null);
     } catch (err: any) {
       Alert.alert("Logout failed", err?.message ?? "Try again.");
@@ -76,6 +90,7 @@ export function SettingsScreen() {
     try {
       setBusy(true);
       await deleteAccount();
+      resetUserStores();
       setSession(null);
       Alert.alert("Account deleted", "Your BEEP-GET account deletion has been completed.");
     } catch (err: any) {

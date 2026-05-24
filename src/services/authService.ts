@@ -46,15 +46,14 @@ export async function signInWithApple() {
   });
   if (error) throw error;
   if (fullName) {
-    const { error: metadataError } = await supabase.auth.updateUser({
+    // Apple full_name metadata is a best-effort enrichment - the user can
+    // still set their nickname in onboarding. Don't block sign-in on failure.
+    await supabase.auth.updateUser({
       data: {
         full_name: fullName,
         name: fullName,
       },
     });
-    if (metadataError) {
-      console.warn("Apple profile metadata update failed", metadataError.message);
-    }
   }
   return data;
 }

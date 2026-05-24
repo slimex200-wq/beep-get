@@ -31,6 +31,7 @@ interface MessageState {
   loading: boolean;
   channel: RealtimeChannel | null;
   quickReplyActionKeys: string[];
+  reset: () => void;
   fetchReceived: (userId: string, friends?: any[]) => Promise<void>;
   fetchSaved: (userId: string) => Promise<void>;
   send: (fromId: string, toId: string, code: string, memo?: string) => Promise<void>;
@@ -48,6 +49,20 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   channel: null,
   quickReplyActionKeys: [],
 
+  reset: () => {
+    const { channel } = get();
+    if (channel) {
+      supabase.removeChannel(channel);
+    }
+    set({
+      received: [],
+      saved: [],
+      loading: false,
+      channel: null,
+      quickReplyActionKeys: [],
+    });
+  },
+
   fetchReceived: async (userId, friends?) => {
     if (isUiPreviewUser(userId)) {
       set({ received: uiPreviewMessages, loading: false });
@@ -55,16 +70,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       return;
     }
     set({ loading: true });
-    const remote = await getReceivedMessages(userId);
-    const previous = get().received;
-    const localBlink = previous.find((m) => m.id === DEMO_BLINK_SIGNAL_ID);
-    const localBeep = previous.find((m) => m.id === DEMO_WELCOME_SIGNAL_ID);
-    const demoBlink = localBlink ?? buildDemoBlinkMessage(userId);
-    const demoBeep = localBeep ?? buildDemoWelcomeMessage(userId);
-    // Blink first so the widget's latestMessage shows the 3-frame strip demo.
-    const received = [demoBlink as Message, demoBeep as Message, ...remote];
-    set({ received, loading: false });
-    syncWidgetData(received, friends ?? []);
+    try {
+      const remote = await getReceivedMessages(userId);
+      const previous = get().received;
+      const localBlink = previous.find((m) => m.id === DEMO_BLINK_SIGNAL_ID);
+      const localBeep = previous.find((m) => m.id === DEMO_WELCOME_SIGNAL_ID);
+      const demoBlink = localBlink ?? buildDemoBlinkMessage(userId);
+      const demoBeep = localBeep ?? buildDemoWelcomeMessage(userId);
+      // Blink first so the widget's latestMessage shows the 3-frame strip demo.
+      const received = [demoBlink as Message, demoBeep as Message, ...remote];
+      set({ received, loading: false });
+      syncWidgetData(received, friends ?? []);
+    } catch (err) {
+      set({ loading: false });
+      throw err;
+    }
   },
 
   fetchSaved: async (userId) => {

@@ -160,7 +160,7 @@ function reportError(err: unknown) {
       : err && typeof err === "object" && "message" in err
         ? String((err as { message?: unknown }).message)
         : "Unexpected error";
-  console.warn("CollectionScreen", message);
+  Alert.alert("BEEP-GET", message);
 }
 
 const styles = StyleSheet.create({
