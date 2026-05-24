@@ -212,6 +212,8 @@ describe("syncWidgetData", () => {
     expect(beepWidget.updateWidgetData).toHaveBeenCalledWith({
       latestMessage: null,
       recentSenders: [],
+      totalReceived: 0,
+      newCount: 0,
     });
   });
 });
