@@ -1,5 +1,7 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
+  BLINK_PLAYBACK_SIGNED_URL_TTL_SECONDS,
+  BLINK_TEASER_SIGNED_URL_TTL_SECONDS,
   getReceivedMessages,
   getMessageById,
   getSavedMessages,
@@ -229,6 +231,18 @@ describe("getReceivedMessages", () => {
     });
     expect(supabase.storage.from).toHaveBeenCalledWith("blink-thumbs");
     expect(supabase.storage.from).toHaveBeenCalledWith("blink-originals");
+    expect(createSignedUrl).toHaveBeenCalledWith(
+      "thumb.jpg",
+      BLINK_TEASER_SIGNED_URL_TTL_SECONDS
+    );
+    expect(createSignedUrl).toHaveBeenCalledWith(
+      "a.jpg",
+      BLINK_TEASER_SIGNED_URL_TTL_SECONDS
+    );
+    expect(createSignedUrl).toHaveBeenCalledWith(
+      "video.mp4",
+      BLINK_PLAYBACK_SIGNED_URL_TTL_SECONDS
+    );
   });
 
   it("returns empty array when data is null", async () => {

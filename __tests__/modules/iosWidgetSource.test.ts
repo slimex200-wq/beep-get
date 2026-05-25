@@ -9,6 +9,8 @@ describe("iOS widget source", () => {
   );
   const mediumSource = readFileSync(path.join(widgetDir, "SwissPaperMediumView.swift"), "utf8");
   const smallSource = readFileSync(path.join(widgetDir, "SwissPaperSmallView.swift"), "utf8");
+  const skinSource = readFileSync(path.join(widgetDir, "SkinTokens.swift"), "utf8");
+  const widgetSource = readFileSync(path.join(widgetDir, "BeepWidget.swift"), "utf8");
   const pluginSource = readFileSync(
     path.join(process.cwd(), "modules/beep-widget/plugin/src/withBeepWidgetIOS.ts"),
     "utf8"
@@ -36,6 +38,19 @@ describe("iOS widget source", () => {
     // single-tap-to-open Reply Room behavior).
     expect(mediumSource).toContain(".widgetURL");
     expect(smallSource).toContain(".widgetURL");
+  });
+
+  it("uses the full widget canvas instead of a nested card surface", () => {
+    expect(widgetSource).toContain(".contentMarginsDisabled()");
+    expect(skinSource).toContain("containerBackground(for: .widget)");
+    expect(mediumSource).not.toMatch(/frame\(width:\s*(200|240|260|280)/);
+    expect(smallSource).not.toMatch(/frame\(width:\s*(200|240|260|280)/);
+  });
+
+  it("renders inline demo Blink preview frames in WidgetKit", () => {
+    expect(mediumSource).toContain("DataBackedImage");
+    expect(mediumSource).toContain("base64Encoded:");
+    expect(smallSource).toContain("SignalSlotStrip");
   });
 
   it("generates native iOS extension targets for EAS prebuild", () => {

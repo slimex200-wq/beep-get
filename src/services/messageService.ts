@@ -7,6 +7,9 @@ import {
 } from "@/services/mediaStorage";
 import { notifySignal } from "@/services/pushService";
 
+export const BLINK_TEASER_SIGNED_URL_TTL_SECONDS = 60 * 30;
+export const BLINK_PLAYBACK_SIGNED_URL_TTL_SECONDS = 60;
+
 interface ValidationResult {
   valid: boolean;
   error?: string;
@@ -205,15 +208,20 @@ async function resolveSignedBlinkMediaUrl(message: LegacyMessage) {
   if (!media) return message;
 
   const [thumbnailUri, signedStripFrameUris, playbackUri] = await Promise.all([
-    signStorageKey(BLINK_THUMBS_BUCKET, media.thumbnailUri),
+    signStorageKey(
+      BLINK_THUMBS_BUCKET,
+      media.thumbnailUri,
+      BLINK_TEASER_SIGNED_URL_TTL_SECONDS
+    ),
     Promise.all(
       (media.stripFrameUris ?? []).map((uri) =>
-        signStorageKey(BLINK_THUMBS_BUCKET, uri)
+        signStorageKey(BLINK_THUMBS_BUCKET, uri, BLINK_TEASER_SIGNED_URL_TTL_SECONDS)
       )
     ),
     signStorageKey(
       BLINK_ORIGINALS_BUCKET,
-      typeof media.playbackUri === "string" ? media.playbackUri : null
+      typeof media.playbackUri === "string" ? media.playbackUri : null,
+      BLINK_PLAYBACK_SIGNED_URL_TTL_SECONDS
     ),
   ]);
 
@@ -230,12 +238,16 @@ async function resolveSignedBlinkMediaUrl(message: LegacyMessage) {
   };
 }
 
-async function signStorageKey(bucket: string, value?: string | null) {
+async function signStorageKey(
+  bucket: string,
+  value?: string | null,
+  expiresInSeconds = BLINK_PLAYBACK_SIGNED_URL_TTL_SECONDS
+) {
   if (!value || !shouldSignStorageKey(value)) return value ?? null;
 
   const { data, error } = await supabase.storage
     .from(bucket)
-    .createSignedUrl(value, 60);
+    .createSignedUrl(value, expiresInSeconds);
 
   if (error) throw error;
   return data?.signedUrl ?? value;

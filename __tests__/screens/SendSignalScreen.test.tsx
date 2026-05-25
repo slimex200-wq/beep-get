@@ -8,4 +8,12 @@ describe("SendSignalScreen product sections", () => {
       expect(source).toContain(label);
     });
   });
+
+  it("uses a two-phase Blink flow so capture preview happens before upload", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
+
+    expect(source).toContain("blinkDraft");
+    expect(source).toContain("createBlinkDraft");
+    expect(source).toContain("createTeaser: async () => blinkDraft.teaser");
+  });
 });

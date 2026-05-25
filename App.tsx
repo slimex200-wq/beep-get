@@ -40,7 +40,6 @@ const linking = {
       },
       FirstRun: "first-run",
       Send: "message/reply/:friendId/:friendName",
-      ReplyRoom: "reply/:signalId",
       WidgetStates: "widget-states",
     },
   },
@@ -111,14 +110,18 @@ export default function App() {
       }
 
       try {
-        if (action.type === "confirm") {
+        if (action.type === "open") {
+          navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
+        } else if (action.type === "confirm") {
           await read(action.signalId);
+          navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
         } else if (action.type === "save") {
           await save(action.signalId);
+          navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
         } else {
           await quickReply(action.signalId, action.code);
+          navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
         }
-        navigationRef.current?.navigate("ReplyRoom", { signalId: action.signalId });
       } catch (err: any) {
         console.warn("Widget action failed", err?.message ?? err);
       }

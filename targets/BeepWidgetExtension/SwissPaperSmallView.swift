@@ -11,189 +11,141 @@ struct SwissPaperSmallView: View {
     let hasBlinkPreview: Bool
     let stripFrameUris: [String]
     let openUrl: String?
+    let newCount: Int
 
     private let skin = BeepSkin.swissPaper
 
     var body: some View {
-        Group {
-            if kind == "blink" {
-                blinkBody
-            } else {
-                beepBody
+        GeometryReader { proxy in
+            VStack(alignment: .leading, spacing: 0) {
+                header
+                    .padding(.bottom, 7)
+
+                hDivider
+
+                Spacer(minLength: 7)
+
+                Text(code)
+                    .font(.custom(skin.monoBoldFont, size: 48))
+                    .tracking(1)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+                    .layoutPriority(2)
+
+                HStack(spacing: 5) {
+                    Text("FROM")
+                        .font(.custom(skin.monoFont, size: 9))
+                        .tracking(1.3)
+                        .foregroundColor(skin.mute)
+                    Text(fromName)
+                        .font(.custom(skin.monoBoldFont, size: 12))
+                        .tracking(0.35)
+                        .foregroundColor(skin.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .layoutPriority(1)
+                }
+
+                Spacer(minLength: 8)
+
+                SignalSlotStrip(frameUris: kind == "blink" ? stripFrameUris : [], skin: skin, spacing: 4)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 24)
+
+                HStack(alignment: .firstTextBaseline) {
+                    Text("NO.\(indexNo)")
+                        .font(.custom(skin.monoFont, size: 8))
+                        .tracking(1)
+                        .foregroundColor(skin.mute)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    Spacer(minLength: 8)
+
+                    Text(statusText)
+                        .font(.custom(skin.monoBoldFont, size: 9))
+                        .tracking(0.9)
+                        .foregroundColor(newCount > 0 || isNew ? skin.accent : skin.mute)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .layoutPriority(1)
+                }
+                .padding(.top, 6)
             }
+            .padding(11)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
         .beepWidgetBackground(skin.paper)
         .widgetURL(actionURL(openUrl))
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            kindTitle
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .layoutPriority(1)
+
+            Spacer(minLength: 8)
+
+            Text(time)
+                .font(.custom(skin.monoFont, size: 10))
+                .tracking(0.6)
+                .foregroundColor(skin.mute)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+    }
+
+    @ViewBuilder
+    private var kindTitle: some View {
+        if kind == "blink" {
+            Text("Blink")
+                .font(.custom(skin.displayItalicFont, size: 18))
+                .italic()
+                .foregroundColor(skin.ink)
+        } else {
+            Text("Beep")
+                .font(.custom(skin.displayFont, size: 17))
+                .fontWeight(.heavy)
+                .foregroundColor(skin.ink)
+        }
     }
 
     private var hDivider: some View {
         Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
     }
 
-    // ===== Beep =====
-    private var beepBody: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Beep")
-                    .font(.custom(skin.displayFont, size: 17))
-                    .fontWeight(.heavy)
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-
-                Spacer()
-
-                Text(time)
-                    .font(.custom(skin.monoFont, size: 10))
-                    .tracking(0.6)
-                    .foregroundColor(skin.mute)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            .overlay(alignment: .bottom) { hDivider }
-
-            VStack(spacing: 6) {
-                Spacer(minLength: 0)
-                Text(code)
-                    .font(.custom(skin.monoBoldFont, size: 44))
-                    .tracking(1)
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-
-                HStack(spacing: 4) {
-                    Text("FROM.")
-                        .font(.custom(skin.monoFont, size: 9))
-                        .tracking(1.4)
-                        .foregroundColor(skin.mute)
-                        .textCase(.uppercase)
-                    Text(fromName)
-                        .font(.custom(skin.monoBoldFont, size: 12))
-                        .tracking(0.4)
-                        .foregroundColor(skin.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            HStack {
-                Text("NO.\(indexNo)")
-                    .font(.custom(skin.monoFont, size: 10))
-                    .tracking(1.2)
-                    .foregroundColor(skin.mute)
-                    .lineLimit(1)
-
-                Spacer()
-
-                if isNew {
-                    Circle()
-                        .fill(skin.accent)
-                        .frame(width: 8, height: 8)
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, 8)
-            .padding(.bottom, 10)
-            .overlay(alignment: .top) { hDivider }
+    private var statusText: String {
+        if newCount > 0 {
+            return "+\(newCount) NEW"
         }
-    }
-
-    // ===== Blink =====
-    private var blinkBody: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Blink")
-                    .font(.custom(skin.displayItalicFont, size: 18))
-                    .italic()
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-
-                Spacer()
-
-                Text(time)
-                    .font(.custom(skin.monoFont, size: 10))
-                    .tracking(0.6)
-                    .foregroundColor(skin.mute)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            .overlay(alignment: .bottom) { hDivider }
-
-            blinkStrip
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            HStack(alignment: .firstTextBaseline) {
-                Text(code)
-                    .font(.custom(skin.monoBoldFont, size: 20))
-                    .tracking(1)
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-
-                Spacer()
-
-                Text(fromName)
-                    .font(.custom(skin.monoBoldFont, size: 12))
-                    .tracking(0.4)
-                    .foregroundColor(skin.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, 8)
-            .padding(.bottom, 10)
-            .overlay(alignment: .top) { hDivider }
-        }
-    }
-
-    private var blinkStrip: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<3, id: \.self) { index in
-                let uri = index < stripFrameUris.count ? stripFrameUris[index] : ""
-                Group {
-                    if let url = URL(string: uri), !uri.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image.resizable().scaledToFill()
-                            default:
-                                stripPlaceholder
-                            }
-                        }
-                    } else {
-                        stripPlaceholder
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .overlay(
-                    Rectangle()
-                        .stroke(skin.ink, lineWidth: skin.ruleWidth)
-                )
-            }
-        }
-    }
-
-    private var stripPlaceholder: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [Color(red: 0.84, green: 0.78, blue: 0.70), Color(red: 0.70, green: 0.62, blue: 0.51)]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        return isNew ? "NEW" : "READ"
     }
 
     private func actionURL(_ raw: String?) -> URL {
         URL(string: raw ?? "") ?? URL(string: "beepget://today")!
     }
 }
+
+#if DEBUG
+struct SwissPaperSmallView_Previews: PreviewProvider {
+    static var previews: some View {
+        SwissPaperSmallView(
+            kind: "blink",
+            code: "8282",
+            fromName: "Beepy",
+            time: "18:05",
+            indexNo: "01",
+            isNew: true,
+            hasBlinkPreview: true,
+            stripFrameUris: [],
+            openUrl: nil,
+            newCount: 2
+        )
+        .previewContext(WidgetPreviewContext(family: .systemSmall))
+        .previewDisplayName("Beep Get Small")
+    }
+}
+#endif

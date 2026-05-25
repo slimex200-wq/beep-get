@@ -13,6 +13,7 @@ export type WidgetActionUrls = {
 };
 
 export type WidgetAction =
+  | { type: "open"; signalId: string }
   | { type: "confirm"; signalId: string }
   | { type: "save"; signalId: string }
   | { type: "quickReply"; signalId: string; code: string };
@@ -67,6 +68,11 @@ export function buildQuickReplyClientActionId(signalId: string, code: string): s
 
 export function parseWidgetActionUrl(url: string): WidgetAction | null {
   const normalized = url.trim();
+
+  const open = normalized.match(/^beepget:\/\/reply\/([^/?#]+)(?:[?#].*)?$/);
+  if (open) {
+    return { type: "open", signalId: decodeURIComponent(open[1]) };
+  }
 
   const confirm = normalized.match(/^beepget:\/\/signal\/([^/?#]+)\/confirm(?:[?#].*)?$/);
   if (confirm) {

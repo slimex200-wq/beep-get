@@ -98,9 +98,9 @@ export function PeopleScreen() {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HeroBlock
-          titleTop="Widget"
-          titleBottom="Circle"
-          copy="Recent widget senders, quick replies, and send shortcuts stay together."
+          titleTop="Close"
+          titleBottom="Circuit"
+          copy="Close friends, last signal context, and send shortcuts stay together."
           badge={slipFriends.length.toString().padStart(2, "0")}
         />
 
@@ -110,52 +110,7 @@ export function PeopleScreen() {
           onShare={profile ? shareMyBeepId : undefined}
         />
 
-        <SectionHeader label="WIDGET CIRCLE" hint="RECENT SIGNALS" />
-        <View style={styles.widgetCircle}>
-          <View style={styles.circleSummary}>
-            <View>
-              <Text style={type.metaValue}>Recent widget senders</Text>
-              <Text style={type.tinyMono}>LATEST SIGNALS APPEAR FIRST</Text>
-            </View>
-            <View style={styles.circleCount}>
-              <Text style={type.monoValue}>{Math.min(slipFriends.length, 3).toString().padStart(2, "0")}</Text>
-            </View>
-          </View>
-          {slipFriends.length > 0 ? (
-            slipFriends.slice(0, 3).map((friend, index) => (
-              <View key={friend.id} style={[styles.circleFriend, index === 0 && styles.circleFriendLatest]}>
-                <View style={styles.circleFriendText}>
-                  <Text style={type.metaValue}>{friend.name}</Text>
-                  <Text style={type.tinyMono} numberOfLines={1}>
-                    {lastSignalByFriend.get(friend.id) ?? "QUIET"}
-                  </Text>
-                </View>
-                <View style={styles.circleActions}>
-                  <ActionButton label="BEEP" mono flex onPress={() => navigateSend(friend, "beep")} />
-                  <ActionButton label="BLINK" mono flex onPress={() => navigateSend(friend, "blink")} />
-                  <ActionButton
-                    label="WIDGET"
-                    mono
-                    flex
-                    variant="ghost"
-                    onPress={() => navigation.navigate("WidgetStates", { size: "medium" })}
-                  />
-                </View>
-              </View>
-            ))
-          ) : (
-            <View style={styles.softPanel}>
-              <Text style={type.metaValue}>No widget sender yet.</Text>
-              <Text style={type.bodyMuted}>Add a Beep ID below, then send or receive the first signal.</Text>
-              <View style={styles.softActions}>
-                <ActionButton label="INVITE" flex onPress={focusInvite} />
-                <ActionButton label="SHARE ID" flex variant="dark" onPress={profile ? shareMyBeepId : focusInvite} />
-              </View>
-            </View>
-          )}
-        </View>
-
-        <SectionHeader label="FRIENDS" hint={`${slipFriends.length} TOTAL`} />
+        <SectionHeader label="CLOSE CIRCUIT" hint={`${slipFriends.length} FRIENDS`} />
         <View style={styles.friendRow}>
           {slipFriends.length > 0 ? (
             slipFriends.map((friend) => (
@@ -166,7 +121,6 @@ export function PeopleScreen() {
                 onPress={() => navigateSend(friend, "beep")}
                 onSendBeep={() => navigateSend(friend, "beep")}
                 onSendBlink={() => navigateSend(friend, "blink")}
-                onPin={() => navigation.navigate("WidgetStates", { size: "medium" })}
               />
             ))
           ) : (
@@ -351,57 +305,6 @@ const styles = StyleSheet.create({
     ...type.codeSmall,
     lineHeight: 28,
   },
-  widgetCircle: {
-    gap: spacing[3],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: colors.paperWarm,
-  },
-  circleSummary: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[4],
-    paddingBottom: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rule,
-  },
-  circleCount: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    backgroundColor: colors.lcd,
-  },
-  circleFriend: {
-    minHeight: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    padding: spacing[3],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 9,
-    backgroundColor: "rgba(255,255,255,0.18)",
-  },
-  circleFriendLatest: {
-    borderColor: colors.ruleStrong,
-    backgroundColor: colors.paper,
-  },
-  circleFriendText: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  circleActions: {
-    width: 212,
-    flexDirection: "row",
-    gap: spacing[2],
-  },
   invitePanel: {
     gap: spacing[3],
     padding: spacing[4],
@@ -445,19 +348,5 @@ const styles = StyleSheet.create({
     borderColor: colors.ruleStrong,
     borderRadius: 12,
     backgroundColor: colors.paperWarm,
-  },
-  softPanel: {
-    minHeight: 112,
-    justifyContent: "center",
-    gap: spacing[3],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 9,
-    backgroundColor: "rgba(255,255,255,0.16)",
-  },
-  softActions: {
-    flexDirection: "row",
-    gap: spacing[3],
   },
 });

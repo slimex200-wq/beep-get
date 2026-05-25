@@ -37,6 +37,10 @@ describe("buildWidgetActionUrls", () => {
 
 describe("parseWidgetActionUrl", () => {
   it("parses widget action URLs", () => {
+    expect(parseWidgetActionUrl("beepget://reply/signal-1")).toEqual({
+      type: "open",
+      signalId: "signal-1",
+    });
     expect(parseWidgetActionUrl("beepget://signal/signal-1/confirm")).toEqual({
       type: "confirm",
       signalId: "signal-1",
@@ -53,7 +57,6 @@ describe("parseWidgetActionUrl", () => {
   });
 
   it("ignores non-widget action URLs", () => {
-    expect(parseWidgetActionUrl("beepget://reply/signal-1")).toBeNull();
     expect(parseWidgetActionUrl("https://example.com")).toBeNull();
   });
 });

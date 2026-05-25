@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WidgetKit
 
 struct SwissPaperMediumView: View {
@@ -17,161 +18,91 @@ struct SwissPaperMediumView: View {
     private let skin = BeepSkin.swissPaper
 
     var body: some View {
-        Group {
-            if kind == "blink" {
-                blinkBody
-            } else {
-                beepBody
+        GeometryReader { proxy in
+            let stripHeight = teaserStripHeight(for: proxy.size.height)
+
+            VStack(spacing: 0) {
+                head
+
+                HStack(spacing: 0) {
+                    numberBlock
+                        .padding(.leading, 16)
+                        .padding(.trailing, 12)
+                        .frame(width: max(CGFloat(96), min(CGFloat(116), proxy.size.width * 0.30)), maxHeight: .infinity, alignment: .leading)
+                        .layoutPriority(1)
+                        .overlay(alignment: .trailing) { vDivider }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("SIGNAL SLOTS")
+                                .font(.custom(skin.monoFont, size: 9))
+                                .tracking(1.2)
+                                .foregroundColor(skin.mute)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+
+                            Spacer(minLength: 8)
+
+                            Text(statusText)
+                                .font(.custom(skin.monoBoldFont, size: 10))
+                                .tracking(1.1)
+                                .foregroundColor(newCount > 0 || isNew ? skin.accent : skin.mute)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        SignalSlotStrip(frameUris: kind == "blink" ? stripFrameUris : [], skin: skin, spacing: 6)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: stripHeight)
+                            .layoutPriority(2)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .layoutPriority(2)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
         .beepWidgetBackground(skin.paper)
         .widgetURL(actionURL(openUrl))
-        .overlay(alignment: .topTrailing) {
-            if isNew {
-                Circle()
-                    .fill(skin.accent)
-                    .frame(width: 8, height: 8)
-                    .padding(.top, 14)
-                    .padding(.trailing, 14)
-            }
-        }
     }
 
-    private var hDivider: some View {
-        Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
-    }
-
-    private var headMetaText: String {
-        if totalReceived > 1 {
-            return "NO.\(indexNo) OF \(totalReceived) · \(time)"
-        }
-        return "NO.\(indexNo) · \(time)"
-    }
-    private var vDivider: some View {
-        Rectangle().fill(skin.ink).frame(width: skin.ruleWidth)
-    }
-
-    // ===== Beep =====
-    private var beepBody: some View {
-        VStack(spacing: 0) {
-            head(kindLabel: "Beep", italic: false)
-            HStack(spacing: 0) {
-                VStack {
-                    Spacer(minLength: 0)
-                    Text(code)
-                        .font(.custom(skin.monoBoldFont, size: 54))
-                        .tracking(1.2)
-                        .foregroundColor(skin.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                    Spacer(minLength: 0)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.horizontal, 16)
-                .overlay(alignment: .trailing) { vDivider }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("FROM.")
-                        .font(.custom(skin.monoFont, size: 9))
-                        .tracking(1.4)
-                        .foregroundColor(skin.mute)
-                        .textCase(.uppercase)
-                    Text(fromName)
-                        .font(.custom(skin.monoBoldFont, size: 16))
-                        .tracking(0.5)
-                        .foregroundColor(skin.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                }
-                .frame(width: 128, alignment: .leading)
-                .padding(.horizontal, 14)
-            }
-        }
-    }
-
-    // ===== Blink =====
-    private var blinkBody: some View {
-        VStack(spacing: 0) {
-            head(kindLabel: "Blink", italic: true)
-            HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Spacer(minLength: 0)
-                    Text(code)
-                        .font(.custom(skin.monoBoldFont, size: 34))
-                        .tracking(1)
-                        .foregroundColor(skin.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-
-                    HStack(spacing: 5) {
-                        Text("FROM")
-                            .font(.custom(skin.monoFont, size: 9))
-                            .tracking(1.4)
-                            .foregroundColor(skin.mute)
-                            .textCase(.uppercase)
-                        Text(fromName)
-                            .font(.custom(skin.monoBoldFont, size: 11))
-                            .tracking(0.5)
-                            .foregroundColor(skin.ink)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-
-                    Text("2.0s · MUTE")
-                        .font(.custom(skin.monoFont, size: 9))
-                        .tracking(1.2)
-                        .foregroundColor(skin.mute)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .overlay(alignment: .trailing) { vDivider }
-
-                blinkStrip
-                    .padding(10)
-                    .frame(width: 200)
-            }
-        }
-    }
-
-    private func head(kindLabel: String, italic: Bool) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+    private var head: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
             HStack(spacing: 5) {
                 Text("Incoming")
                     .font(.custom(skin.displayFont, size: 17))
                     .fontWeight(.heavy)
                     .foregroundColor(skin.ink)
-                if italic {
-                    Text(kindLabel)
-                        .font(.custom(skin.displayItalicFont, size: 17))
-                        .italic()
-                        .foregroundColor(skin.ink)
-                } else {
-                    Text(kindLabel)
-                        .font(.custom(skin.displayFont, size: 17))
-                        .fontWeight(.heavy)
-                        .foregroundColor(skin.ink)
-                }
+
+                kindTitle
             }
             .lineLimit(1)
             .minimumScaleFactor(0.7)
+            .layoutPriority(2)
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            HStack(spacing: 5) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(headMetaText)
                     .font(.custom(skin.monoBoldFont, size: 11))
-                    .tracking(1.2)
+                    .tracking(1)
                     .foregroundColor(skin.ink)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.65)
+
                 if newCount > 0 {
                     Text("+\(newCount) NEW")
                         .font(.custom(skin.monoBoldFont, size: 10))
-                        .tracking(1.4)
+                        .tracking(1.1)
                         .foregroundColor(skin.accent)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .layoutPriority(1)
                 }
             }
         }
@@ -181,22 +112,112 @@ struct SwissPaperMediumView: View {
         .overlay(alignment: .bottom) { hDivider }
     }
 
-    private var blinkStrip: some View {
-        HStack(spacing: 4) {
+    @ViewBuilder
+    private var kindTitle: some View {
+        if kind == "blink" {
+            Text("Blink")
+                .font(.custom(skin.displayItalicFont, size: 17))
+                .italic()
+                .foregroundColor(skin.ink)
+        } else {
+            Text("Beep")
+                .font(.custom(skin.displayFont, size: 17))
+                .fontWeight(.heavy)
+                .foregroundColor(skin.ink)
+        }
+    }
+
+    private var numberBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Spacer(minLength: 0)
+
+            Text(code)
+                .font(.custom(skin.monoBoldFont, size: 36))
+                .tracking(1)
+                .foregroundColor(skin.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
+                .layoutPriority(2)
+
+            HStack(spacing: 5) {
+                Text("FROM")
+                    .font(.custom(skin.monoFont, size: 9))
+                    .tracking(1.3)
+                    .foregroundColor(skin.mute)
+                Text(fromName)
+                    .font(.custom(skin.monoBoldFont, size: 11))
+                    .tracking(0.4)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+            }
+
+            Text(kind == "blink" ? "2.0s - MUTE" : "PRIVATE SIGNAL")
+                .font(.custom(skin.monoFont, size: 9))
+                .tracking(1.1)
+                .foregroundColor(skin.mute)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    private var hDivider: some View {
+        Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
+    }
+
+    private var vDivider: some View {
+        Rectangle().fill(skin.ink).frame(width: skin.ruleWidth)
+    }
+
+    private func teaserStripHeight(for widgetHeight: CGFloat) -> CGFloat {
+        min(CGFloat(56), max(CGFloat(38), widgetHeight * 0.34))
+    }
+
+    private var headMetaText: String {
+        if totalReceived > 1 {
+            return "NO.\(indexNo) OF \(totalReceived) · \(time)"
+        }
+        return "NO.\(indexNo) · \(time)"
+    }
+
+    private var statusText: String {
+        if newCount > 0 {
+            return "+\(newCount) NEW"
+        }
+        return isNew ? "NEW" : "READ"
+    }
+
+    private func actionURL(_ raw: String?) -> URL {
+        URL(string: raw ?? "") ?? URL(string: "beepget://today")!
+    }
+}
+
+struct SignalSlotStrip: View {
+    let frameUris: [String]
+    let skin: BeepSkin
+    var spacing: CGFloat = 6
+
+    var body: some View {
+        HStack(spacing: spacing) {
             ForEach(0..<3, id: \.self) { index in
-                let uri = index < stripFrameUris.count ? stripFrameUris[index] : ""
+                let uri = index < frameUris.count ? frameUris[index] : ""
                 Group {
-                    if let url = URL(string: uri), !uri.isEmpty {
+                    if uri.hasPrefix("data:image") {
+                        DataBackedImage(uri: uri, skin: skin)
+                    } else if let url = URL(string: uri), !uri.isEmpty {
                         AsyncImage(url: url) { phase in
                             switch phase {
                             case .success(let image):
                                 image.resizable().scaledToFill()
                             default:
-                                stripPlaceholder
+                                emptySlot
                             }
                         }
                     } else {
-                        stripPlaceholder
+                        emptySlot
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -209,15 +230,71 @@ struct SwissPaperMediumView: View {
         }
     }
 
-    private var stripPlaceholder: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [Color(red: 0.84, green: 0.78, blue: 0.70), Color(red: 0.66, green: 0.58, blue: 0.47)]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private func actionURL(_ raw: String?) -> URL {
-        URL(string: raw ?? "") ?? URL(string: "beepget://today")!
+    private var emptySlot: some View {
+        ZStack {
+            Color(hex: "#E7D9C8")
+            Rectangle()
+                .fill(skin.ink.opacity(0.08))
+                .frame(height: 1)
+                .rotationEffect(.degrees(-16))
+        }
     }
 }
+
+struct DataBackedImage: View {
+    let uri: String
+    let skin: BeepSkin
+
+    var body: some View {
+        if let image = decodeImage(uri) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+        } else {
+            emptySlot
+        }
+    }
+
+    private func decodeImage(_ uri: String) -> UIImage? {
+        guard let markerRange = uri.range(of: "base64,") else {
+            return nil
+        }
+        let encoded = String(uri[markerRange.upperBound...])
+        guard let data = Data(base64Encoded: encoded) else {
+            return nil
+        }
+        return UIImage(data: data)
+    }
+
+    private var emptySlot: some View {
+        ZStack {
+            Color(hex: "#E7D9C8")
+            Rectangle()
+                .fill(skin.ink.opacity(0.08))
+                .frame(height: 1)
+                .rotationEffect(.degrees(-16))
+        }
+    }
+}
+
+#if DEBUG
+struct SwissPaperMediumView_Previews: PreviewProvider {
+    static var previews: some View {
+        SwissPaperMediumView(
+            kind: "blink",
+            code: "8282",
+            fromName: "Beepy",
+            time: "18:05",
+            indexNo: "01",
+            isNew: true,
+            hasBlinkPreview: true,
+            stripFrameUris: [],
+            openUrl: nil,
+            totalReceived: 2,
+            newCount: 2
+        )
+        .previewContext(WidgetPreviewContext(family: .systemMedium))
+        .previewDisplayName("Beep Get Medium")
+    }
+}
+#endif

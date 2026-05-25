@@ -13,6 +13,8 @@ import { RecentSignalCombos, type RecentSignalCombo } from "@/components/RecentS
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
+import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
+import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 import { isDemoFriend } from "@/lib/demoFriend";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { sendBlinkVideo } from "@/services/blinkSendService";
@@ -44,6 +46,7 @@ export function SendSignalScreen() {
   const [memo, setMemo] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [blinkDraft, setBlinkDraft] = useState<BlinkDraft | null>(null);
   const previewMode = Boolean(profile && isUiPreviewUser(profile.id));
 
   useEffect(() => {
@@ -92,6 +95,10 @@ export function SendSignalScreen() {
   }, [params.friendId, selectedRecipientId, friendOptions]);
 
   const recipient = friendOptions.find((friend) => friend.id === selectedRecipientId) ?? friendOptions[0] ?? null;
+
+  useEffect(() => {
+    setBlinkDraft(null);
+  }, [recipient?.id]);
 
   const slotDeck = useMemo(() => {
     const userSlots = entries.map((entry) => entry.code).filter(Boolean);
@@ -197,8 +204,38 @@ export function SendSignalScreen() {
       return;
     }
 
-    if (previewMode) {
-      Alert.alert("Blink preview", `2 sec Blink previewed to ${recipient.name}`);
+    if (!blinkDraft && previewMode) {
+      setBlinkDraft(createPreviewBlinkDraft());
+      Alert.alert("Blink preview", `3 frame Blink preview is ready for ${recipient.name}`);
+      return;
+    }
+
+    if (blinkDraft) {
+      if (previewMode) {
+        Alert.alert("Blink preview", `2 sec Blink previewed to ${recipient.name}`);
+        setBlinkDraft(null);
+        setMemo("");
+        return;
+      }
+
+      setSending(true);
+      try {
+        await sendBlinkVideo({
+          senderId: profile.id,
+          receiverId: recipient.id,
+          code,
+          memo: memo || undefined,
+          video: blinkDraft.video,
+          createTeaser: async () => blinkDraft.teaser,
+        });
+        Alert.alert("Blink sent", `2 sec Blink to ${recipient.name}`);
+        setBlinkDraft(null);
+        setMemo("");
+      } catch (err: any) {
+        Alert.alert("Blink failed", err?.message ?? "Try again.");
+      } finally {
+        setSending(false);
+      }
       return;
     }
 
@@ -223,19 +260,13 @@ export function SendSignalScreen() {
       });
       if (!captured?.uri) throw new Error("Camera did not return a video file.");
 
-      await sendBlinkVideo({
+      const draft = await createBlinkDraft({
         senderId: profile.id,
         receiverId: recipient.id,
-        code,
-        memo: memo || undefined,
-        video: {
-          uri: captured.uri,
-          durationMs: BLINK_MAX_DURATION_MS,
-          mimeType: "video/mp4",
-        },
+        videoUri: captured.uri,
       });
-      Alert.alert("Blink sent", `2 sec Blink to ${recipient.name}`);
-      setMemo("");
+      setBlinkDraft(draft);
+      Alert.alert("Blink preview ready", "Check the 3 frames, then send or retake.");
     } catch (err: any) {
       Alert.alert("Blink failed", err?.message ?? "Try again.");
     } finally {
@@ -329,6 +360,8 @@ export function SendSignalScreen() {
       memo={memo}
       sending={sending}
       recording={recording}
+      hasCapturedBlink={Boolean(blinkDraft)}
+      previewFrameUris={blinkDraft?.previewFrameUris}
       cameraPermissionGranted={Boolean(cameraPermission?.granted)}
       cameraRef={cameraRef}
       onCodeChange={setCode}
@@ -336,12 +369,33 @@ export function SendSignalScreen() {
       onPreset={setCode}
       onRequestPermission={() => requestCameraPermission()}
       onSend={sendBlink}
-      onRetake={() => setMemo("")}
+      onRetake={() => setBlinkDraft(null)}
       onBack={goBackToFlow}
       onOpenLogs={openLogs}
       previewMode={previewMode}
     />
   );
+}
+
+function createPreviewBlinkDraft(): BlinkDraft {
+  return {
+    video: {
+      uri: "preview-private-playback",
+      durationMs: BLINK_MAX_DURATION_MS,
+      mimeType: "video/mp4",
+    },
+    teaser: {
+      thumbnailKey: null,
+      stripKeys: [],
+      assets: DEMO_BLINK_FRAME_DATA_URIS.map((uri, index) => ({
+        uri,
+        objectKey: `preview-strip-${index + 1}`,
+        mimeType: "image/jpeg" as const,
+        timeMs: Math.floor(BLINK_MAX_DURATION_MS * (index / 3)),
+      })),
+    },
+    previewFrameUris: [...DEMO_BLINK_FRAME_DATA_URIS],
+  };
 }
 
 function ModeButton({

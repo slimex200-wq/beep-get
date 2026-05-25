@@ -3,6 +3,11 @@
 // Send actions to this id short-circuit with a friendly alert instead of
 // hitting send_beep; nothing reaches the server.
 //
+import {
+  DEMO_BLINK_FRAME_DATA_URIS,
+  DEMO_BLINK_THUMBNAIL_URI,
+} from "@/lib/demoBlinkFrameData";
+
 // When a real system-managed demo profile is registered in production, this
 // id can be swapped to the server-side uuid and the client-side prepend can
 // be removed.
@@ -59,8 +64,8 @@ export function buildDemoBlinkMessage(ownerId: string) {
     media: {
       durationMs: 2000,
       status: "processed" as const,
-      thumbnailUri: "",
-      stripFrameUris: [] as string[],
+      thumbnailUri: DEMO_BLINK_THUMBNAIL_URI,
+      stripFrameUris: [...DEMO_BLINK_FRAME_DATA_URIS],
       playbackUri: require("../../assets/demo/beepy-blink.mp4") as number,
     },
   };

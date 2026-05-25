@@ -31,7 +31,9 @@ export function FriendCard({ friend, lastSignal, onPress, onSendBeep, onSendBlin
         <ActionButton label="SEND BEEP" mono flex onPress={onSendBeep} />
         <ActionButton label="SEND BLINK" mono flex onPress={onSendBlink} />
       </View>
-      <ActionButton label="WIDGET" mono variant="ghost" onPress={onPin} />
+      {onPin ? (
+        <ActionButton label="SETUP" mono variant="ghost" onPress={onPin} />
+      ) : null}
     </Pressable>
   );
 }

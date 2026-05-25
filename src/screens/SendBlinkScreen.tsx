@@ -20,6 +20,8 @@ type Props = {
   memo: string;
   sending: boolean;
   recording: boolean;
+  hasCapturedBlink?: boolean;
+  previewFrameUris?: string[] | null;
   cameraPermissionGranted: boolean;
   cameraRef: React.RefObject<CameraView | null>;
   onCodeChange: (code: string) => void;
@@ -42,6 +44,8 @@ export function SendBlinkScreen({
   memo,
   sending,
   recording,
+  hasCapturedBlink = false,
+  previewFrameUris,
   cameraPermissionGranted,
   cameraRef,
   onCodeChange,
@@ -54,6 +58,14 @@ export function SendBlinkScreen({
   onOpenLogs,
   previewMode = false,
 }: Props) {
+  const primaryLabel = recording
+    ? "RECORDING 2 SEC"
+    : sending
+      ? "SENDING"
+      : hasCapturedBlink
+        ? "SEND BLINK"
+        : "CAPTURE BLINK";
+
   return (
     <AppSurface>
       <HeaderBar title="SEND BLINK" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
@@ -137,13 +149,20 @@ export function SendBlinkScreen({
             style={styles.memoInput}
           />
 
-          <Text style={type.tinyMono}>PREVIEW  3 FRAMES</Text>
-          <BlinkStrip compact />
+          <Text style={type.tinyMono}>
+            {hasCapturedBlink ? "PREVIEW  3 FRAMES READY" : "PREVIEW  3 FRAMES"}
+          </Text>
+          <BlinkStrip compact frameUris={previewFrameUris} />
         </SlipFrame>
         <View style={styles.actions}>
-          <ActionButton label="RETAKE" flex onPress={onRetake} disabled={sending || recording} />
           <ActionButton
-            label={recording ? "RECORDING 2 SEC" : sending ? "SENDING" : "SEND BLINK"}
+            label="RETAKE"
+            flex
+            onPress={onRetake}
+            disabled={!hasCapturedBlink || sending || recording}
+          />
+          <ActionButton
+            label={primaryLabel}
             variant="dark"
             flex
             onPress={onSend}

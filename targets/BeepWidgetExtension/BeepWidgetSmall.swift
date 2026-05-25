@@ -15,7 +15,8 @@ struct BeepWidgetSmallView: View {
                 isNew: !msg.isRead,
                 hasBlinkPreview: msg.teaser != nil,
                 stripFrameUris: msg.teaser?.stripFrameUris ?? [],
-                openUrl: msg.actions?.openReplyRoomUrl
+                openUrl: msg.actions?.openReplyRoomUrl,
+                newCount: entry.newCount
             )
         } else {
             PlaceholderSmallView()
@@ -57,24 +58,69 @@ struct PlaceholderSmallView: View {
     private let skin = BeepSkin.swissPaper
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text("BEEP-GET")
-                .font(.custom(skin.displayFont, size: 13))
-                .fontWeight(.heavy)
-                .foregroundColor(skin.ink)
-            Text("Waiting")
-                .font(.custom(skin.monoFont, size: 10))
-                .tracking(1.2)
-                .foregroundColor(skin.mute)
-                .textCase(.uppercase)
+        GeometryReader { proxy in
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Beep")
+                        .font(.custom(skin.displayFont, size: 17))
+                        .fontWeight(.heavy)
+                        .foregroundColor(skin.ink)
+                    Spacer(minLength: 8)
+                    Text("--:--")
+                        .font(.custom(skin.monoFont, size: 10))
+                        .tracking(0.6)
+                        .foregroundColor(skin.mute)
+                }
+                .padding(.bottom, 7)
+
+                Rectangle().fill(skin.ink).frame(height: skin.ruleWidth)
+
+                Spacer(minLength: 8)
+
+                Text("WAIT")
+                    .font(.custom(skin.monoBoldFont, size: 35))
+                    .tracking(1)
+                    .foregroundColor(skin.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+
+                HStack(spacing: 5) {
+                    Text("FROM")
+                        .font(.custom(skin.monoFont, size: 9))
+                        .tracking(1.2)
+                        .foregroundColor(skin.mute)
+                    Text("BEEP-GET")
+                        .font(.custom(skin.monoBoldFont, size: 11))
+                        .tracking(0.3)
+                        .foregroundColor(skin.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+
+                Spacer(minLength: 8)
+
+                SignalSlotStrip(frameUris: [], skin: skin, spacing: 4)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 24)
+
+                HStack {
+                    Text("SLOTS")
+                        .font(.custom(skin.monoFont, size: 8))
+                        .tracking(1)
+                        .foregroundColor(skin.mute)
+                    Spacer(minLength: 8)
+                    Text("WAITING")
+                        .font(.custom(skin.monoBoldFont, size: 9))
+                        .tracking(0.9)
+                        .foregroundColor(skin.mute)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .padding(.top, 6)
+            }
+            .padding(11)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: skin.innerRadius, style: .continuous)
-                .stroke(skin.ink, lineWidth: skin.ruleWidth)
-                .padding(10)
-        )
         .beepWidgetBackground(skin.paper)
     }
 }

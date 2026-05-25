@@ -66,6 +66,7 @@ struct BeepWidget: Widget {
         .configurationDisplayName("Beep Get")
         .description("Latest Beep or Blink with quick reply.")
         .supportedFamilies([.systemSmall, .systemMedium])
+        .contentMarginsDisabled()
     }
 }
 

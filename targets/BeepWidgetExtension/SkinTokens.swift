@@ -53,16 +53,16 @@ struct BeepSkin: Sendable {
 
     static let swissPaper = BeepSkin(
         id: .swissPaper,
-        paper: Color(hex: "#F2EDE4"),
+        paper: Color(hex: "#F2E6D6"),
         ink: Color(hex: "#0A0A0A"),
-        mute: Color(hex: "#6B6560"),
+        mute: Color(hex: "#5E5750"),
         accent: Color(hex: "#D8361E"),
         displayFont: "Fraunces-Regular",
         displayItalicFont: "Fraunces-Italic",
         monoFont: "IBMPlexMono",
         monoMediumFont: "IBMPlexMono-Medium",
         monoBoldFont: "IBMPlexMono-Bold",
-        ruleWidth: 1,
+        ruleWidth: 1.15,
         outerRadius: 22,
         innerRadius: 14,
         decoration: .dotCircle

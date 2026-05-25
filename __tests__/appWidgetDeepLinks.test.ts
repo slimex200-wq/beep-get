@@ -11,7 +11,12 @@ describe("App widget deep-link handling", () => {
   });
 
   it("routes completed widget actions into the Reply Room", () => {
+    expect(source).toContain('action.type === "open"');
     expect(source).toContain('navigationRef.current?.navigate("ReplyRoom"');
     expect(source).toContain("Widget action failed");
+  });
+
+  it("keeps widget open links in the deferred widget handler", () => {
+    expect(source).not.toContain('ReplyRoom: "reply/:signalId"');
   });
 });

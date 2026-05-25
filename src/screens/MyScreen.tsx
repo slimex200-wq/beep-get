@@ -152,9 +152,7 @@ export function MyScreen() {
           <View style={styles.toolGrid}>
             <ToolButton label="WIDGET SETUP" onPress={() => navigation.navigate("WidgetStates", { size: "medium" })} />
             <ToolButton label="CODES" onPress={() => navigation.navigate("Dictionary")} />
-            <ToolButton label="COLLECTION" onPress={() => navigation.navigate("Collection")} />
             <ToolButton label="LOGS" onPress={() => navigation.navigate("Logs")} />
-            <ToolButton label="STUDIO" onPress={() => navigation.navigate("StudioTools")} />
             <ToolButton label="ACCOUNT" onPress={() => navigation.navigate("Account")} />
           </View>
         </View>

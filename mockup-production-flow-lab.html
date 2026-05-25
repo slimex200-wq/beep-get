@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beep Get Production Flow Lab</title>
+  <style>
+    :root {
+      --stage: #111111;
+      --ink: #171411;
+      --paper: #f5ecdd;
+      --paper-2: #fff7e8;
+      --paper-3: #ead8c5;
+      --rule: #b99c7e;
+      --rule-soft: rgba(23, 20, 17, 0.18);
+      --red: #e04d38;
+      --green: #bedf6a;
+      --blue: #9eb8d9;
+      --yellow: #f0c64e;
+      --muted: #776858;
+      --white: #fffaf0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--stage);
+      color: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .shell {
+      min-height: 100vh;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(245, 236, 221, 0.18);
+    }
+
+    .kicker,
+    .mono,
+    .label,
+    button {
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .kicker {
+      font-size: 11px;
+      color: rgba(245, 236, 221, 0.68);
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 0;
+      font-size: clamp(30px, 5vw, 56px);
+      line-height: 0.96;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      max-width: 540px;
+      margin: 0;
+      color: rgba(245, 236, 221, 0.74);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 22px 0;
+    }
+
+    button {
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1px solid rgba(245, 236, 221, 0.26);
+      background: transparent;
+      color: var(--paper);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.active {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 30px 0 12px;
+      border-bottom: 1px solid rgba(245, 236, 221, 0.16);
+      padding-bottom: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .section-title p {
+      margin: 0;
+      max-width: 560px;
+      color: rgba(245, 236, 221, 0.68);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .app-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(240px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .swift-board {
+      display: grid;
+      grid-template-columns: minmax(180px, max-content) minmax(360px, max-content) 1fr;
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 28px;
+    }
+
+    .swift-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .widget-device {
+      padding: 18px;
+      border: 1px dashed rgba(245, 236, 221, 0.28);
+      background: #202020;
+      width: max-content;
+    }
+
+    .swift-widget {
+      --swift-paper: #f2e6d6;
+      --swift-ink: #0a0a0a;
+      --swift-mute: #5e5750;
+      --swift-accent: #d8361e;
+      --swift-rule: 1.15px;
+      background: var(--swift-paper);
+      color: var(--swift-ink);
+      overflow: hidden;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .swift-widget * {
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    .swift-small {
+      width: 158px;
+      height: 158px;
+      padding: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .swift-medium {
+      width: 338px;
+      height: 158px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .swift-head-small,
+    .swift-head-medium,
+    .swift-bottom-meta,
+    .swift-slots-head,
+    .swift-meta-pair {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .swift-head-small {
+      padding-bottom: 7px;
+    }
+
+    .swift-head-medium {
+      padding: 12px 16px 10px;
+      border-bottom: var(--swift-rule) solid var(--swift-ink);
+    }
+
+    .swift-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      line-height: 1;
+      font-style: italic;
+      color: var(--swift-ink);
+      white-space: nowrap;
+    }
+
+    .swift-title-medium {
+      display: flex;
+      gap: 5px;
+      align-items: baseline;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      line-height: 1;
+      color: var(--swift-ink);
+      white-space: nowrap;
+    }
+
+    .swift-title-medium strong {
+      font-weight: 900;
+    }
+
+    .swift-title-medium em {
+      font-style: italic;
+    }
+
+    .swift-time,
+    .swift-kicker,
+    .swift-meta,
+    .swift-state {
+      color: var(--swift-mute);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .swift-time {
+      font-size: 10px;
+      letter-spacing: 0.6px;
+    }
+
+    .swift-meta {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--swift-ink);
+    }
+
+    .swift-state {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+      color: var(--swift-accent);
+    }
+
+    .swift-rule {
+      height: var(--swift-rule);
+      background: var(--swift-ink);
+      flex: 0 0 auto;
+    }
+
+    .swift-small-code {
+      margin-top: 7px;
+      font-size: 48px;
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--swift-ink);
+      white-space: nowrap;
+    }
+
+    .swift-from {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .swift-from span:first-child {
+      font-size: 9px;
+      letter-spacing: 1.3px;
+      color: var(--swift-mute);
+    }
+
+    .swift-from span:last-child {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.35px;
+      color: var(--swift-ink);
+    }
+
+    .swift-small-spacer {
+      flex: 1 1 auto;
+      min-height: 8px;
+    }
+
+    .swift-slot-strip {
+      display: flex;
+      gap: 4px;
+      width: 100%;
+      flex: 0 0 auto;
+    }
+
+    .swift-slot-strip.medium {
+      gap: 6px;
+      height: 54px;
+    }
+
+    .swift-slot-strip.small {
+      height: 24px;
+    }
+
+    .swift-slot {
+      flex: 1 1 0;
+      height: 100%;
+      border: var(--swift-rule) solid var(--swift-ink);
+      overflow: hidden;
+      background: #e7d9c8;
+      position: relative;
+    }
+
+    .swift-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 48%;
+      display: block;
+    }
+
+    .swift-bottom-meta {
+      padding-top: 6px;
+    }
+
+    .swift-bottom-meta span:first-child {
+      font-size: 8px;
+      letter-spacing: 1px;
+      color: var(--swift-mute);
+    }
+
+    .swift-bottom-meta span:last-child {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      color: var(--swift-accent);
+    }
+
+    .swift-medium-body {
+      flex: 1 1 auto;
+      display: flex;
+      min-height: 0;
+    }
+
+    .swift-medium-number {
+      width: 101px;
+      padding: 0 12px 0 16px;
+      border-right: var(--swift-rule) solid var(--swift-ink);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .swift-medium-code {
+      font-size: 32px;
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: var(--swift-ink);
+      white-space: nowrap;
+    }
+
+    .swift-medium-from span:first-child {
+      font-size: 9px;
+    }
+
+    .swift-medium-from span:last-child {
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+
+    .swift-private {
+      font-size: 9px;
+      letter-spacing: 1.1px;
+      color: var(--swift-mute);
+      white-space: nowrap;
+    }
+
+    .swift-medium-slots {
+      flex: 1 1 auto;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .swift-slots-head {
+      flex: 0 0 auto;
+      margin-bottom: auto;
+    }
+
+    .swift-kicker {
+      font-size: 9px;
+      letter-spacing: 1.2px;
+    }
+
+    .swift-notes {
+      border: 1px solid rgba(245, 236, 221, 0.18);
+      color: rgba(245, 236, 221, 0.72);
+      padding: 14px;
+      line-height: 1.45;
+      font-size: 13px;
+      max-width: 460px;
+    }
+
+    .panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--paper);
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .phone {
+      min-height: 720px;
+      background: var(--paper);
+      color: var(--ink);
+      border: 1px solid rgba(245, 236, 221, 0.32);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .phone.compact,
+    .phone.compact .screen {
+      min-height: 680px;
+    }
+
+    .screen {
+      min-height: 720px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .app-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 34px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--red);
+      display: inline-block;
+    }
+
+    .tiny {
+      font-size: 10px;
+      line-height: 1.3;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .mode-strip,
+    .slot-row,
+    .action-row,
+    .tool-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .mode-strip button,
+    .slot,
+    .mini-action,
+    .tool {
+      flex: 1;
+      min-height: 34px;
+      border: 1px solid var(--ink);
+      background: rgba(255, 255, 255, 0.24);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .mode-strip button.active,
+    .mini-action.dark,
+    .tool.dark {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .send-main {
+      border: 1px solid var(--ink);
+      background: var(--paper-2);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .recipient-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 10px;
+    }
+
+    .code-big {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 64px;
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .memo {
+      min-height: 54px;
+      border: 1px solid var(--rule);
+      padding: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+    }
+
+    .camera {
+      min-height: 210px;
+      background: #141414;
+      color: var(--paper);
+      border: 1px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .camera::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(245, 236, 221, 0.28);
+    }
+
+    .frame-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      min-height: 92px;
+    }
+
+    .frame-strip img,
+    .frame-placeholder {
+      width: 100%;
+      height: 92px;
+      object-fit: cover;
+      background: #1a1a1a;
+      border: 1px solid var(--ink);
+    }
+
+    .widget-teaser-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      width: 100%;
+    }
+
+    .widget-teaser-strip img,
+    .widget-teaser-slot {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      aspect-ratio: 1.14 / 1;
+      object-fit: cover;
+      object-position: 50% 48%;
+      background: #171717;
+      border: 1px solid var(--ink);
+    }
+
+    .widget-small .widget-teaser-strip {
+      margin-top: auto;
+    }
+
+    .widget-medium-body {
+      display: grid;
+      grid-template-columns: minmax(72px, 0.72fr) minmax(104px, 1.28fr);
+      gap: 10px;
+      align-items: end;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .widget-medium-body .widget-teaser-strip {
+      align-self: end;
+    }
+
+    .deck-mini {
+      border: 1px solid var(--rule);
+      background: rgba(255, 255, 255, 0.18);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 8px;
+    }
+
+    .compact-select {
+      min-height: 42px;
+      border: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      background: var(--paper-2);
+    }
+
+    .widget-lab-preview {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 10px;
+    }
+
+    .widget-small,
+    .widget-medium {
+      background: var(--paper-2);
+      border: 1px solid var(--ink);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .widget-small {
+      aspect-ratio: 1 / 1;
+    }
+
+    .widget-medium {
+      min-height: 145px;
+    }
+
+    .rule {
+      height: 1px;
+      background: var(--ink);
+      opacity: 0.72;
+    }
+
+    .widget-code {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 42px;
+      line-height: 0.9;
+      font-weight: 900;
+    }
+
+    .home-feed,
+    .friend-list,
+    .room-stack,
+    .playback-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .incoming-slip,
+    .friend-row,
+    .room-tile,
+    .player-card {
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .incoming-slip.primary {
+      border-color: var(--ink);
+      min-height: 184px;
+    }
+
+    .slip-topline,
+    .friend-topline,
+    .tabbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .slip-code {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 52px;
+      line-height: 0.92;
+      font-weight: 900;
+    }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .micro-card {
+      min-height: 72px;
+      border: 1px solid var(--rule);
+      background: rgba(255, 255, 255, 0.18);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .avatar-stamp {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 900;
+    }
+
+    .friend-row {
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+    }
+
+    .status-pill {
+      min-width: 52px;
+      min-height: 28px;
+      border: 1px solid var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .room-tile.important {
+      border-color: var(--ink);
+      background: var(--paper-2);
+    }
+
+    .room-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 8px;
+    }
+
+    .video-stage {
+      min-height: 280px;
+      background: #151515;
+      border: 1px solid var(--ink);
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-stage::before,
+    .video-stage::after {
+      content: "";
+      position: absolute;
+      inset: 22px;
+      border: 1px solid rgba(245, 236, 221, 0.2);
+    }
+
+    .video-stage::after {
+      inset: auto 24px 28px;
+      height: 4px;
+      background: var(--paper);
+      border: 0;
+      opacity: 0.68;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .timeline img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border: 1px solid var(--ink);
+      background: #171717;
+    }
+
+    .bottom-nav {
+      margin-top: auto;
+      border-top: 1px solid var(--rule);
+      padding-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .bottom-nav span {
+      text-align: center;
+    }
+
+    .bottom-nav .active {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .lab-block,
+    .archive-row {
+      border: 1px solid var(--rule);
+      background: rgba(255, 255, 255, 0.2);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .slot-editor {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .archive-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 82px;
+      border: 1px solid var(--ink);
+      background: var(--paper-2);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .badge {
+      min-height: 92px;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .badge.locked {
+      opacity: 0.52;
+    }
+
+    .next-note {
+      margin-top: 18px;
+      color: rgba(245, 236, 221, 0.72);
+      max-width: 760px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1080px) {
+      .board,
+      .app-board,
+      .swift-board {
+        grid-template-columns: 1fr;
+      }
+
+      .phone,
+      .screen {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        padding: 16px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .deck-grid,
+      .widget-lab-preview,
+      .archive-stats,
+      .app-board,
+      .swift-board {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="kicker">BEEP-GET / production flow lab</div>
+        <h1>Send first. Widget second. Archive later.</h1>
+      </div>
+      <p class="summary">
+        This mockup makes the actual send controls larger, turns Studio into Widget Lab,
+        and reframes Collection as a personal signal archive instead of a half-finished reward shop.
+      </p>
+    </header>
+
+    <div class="controls" aria-label="Mockup controls">
+      <button class="active" data-mode="blink">SEND: BLINK</button>
+      <button data-mode="beep">SEND: BEEP</button>
+      <button data-mode="captured">BLINK CAPTURED</button>
+    </div>
+
+    <section class="section-title">
+      <h2>Actual WidgetKit Mirror</h2>
+      <p>
+        This section mirrors the current SwiftUI widget code, not the product-direction mockup.
+        It follows the small and medium layouts in `SwissPaperSmallView.swift` and `SwissPaperMediumView.swift`.
+      </p>
+    </section>
+
+    <section class="swift-board" aria-label="actual SwiftUI WidgetKit layout mirror">
+      <article class="swift-card">
+        <div class="panel-title">
+          <h2>systemSmall</h2>
+          <span class="tiny">158 x 158 QA frame</span>
+        </div>
+        <div class="widget-device">
+          <div class="swift-widget swift-small">
+            <div class="swift-head-small">
+              <span class="swift-title">Blink</span>
+              <span class="swift-time">18:05</span>
+            </div>
+            <div class="swift-rule"></div>
+            <div class="swift-small-code">8282</div>
+            <div class="swift-from">
+              <span>FROM</span>
+              <span>Beepy</span>
+            </div>
+            <div class="swift-small-spacer"></div>
+            <div class="swift-slot-strip small">
+              <div class="swift-slot"><img src="mockup-assets/blink-frames/frame1.jpg" alt="" /></div>
+              <div class="swift-slot"><img src="mockup-assets/blink-frames/frame2.jpg" alt="" /></div>
+              <div class="swift-slot"><img src="mockup-assets/blink-frames/frame3.jpg" alt="" /></div>
+            </div>
+            <div class="swift-bottom-meta">
+              <span>NO.01</span>
+              <span>+2 NEW</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="swift-card">
+        <div class="panel-title">
+          <h2>systemMedium</h2>
+          <span class="tiny">338 x 158 QA frame</span>
+        </div>
+        <div class="widget-device">
+          <div class="swift-widget swift-medium">
+            <div class="swift-head-medium">
+              <div class="swift-title-medium">
+                <strong>Incoming</strong>
+                <em>Blink</em>
+              </div>
+              <div class="swift-meta-pair">
+                <span class="swift-meta">NO.01 OF 2 · 18:05</span>
+                <span class="swift-state">+2 NEW</span>
+              </div>
+            </div>
+            <div class="swift-medium-body">
+              <div class="swift-medium-number">
+                <div class="swift-medium-code">8282</div>
+                <div class="swift-from swift-medium-from">
+                  <span>FROM</span>
+                  <span>Beepy</span>
+                </div>
+                <div class="swift-private">2.0s - MUTE</div>
+              </div>
+              <div class="swift-medium-slots">
+                <div class="swift-slots-head">
+                  <span class="swift-kicker">SIGNAL SLOTS</span>
+                  <span class="swift-state">+2 NEW</span>
+                </div>
+                <div class="swift-slot-strip medium">
+                  <div class="swift-slot"><img src="mockup-assets/blink-frames/frame1.jpg" alt="" /></div>
+                  <div class="swift-slot"><img src="mockup-assets/blink-frames/frame2.jpg" alt="" /></div>
+                  <div class="swift-slot"><img src="mockup-assets/blink-frames/frame3.jpg" alt="" /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="swift-notes">
+        <strong>QA note:</strong> this is the current Swift layout translated to HTML.
+        The real device can vary a few points by iPhone size and iOS widget margins, but the internal hierarchy,
+        padding, divider placement, code scale, and teaser-strip height match the code path we are editing.
+      </aside>
+    </section>
+
+    <section class="board">
+      <article class="panel">
+        <div class="panel-title">
+          <h2>1. Send Tab</h2>
+          <span class="tiny">real controls get the space</span>
+        </div>
+        <div class="phone">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">SEND</span>
+              <span class="tiny">LIVE <span class="dot"></span></span>
+            </div>
+
+            <div class="deck-mini">
+              <div class="tiny">compact signal deck</div>
+              <div class="deck-grid">
+                <div class="compact-select">
+                  <span class="mono">TO. Beepy</span>
+                  <span class="tiny">NO 01</span>
+                </div>
+                <div class="mode-strip">
+                  <button class="mode-beep">BEEP</button>
+                  <button class="mode-blink active">BLINK</button>
+                </div>
+              </div>
+              <div class="slot-row">
+                <div class="slot">8282</div>
+                <div class="slot">486</div>
+                <div class="slot">OPEN</div>
+              </div>
+            </div>
+
+            <div class="send-main" id="send-main">
+              <div class="recipient-line">
+                <div>
+                  <div class="tiny">outgoing blink</div>
+                  <strong>2 second private signal</strong>
+                </div>
+                <div class="mono">18:05</div>
+              </div>
+
+              <div class="blink-only">
+                <div class="camera">
+                  <span class="mono">CAMERA / TAP TO CAPTURE</span>
+                </div>
+                <div class="tiny">preview 3 frames</div>
+                <div class="frame-strip">
+                  <div class="frame-placeholder"></div>
+                  <div class="frame-placeholder"></div>
+                  <div class="frame-placeholder"></div>
+                </div>
+              </div>
+
+              <div class="beep-only" hidden>
+                <div class="tiny">code / token</div>
+                <div class="code-big">8282</div>
+                <div class="memo">tiny note...</div>
+              </div>
+
+              <div class="action-row">
+                <div class="mini-action">RETAKE</div>
+                <div class="mini-action dark" id="primary-action">CAPTURE BLINK</div>
+              </div>
+            </div>
+
+            <div class="deck-mini">
+              <div class="tiny">recent combos stay secondary</div>
+              <div class="slot-row">
+                <div class="slot">Beepy + 8282</div>
+                <div class="slot">Mina + 486</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <h2>2. Widget Lab</h2>
+          <span class="tiny">Studio becomes useful</span>
+        </div>
+        <div class="phone">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">WIDGET LAB</span>
+              <span class="tiny">SYNC OK</span>
+            </div>
+
+            <div class="widget-lab-preview">
+              <div class="widget-small">
+                <div class="tiny">Blink 18:05</div>
+                <div class="rule"></div>
+                <div class="widget-code">8282</div>
+                <div class="tiny">FROM Beepy</div>
+                <div class="widget-teaser-strip" aria-label="cropped 3 frame widget teaser">
+                  <img src="mockup-assets/blink-frames/frame1.jpg" alt="" />
+                  <img src="mockup-assets/blink-frames/frame2.jpg" alt="" />
+                  <img src="mockup-assets/blink-frames/frame3.jpg" alt="" />
+                </div>
+              </div>
+
+              <div class="widget-medium">
+                <div class="recipient-line">
+                  <span class="mono">Incoming Blink</span>
+                  <span class="tiny">+2 NEW</span>
+                </div>
+                <div class="rule"></div>
+                <div class="widget-medium-body">
+                  <div>
+                    <div class="tiny">NO.</div>
+                    <div class="widget-code">8282</div>
+                    <div class="tiny">FROM Beepy</div>
+                  </div>
+                  <div class="widget-teaser-strip" aria-label="cropped 3 frame widget teaser">
+                    <img src="mockup-assets/blink-frames/frame1.jpg" alt="" />
+                    <img src="mockup-assets/blink-frames/frame2.jpg" alt="" />
+                    <img src="mockup-assets/blink-frames/frame3.jpg" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lab-block">
+              <div class="tiny">reply slot editor</div>
+              <div class="slot-editor">
+                <div class="slot">OK</div>
+                <div class="slot">8282</div>
+                <div class="slot">OPEN</div>
+              </div>
+              <div class="tool-row">
+                <div class="tool">TEST TAP</div>
+                <div class="tool dark">SYNC WIDGET</div>
+              </div>
+            </div>
+
+            <div class="lab-block">
+              <div class="tiny">diagnostics are still here, but quiet</div>
+              <div class="recipient-line">
+                <span>App Group data</span>
+                <span class="mono">READY</span>
+              </div>
+              <div class="recipient-line">
+                <span>Last widget reload</span>
+                <span class="mono">18:05</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <h2>3. Signal Archive</h2>
+          <span class="tiny">Collection gets a reason</span>
+        </div>
+        <div class="phone">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">ARCHIVE</span>
+              <span class="tiny">PRIVATE</span>
+            </div>
+
+            <div class="archive-stats">
+              <div class="stat">
+                <span class="tiny">favorite code</span>
+                <strong>8282</strong>
+              </div>
+              <div class="stat">
+                <span class="tiny">blinks saved</span>
+                <strong>12</strong>
+              </div>
+              <div class="stat">
+                <span class="tiny">close streak</span>
+                <strong>7d</strong>
+              </div>
+            </div>
+
+            <div class="archive-row">
+              <div class="recipient-line">
+                <strong>Recent signal slips</strong>
+                <span class="tiny">saved only</span>
+              </div>
+              <div class="recipient-line">
+                <span>Beepy sent 8282 Blink</span>
+                <span class="mono">18:05</span>
+              </div>
+              <div class="recipient-line">
+                <span>Mina sent 486 Beep</span>
+                <span class="mono">17:42</span>
+              </div>
+            </div>
+
+            <div class="badge-grid">
+              <div class="badge">
+                <span class="tiny">unlocked badge</span>
+                <strong>Night Signal</strong>
+                <span class="mono">PRIVATE MODE</span>
+              </div>
+              <div class="badge">
+                <span class="tiny">unlocked badge</span>
+                <strong>Photo Booth</strong>
+                <span class="mono">3-CUT BLINK</span>
+              </div>
+              <div class="badge locked">
+                <span class="tiny">locked badge</span>
+                <strong>Signal Keeper</strong>
+                <span class="mono">SAVE 20</span>
+              </div>
+              <div class="badge locked">
+                <span class="tiny">locked badge</span>
+                <strong>Close Circuit</strong>
+                <span class="mono">7 FRIENDS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section-title">
+      <h2>More App Surfaces</h2>
+      <p>
+        These screens keep the same private-signal language but remove duplicated shelves.
+        They are rough composition mocks for deciding hierarchy before touching the React Native screens.
+      </p>
+    </section>
+
+    <section class="app-board" aria-label="additional app UI directions">
+      <article class="panel">
+        <div class="panel-title">
+          <h2>Today</h2>
+          <span class="tiny">one queue, no echo</span>
+        </div>
+        <div class="phone compact">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">TODAY</span>
+              <span class="tiny">2 NEW</span>
+            </div>
+
+            <div class="home-feed">
+              <div class="incoming-slip primary">
+                <div class="slip-topline">
+                  <span class="mono">Incoming Blink</span>
+                  <span class="tiny">18:05</span>
+                </div>
+                <div class="rule"></div>
+                <div class="slip-code">8282</div>
+                <div class="tiny">FROM BEEPY</div>
+                <div class="widget-teaser-strip">
+                  <img src="mockup-assets/blink-frames/frame1.jpg" alt="" />
+                  <img src="mockup-assets/blink-frames/frame2.jpg" alt="" />
+                  <img src="mockup-assets/blink-frames/frame3.jpg" alt="" />
+                </div>
+                <div class="action-row">
+                  <div class="mini-action dark">OPEN</div>
+                  <div class="mini-action">OK</div>
+                </div>
+              </div>
+
+              <div class="home-grid">
+                <div class="micro-card">
+                  <span class="tiny">next signal</span>
+                  <strong>Mina sent 486</strong>
+                </div>
+                <div class="micro-card">
+                  <span class="tiny">widget state</span>
+                  <strong>Synced 18:05</strong>
+                </div>
+              </div>
+
+              <div class="incoming-slip">
+                <div class="slip-topline">
+                  <strong>Close queue</strong>
+                  <span class="tiny">today only</span>
+                </div>
+                <div class="recipient-line">
+                  <span>Beepy / Blink / 8282</span>
+                  <span class="mono">NEW</span>
+                </div>
+                <div class="recipient-line">
+                  <span>Mina / Beep / 486</span>
+                  <span class="mono">17:42</span>
+                </div>
+              </div>
+            </div>
+
+            <nav class="bottom-nav">
+              <span class="active">TODAY</span>
+              <span>SEND</span>
+              <span>PEOPLE</span>
+              <span>MY</span>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <h2>People</h2>
+          <span class="tiny">close circuit</span>
+        </div>
+        <div class="phone compact">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">PEOPLE</span>
+              <span class="tiny">7 CLOSE</span>
+            </div>
+
+            <div class="incoming-slip primary">
+              <div class="slip-topline">
+                <span class="mono">CLOSE CIRCUIT</span>
+                <span class="tiny">LIVE</span>
+              </div>
+              <div class="home-grid">
+                <div class="micro-card">
+                  <span class="tiny">favorite</span>
+                  <strong>Beepy</strong>
+                </div>
+                <div class="micro-card">
+                  <span class="tiny">last code</span>
+                  <strong>8282</strong>
+                </div>
+              </div>
+              <div class="action-row">
+                <div class="mini-action dark">SEND BLINK</div>
+                <div class="mini-action">ADD</div>
+              </div>
+            </div>
+
+            <div class="friend-list">
+              <div class="friend-row">
+                <span class="avatar-stamp">B</span>
+                <div>
+                  <strong>Beepy</strong>
+                  <div class="tiny">Widget slot 01 / 18:05</div>
+                </div>
+                <span class="status-pill">8282</span>
+              </div>
+              <div class="friend-row">
+                <span class="avatar-stamp">M</span>
+                <div>
+                  <strong>Mina</strong>
+                  <div class="tiny">Quiet mode / last 486</div>
+                </div>
+                <span class="status-pill">BEEP</span>
+              </div>
+              <div class="friend-row">
+                <span class="avatar-stamp">J</span>
+                <div>
+                  <strong>Joon</strong>
+                  <div class="tiny">Pending close request</div>
+                </div>
+                <span class="status-pill">ADD</span>
+              </div>
+            </div>
+
+            <nav class="bottom-nav">
+              <span>TODAY</span>
+              <span>SEND</span>
+              <span class="active">PEOPLE</span>
+              <span>MY</span>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <h2>My</h2>
+          <span class="tiny">room as control center</span>
+        </div>
+        <div class="phone compact">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">MY ROOM</span>
+              <span class="tiny">PRIVATE</span>
+            </div>
+
+            <div class="room-stack">
+              <div class="room-tile important">
+                <div class="room-title">
+                  <strong>Widget Lab</strong>
+                  <span class="mono">READY</span>
+                </div>
+                <div class="tiny">Preview, tap actions, App Group sync, reply slots.</div>
+                <div class="action-row">
+                  <div class="mini-action dark">OPEN LAB</div>
+                  <div class="mini-action">TEST</div>
+                </div>
+              </div>
+
+              <div class="room-tile">
+                <div class="room-title">
+                  <strong>Signal Archive</strong>
+                  <span class="mono">12</span>
+                </div>
+                <div class="tiny">Saved slips, repeated codes, badges that come from real usage.</div>
+              </div>
+
+              <div class="room-tile">
+                <div class="room-title">
+                  <strong>Code Presets</strong>
+                  <span class="mono">3</span>
+                </div>
+                <div class="slot-row">
+                  <div class="slot">8282</div>
+                  <div class="slot">486</div>
+                  <div class="slot">OK</div>
+                </div>
+              </div>
+
+              <div class="room-tile">
+                <div class="room-title">
+                  <strong>Privacy</strong>
+                  <span class="mono">ON</span>
+                </div>
+                <div class="tiny">Playback links expire, widget teaser uses local/cached frames.</div>
+              </div>
+            </div>
+
+            <nav class="bottom-nav">
+              <span>TODAY</span>
+              <span>SEND</span>
+              <span>PEOPLE</span>
+              <span class="active">MY</span>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <h2>Playback</h2>
+          <span class="tiny">tap from widget</span>
+        </div>
+        <div class="phone compact">
+          <div class="screen">
+            <div class="app-head">
+              <span class="mono">BLINK</span>
+              <span class="tiny">18:05</span>
+            </div>
+
+            <div class="playback-stack">
+              <div class="player-card">
+                <div class="slip-topline">
+                  <strong>Beepy sent 8282</strong>
+                  <span class="tiny">private video</span>
+                </div>
+                <div class="video-stage">
+                  <span class="mono">FULL BLINK VIDEO</span>
+                </div>
+              </div>
+
+              <div class="timeline">
+                <img src="mockup-assets/blink-frames/frame1.jpg" alt="" />
+                <img src="mockup-assets/blink-frames/frame2.jpg" alt="" />
+                <img src="mockup-assets/blink-frames/frame3.jpg" alt="" />
+              </div>
+
+              <div class="action-row">
+                <div class="mini-action dark">REPLY 8282</div>
+                <div class="mini-action">SAVE</div>
+              </div>
+            </div>
+
+            <nav class="bottom-nav">
+              <span>TODAY</span>
+              <span>SEND</span>
+              <span>PEOPLE</span>
+              <span>MY</span>
+            </nav>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <p class="next-note">
+      Proposed implementation path: update Send layout first, then rename/rebuild Studio as Widget Lab,
+      then bring Collection back later as Signal Archive once the reward/archive rules are real.
+      The actual app should stay React Native; this HTML is a fast visual workbench for choosing the shape.
+    </p>
+  </main>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-mode]");
+    const blinkOnly = document.querySelector(".blink-only");
+    const beepOnly = document.querySelector(".beep-only");
+    const primary = document.getElementById("primary-action");
+    const frames = document.querySelector(".frame-strip");
+
+    function setMode(mode) {
+      buttons.forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
+      const beep = mode === "beep";
+      blinkOnly.hidden = beep;
+      beepOnly.hidden = !beep;
+      document.querySelector(".mode-beep").classList.toggle("active", beep);
+      document.querySelector(".mode-blink").classList.toggle("active", !beep);
+
+      if (mode === "captured") {
+        primary.textContent = "SEND BLINK";
+        frames.innerHTML = `
+          <img src="mockup-assets/blink-frames/frame1.jpg" alt="" />
+          <img src="mockup-assets/blink-frames/frame2.jpg" alt="" />
+          <img src="mockup-assets/blink-frames/frame3.jpg" alt="" />
+        `;
+      } else if (beep) {
+        primary.textContent = "SEND BEEP";
+      } else {
+        primary.textContent = "CAPTURE BLINK";
+        frames.innerHTML = `
+          <div class="frame-placeholder"></div>
+          <div class="frame-placeholder"></div>
+          <div class="frame-placeholder"></div>
+        `;
+      }
+    }
+
+    buttons.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
+  </script>
+</body>
+</html>
