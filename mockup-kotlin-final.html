@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beep Get Kotlin Final Mockup</title>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap");
+
+    :root {
+      --ink: #161616;
+      --muted: #66625b;
+      --paper: #f7f5ef;
+      --panel: rgba(255, 255, 255, 0.74);
+      --line: rgba(28, 28, 26, 0.14);
+      --line-strong: rgba(28, 28, 26, 0.28);
+      --black: #181818;
+      --shadow: 0 16px 40px rgba(28, 28, 26, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.9), transparent 28%),
+        linear-gradient(180deg, #f6f3ed 0%, #ede9df 100%);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 28px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .top p {
+      max-width: 780px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 560;
+    }
+
+    .stamp {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 13px;
+      background: rgba(255, 255, 255, 0.58);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 830;
+      letter-spacing: 0;
+    }
+
+    .note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 560;
+    }
+
+    .contact-sheet {
+      display: block;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr));
+      gap: 14px;
+    }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 14px;
+    }
+
+    figure {
+      margin: 0;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+      overflow: hidden;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+      object-position: top;
+      background: #f5f3ef;
+    }
+
+    figcaption {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    figcaption b {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 820;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    .decision div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.62);
+      padding: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+
+    .decision b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .decision span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 560;
+    }
+
+    @media (max-width: 1180px) {
+      .screen-grid { grid-template-columns: repeat(2, minmax(190px, 1fr)); }
+      .state-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+      .decision { grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      .page { padding: 16px; }
+      .top { grid-template-columns: 1fr; }
+      .screen-grid,
+      .state-grid,
+      .decision { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div>
+        <h1>Beep Get Kotlin final mockup</h1>
+        <p>최종 기준은 Stitch/Kotlin 캡처입니다. 이 보드는 Today, Send, Friends, My Settings와 lower/dialog 상태를 그대로 모아 앱 구현 또는 다음 HTML 재현 작업의 기준으로 쓰기 위한 산출물입니다.</p>
+      </div>
+      <div class="stamp mono">FINAL SOURCE · KOTLIN CAPTURE</div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>전체 기준 보드</h2>
+          <p class="note">한 장으로 전체 흐름을 확인합니다. 중간 재해석 목업보다 이 캡처 보드가 현재 최종 시안입니다.</p>
+        </div>
+        <span class="stamp mono">10 STATES</span>
+      </div>
+      <img class="contact-sheet" src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/00-contact-sheet.png" alt="Beep Get Kotlin final contact sheet" />
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>주요 화면</h2>
+          <p class="note">탭 구조는 Today / Send / Friends / My 입니다.</p>
+        </div>
+        <span class="stamp mono">PRIMARY</span>
+      </div>
+      <div class="screen-grid">
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/01-today-loaded.png" alt="Today loaded final mockup" />
+          <figcaption><b>Today</b><span class="mono">loaded</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/02-send-top.png" alt="Send top final mockup" />
+          <figcaption><b>Send</b><span class="mono">top</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/03-friends-top.png" alt="Friends top final mockup" />
+          <figcaption><b>Friends</b><span class="mono">top</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/04-my-top.png" alt="My Settings top final mockup" />
+          <figcaption><b>My Settings</b><span class="mono">top</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>상태 화면</h2>
+          <p class="note">스크롤 하단, 친구 추가, 빠른 답장 설정, 새 코드 등록까지 포함합니다.</p>
+        </div>
+        <span class="stamp mono">STATES</span>
+      </div>
+      <div class="state-grid">
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/01b-today-lower.png" alt="Today lower final mockup" />
+          <figcaption><b>Today</b><span class="mono">lower</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/02b-send-lower.png" alt="Send lower final mockup" />
+          <figcaption><b>Send</b><span class="mono">lower</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/03b-friends-add-dialog.png" alt="Friends add dialog final mockup" />
+          <figcaption><b>Friends</b><span class="mono">dialog</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/04c-my-configure-slots-dialog.png" alt="Configure quick replies final mockup" />
+          <figcaption><b>Quick Replies</b><span class="mono">dialog</span></figcaption>
+        </figure>
+        <figure>
+          <img src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/04d-my-add-code-dialog.png" alt="Add signal code final mockup" />
+          <figcaption><b>Add Code</b><span class="mono">dialog</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>진행 기준</h2>
+          <p class="note">다음 작업은 이 보드를 RN 화면으로 옮기는 쪽입니다.</p>
+        </div>
+      </div>
+      <div class="decision">
+        <div><b>1. Final artifact</b><span><span class="mono">mockup-kotlin-final.html</span>을 최종 목업 파일로 고정합니다.</span></div>
+        <div><b>2. Scratch artifact</b><span><span class="mono">mockup-mobbin-ui-refresh.html</span>은 레퍼런스/실험 파일로만 둡니다.</span></div>
+        <div><b>3. Implementation target</b><span>Today, Send, Friends, My Settings의 화면 구조를 앱 코드에 순서대로 맞춥니다.</span></div>
+        <div><b>4. Verification</b><span>HTML 렌더, 이미지 로드, 모바일 화면 스모크 순으로 확인합니다.</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

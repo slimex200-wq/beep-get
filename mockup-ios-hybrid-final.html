@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beep Get iOS Hybrid Final</title>
+  <style>
+    :root {
+      --paper: #f8f4ea;
+      --paper-2: #efe7d8;
+      --ink: #211f1b;
+      --muted: #6f6a60;
+      --faint: #a19a8e;
+      --line: rgba(33, 31, 27, 0.13);
+      --line-strong: rgba(33, 31, 27, 0.28);
+      --red: #d43b2f;
+      --blue: #3577d4;
+      --green: #2f8a57;
+      --amber: #d9972e;
+      --screen: #faf7ef;
+      --shadow: 0 22px 50px rgba(56, 45, 25, 0.18);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(33,31,27,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(33,31,27,0.018) 1px, transparent 1px),
+        var(--paper);
+      background-size: 28px 28px, 28px 28px, auto;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      background: none;
+    }
+
+    .page {
+      width: min(1520px, 100%);
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      padding: 8px 0 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 58px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .stamp {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.42);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(190px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .rule {
+      min-height: 96px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(255,255,255,0.52);
+    }
+
+    .rule b {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .rule span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 0 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .note {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(240px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .phone {
+      position: relative;
+      min-height: 620px;
+      border: 1px solid rgba(33,31,27,0.22);
+      border-radius: 32px;
+      padding: 12px;
+      background: #151412;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 9px;
+      width: 86px;
+      height: 23px;
+      transform: translateX(-50%);
+      border-radius: 0 0 15px 15px;
+      background: #151412;
+      z-index: 5;
+    }
+
+    .status {
+      height: 34px;
+      padding: 5px 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--screen);
+      border-radius: 24px 24px 0 0;
+    }
+
+    .battery {
+      width: 24px;
+      height: 12px;
+      border: 1.6px solid currentColor;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 5px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .screen {
+      position: relative;
+      height: 548px;
+      overflow: hidden;
+      background: var(--screen);
+      border-radius: 0 0 24px 24px;
+    }
+
+    .screenshot {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .tag {
+      position: absolute;
+      left: 16px;
+      top: 42px;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      min-height: 27px;
+      padding: 0 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: rgba(250,247,239,0.86);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      backdrop-filter: blur(16px);
+    }
+
+    .ios-screen {
+      height: 100%;
+      padding: 18px 16px 78px;
+      overflow: hidden;
+    }
+
+    .ios-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .large-title {
+      margin: 2px 0 0;
+      font-size: 31px;
+      line-height: 1;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.62);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .search {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.58);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      margin-top: 14px;
+    }
+
+    .label {
+      margin: 0 0 7px 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.64);
+      overflow: hidden;
+    }
+
+    .cell {
+      min-height: 52px;
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cell:last-child { border-bottom: 0; }
+
+    .avatar,
+    .row-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--paper-2);
+      color: var(--ink);
+      font-weight: 900;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .row-title {
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 850;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row-note {
+      min-width: 0;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chev {
+      color: var(--faint);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(47,138,87,0.12);
+    }
+
+    .widget-preview {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .widget-card {
+      aspect-ratio: 1;
+      border: 1px solid var(--line-strong);
+      border-radius: 15px;
+      background:
+        linear-gradient(rgba(33,31,27,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(33,31,27,0.035) 1px, transparent 1px),
+        #fffaf0;
+      background-size: 12px 12px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-weight: 950;
+      color: var(--red);
+    }
+
+    .switch {
+      width: 46px;
+      height: 28px;
+      padding: 2px;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    .switch::after {
+      content: "";
+      display: block;
+      width: 24px;
+      height: 24px;
+      margin-left: auto;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 7px rgba(0,0,0,0.22);
+    }
+
+    .tabs {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      height: 62px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      align-items: center;
+      padding: 6px;
+      border-radius: 0 0 24px 24px;
+      border-top: 1px solid rgba(33,31,27,0.08);
+      background: rgba(255, 252, 246, 0.82);
+      backdrop-filter: blur(18px);
+    }
+
+    .tab {
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .tab .symbol {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: inherit;
+    }
+
+    .tab.active {
+      color: var(--red);
+    }
+
+    .modal-dim {
+      position: absolute;
+      inset: 34px 0 0;
+      background: rgba(26,24,21,0.32);
+      z-index: 10;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      z-index: 11;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255,252,246,0.96);
+      box-shadow: 0 -18px 38px rgba(26, 24, 21, 0.24);
+      padding: 10px 12px 12px;
+      backdrop-filter: blur(18px);
+    }
+
+    .handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(33,31,27,0.25);
+      margin: 0 auto 10px;
+    }
+
+    .sheet-title {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .input {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .action {
+      height: 42px;
+      border-radius: 13px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .action.primary {
+      border-color: #111;
+      background: #171512;
+      color: #fff;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(210px, 1fr));
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .legend-item {
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      background: rgba(255,255,255,0.45);
+    }
+
+    .legend-item b {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .legend-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1280px) {
+      .board { grid-template-columns: repeat(3, minmax(240px, 1fr)); }
+      .rules { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+      .legend { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 16px; }
+      .hero { grid-template-columns: 1fr; }
+      .rules,
+      .board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <h1>Beep Get iOS hybrid final</h1>
+        <p>Direction lock: follow the Kotlin capture for Today and Send. Do not copy the Kotlin Friends screen or the Android-looking Settings/widget layout. Keep the screen names and modal language because those already work.</p>
+      </div>
+      <div class="stamp">Today/Send locked</div>
+    </header>
+
+    <section class="rules" aria-label="Direction rules">
+      <div class="rule"><b>Today</b><span>Use the Kotlin mockup as the main reference. Keep its queue, code, and quick reply hierarchy.</span></div>
+      <div class="rule"><b>Send</b><span>Use the Kotlin mockup as the main reference. Keep capture, recipient, and signal deck flow.</span></div>
+      <div class="rule"><b>Friends</b><span>Custom pass. Keep the Friends header, but make the list and add-friend flow feel iOS-native and Beep-like.</span></div>
+      <div class="rule"><b>Settings</b><span>Custom pass. Keep modal names, but replace Android-style widget layout with grouped iOS settings.</span></div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>Final Screen Board</h2>
+          <p class="note">Left two screens are direct Kotlin references. Right three screens define the iOS treatment for the exceptions.</p>
+        </div>
+        <span class="stamp">Hybrid source</span>
+      </div>
+
+      <div class="board">
+        <article class="phone" aria-label="Today Kotlin reference">
+          <div class="status"><span>9:41</span><span class="battery"></span></div>
+          <div class="screen">
+            <span class="tag">Kotlin lock</span>
+            <img class="screenshot" src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/01-today-loaded.png" alt="Today Kotlin reference screen" />
+          </div>
+        </article>
+
+        <article class="phone" aria-label="Send Kotlin reference">
+          <div class="status"><span>9:41</span><span class="battery"></span></div>
+          <div class="screen">
+            <span class="tag">Kotlin lock</span>
+            <img class="screenshot" src=".lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/02-send-top.png" alt="Send Kotlin reference screen" />
+          </div>
+        </article>
+
+        <article class="phone" aria-label="Friends iOS custom screen">
+          <div class="status"><span>9:41</span><span class="battery"></span></div>
+          <div class="screen">
+            <div class="ios-screen">
+              <div class="ios-nav">
+                <div>
+                  <div class="caption">Close Circuit</div>
+                  <h2 class="large-title">Friends</h2>
+                </div>
+                <button class="icon-btn" type="button" aria-label="add friend">+</button>
+              </div>
+
+              <div class="search">Search ID or name</div>
+
+              <section class="section">
+                <div class="label">My Beep ID</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="avatar">A</div>
+                    <div>
+                      <div class="row-title">Alex Chen</div>
+                      <div class="row-note">@alexc</div>
+                    </div>
+                    <button class="icon-btn" type="button" aria-label="copy" style="width:32px;height:32px;font-size:13px">ID</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="label">Discover</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="row-icon">+</div>
+                    <div>
+                      <div class="row-title">Add new friends</div>
+                      <div class="row-note">Invite by link, code, or contacts</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="label">Close Friends</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="avatar" style="background:#f6d7d2">B</div>
+                    <div>
+                      <div class="row-title">Bibi</div>
+                      <div class="row-note">Widget seen</div>
+                    </div>
+                    <span class="status-dot"></span>
+                  </div>
+                  <div class="cell">
+                    <div class="avatar" style="background:#dce9f9">M</div>
+                    <div>
+                      <div class="row-title">Mia</div>
+                      <div class="row-note">uses code 486 often</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                  <div class="cell">
+                    <div class="avatar" style="background:#e2efd8">J</div>
+                    <div>
+                      <div class="row-title">Jun</div>
+                      <div class="row-note">quiet receiving</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <nav class="tabs">
+              <div class="tab"><span class="symbol">T</span>Today</div>
+              <div class="tab"><span class="symbol">S</span>Send</div>
+              <div class="tab active"><span class="symbol">F</span>Friends</div>
+              <div class="tab"><span class="symbol">M</span>My</div>
+            </nav>
+          </div>
+        </article>
+
+        <article class="phone" aria-label="Settings iOS custom screen">
+          <div class="status"><span>9:41</span><span class="battery"></span></div>
+          <div class="screen">
+            <div class="ios-screen">
+              <div class="ios-nav">
+                <div>
+                  <div class="caption">My</div>
+                  <h2 class="large-title">Settings</h2>
+                </div>
+                <button class="icon-btn" type="button" aria-label="settings">...</button>
+              </div>
+
+              <section class="section">
+                <div class="label">Appearance</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="row-icon">P</div>
+                    <div>
+                      <div class="row-title">Classic Paper Light Theme</div>
+                      <div class="row-note">Beep paper texture with iOS spacing</div>
+                    </div>
+                    <div class="switch"></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="label">Widget Layouts</div>
+                <div class="group">
+                  <div class="widget-preview">
+                    <div class="widget-card">S1<br>8282</div>
+                    <div>
+                      <div class="row-title">S1 Widget</div>
+                      <div class="row-note">Large preview, not Android settings rows</div>
+                    </div>
+                  </div>
+                  <div class="cell">
+                    <div class="row-icon">MD</div>
+                    <div>
+                      <div class="row-title">MD List Widget</div>
+                      <div class="row-note">3 queued slots</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="label">Quick Replies</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="row-icon">Q</div>
+                    <div>
+                      <div class="row-title">Done / 8282 / View</div>
+                      <div class="row-note">Opens Configure Quick Replies</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="label">Signal Directory Codes</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="row-icon">8282</div>
+                    <div>
+                      <div class="row-title">Ready</div>
+                      <div class="row-note">On demand</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                  <div class="cell">
+                    <div class="row-icon">486</div>
+                    <div>
+                      <div class="row-title">Miss you</div>
+                      <div class="row-note">On demand</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <nav class="tabs">
+              <div class="tab"><span class="symbol">T</span>Today</div>
+              <div class="tab"><span class="symbol">S</span>Send</div>
+              <div class="tab"><span class="symbol">F</span>Friends</div>
+              <div class="tab active"><span class="symbol">M</span>My</div>
+            </nav>
+          </div>
+        </article>
+
+        <article class="phone" aria-label="Quick replies modal">
+          <div class="status"><span>9:41</span><span class="battery"></span></div>
+          <div class="screen">
+            <div class="ios-screen">
+              <div class="ios-nav">
+                <div>
+                  <div class="caption">My</div>
+                  <h2 class="large-title">Settings</h2>
+                </div>
+                <button class="icon-btn" type="button" aria-label="settings">...</button>
+              </div>
+              <section class="section">
+                <div class="label">Quick Replies</div>
+                <div class="group">
+                  <div class="cell">
+                    <div class="row-icon">Q</div>
+                    <div>
+                      <div class="row-title">Done / 8282 / View</div>
+                      <div class="row-note">Edit widget reply slots</div>
+                    </div>
+                    <span class="chev">&gt;</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <nav class="tabs">
+              <div class="tab"><span class="symbol">T</span>Today</div>
+              <div class="tab"><span class="symbol">S</span>Send</div>
+              <div class="tab"><span class="symbol">F</span>Friends</div>
+              <div class="tab active"><span class="symbol">M</span>My</div>
+            </nav>
+            <div class="modal-dim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sheet-title">Configure Quick Replies</div>
+              <div class="section" style="margin-top:0">
+                <div class="label">Reply Slot 1</div>
+                <div class="input">Done</div>
+              </div>
+              <div class="section">
+                <div class="label">Reply Slot 2</div>
+                <div class="input">8282</div>
+              </div>
+              <div class="section">
+                <div class="label">Reply Slot 3</div>
+                <div class="input">View</div>
+              </div>
+              <div class="actions">
+                <button class="action" type="button">Cancel</button>
+                <button class="action primary" type="button">Save</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="legend" aria-label="Implementation notes">
+      <div class="legend-item"><b>Implementation target</b><span>Start with My Settings and modal styles, because those are the obvious Android leftovers.</span></div>
+      <div class="legend-item"><b>Do not re-litigate</b><span>Header names and modal names are acceptable. Keep Friends, Settings, Configure Quick Replies, Add Code.</span></div>
+      <div class="legend-item"><b>Source split</b><span>Use mockup-kotlin-final.html as the source board, and this file as the iOS final direction board.</span></div>
+    </section>
+  </main>
+</body>
+</html>
