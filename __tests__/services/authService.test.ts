@@ -1,6 +1,7 @@
 const { supabase } = require("@/lib/supabase");
 const Linking = require("expo-linking");
 const AppleAuthentication = require("expo-apple-authentication");
+const nodeCrypto = require("node:crypto");
 import {
   createUserProfile,
   exchangeOAuthCodeFromUrl,
@@ -25,6 +26,19 @@ jest.mock("expo-linking", () => ({
 }));
 
 beforeEach(() => jest.clearAllMocks());
+
+function expectAppleNoncePair() {
+  const signInOptions = AppleAuthentication.signInAsync.mock.calls.at(-1)?.[0];
+  const tokenPayload = supabase.auth.signInWithIdToken.mock.calls.at(-1)?.[0];
+
+  expect(signInOptions.nonce).toEqual(expect.stringMatching(/^[a-f0-9]{64}$/));
+  expect(tokenPayload.nonce).toEqual(
+    expect.stringMatching(/^[0-9A-Za-z._-]{32}$/)
+  );
+  expect(signInOptions.nonce).toBe(
+    nodeCrypto.createHash("sha256").update(tokenPayload.nonce).digest("hex")
+  );
+}
 
 describe("generateBeepId", () => {
   it("generates an 8-digit numeric string", () => {
@@ -87,11 +101,14 @@ describe("signInWithApple", () => {
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
       ],
+      nonce: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
     expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
       provider: "apple",
       token: "apple-id-token",
+      nonce: expect.stringMatching(/^[0-9A-Za-z._-]{32}$/),
     });
+    expectAppleNoncePair();
     expect(supabase.auth.updateUser).toHaveBeenCalledWith({
       data: {
         full_name: "Beepy Tester",
@@ -114,8 +131,48 @@ describe("signInWithApple", () => {
     expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
       provider: "apple",
       token: "apple-id-token",
+      nonce: expect.stringMatching(/^[0-9A-Za-z._-]{32}$/),
     });
+    expectAppleNoncePair();
     expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("hashes the Apple nonce without SubtleCrypto support", async () => {
+    const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        getRandomValues: (array: Uint8Array) => {
+          array.fill(7);
+          return array;
+        },
+      },
+    });
+    supabase.auth.signInWithIdToken.mockResolvedValue({ data: {}, error: null });
+
+    try {
+      await signInWithApple();
+    } finally {
+      if (cryptoDescriptor) {
+        Object.defineProperty(globalThis, "crypto", cryptoDescriptor);
+      } else {
+        delete (globalThis as { crypto?: unknown }).crypto;
+      }
+    }
+
+    expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
+      provider: "apple",
+      token: "apple-id-token",
+      nonce: "7".repeat(32),
+    });
+    expect(AppleAuthentication.signInAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nonce: nodeCrypto
+          .createHash("sha256")
+          .update("7".repeat(32))
+          .digest("hex"),
+      })
+    );
   });
 
   it("does not fail login when Apple metadata update fails", async () => {
