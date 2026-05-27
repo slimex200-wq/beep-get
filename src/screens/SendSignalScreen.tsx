@@ -35,6 +35,7 @@ export function SendSignalScreen() {
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const params = (route.params ?? {}) as SendRouteParams;
+  const isModalFlow = route.name === "Send";
   const { profile } = useAuthStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const { friends, fetch: fetchFriends } = useFriendStore();
@@ -360,6 +361,7 @@ export function SendSignalScreen() {
       onSend={sendBeep}
       onBack={goBackToFlow}
       onOpenLogs={openLogs}
+      showBackAction={isModalFlow}
     />
   ) : (
     <SendBlinkScreen
@@ -383,6 +385,7 @@ export function SendSignalScreen() {
       onBack={goBackToFlow}
       onOpenLogs={openLogs}
       previewMode={previewMode}
+      showBackAction={isModalFlow}
     />
   );
 }

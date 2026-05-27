@@ -25,6 +25,7 @@ type HeaderProps = {
   avatarSource?: ImageSourcePropType;
   actions?: HeaderAction[];
   centered?: boolean;
+  showAvatar?: boolean;
 };
 
 export function KotlinHeader({
@@ -33,12 +34,15 @@ export function KotlinHeader({
   avatarSource = beepyAvatar,
   actions = [{ label: "◐" }, { label: "◎" }, { label: "⚙" }],
   centered = false,
+  showAvatar = true,
 }: HeaderProps) {
   return (
     <View style={[styles.header, centered && styles.headerCentered]}>
-      <View style={[styles.headerLeft, centered && styles.headerSide]}>
-        <Avatar label={avatarLabel} source={avatarSource} size={34} />
-      </View>
+      {showAvatar ? (
+        <View style={[styles.headerLeft, centered && styles.headerSide]}>
+          <Avatar label={avatarLabel} source={avatarSource} size={34} />
+        </View>
+      ) : null}
       <Text style={[styles.headerTitle, centered && styles.headerTitleCentered]}>{title}</Text>
       <View style={[styles.headerActions, centered && styles.headerSide]}>
         {actions.map((action) => (

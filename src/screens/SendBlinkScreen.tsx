@@ -31,6 +31,7 @@ type Props = {
   onBack: () => void;
   onOpenLogs: () => void;
   previewMode?: boolean;
+  showBackAction?: boolean;
 };
 
 export function SendBlinkScreen({
@@ -54,6 +55,7 @@ export function SendBlinkScreen({
   onBack,
   onOpenLogs,
   previewMode = false,
+  showBackAction = true,
 }: Props) {
   const primaryLabel = recording
     ? "Recording 2.0s"
@@ -71,7 +73,7 @@ export function SendBlinkScreen({
         title="Send"
         centered
         actions={[
-          { label: "‹", onPress: onBack },
+          ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
           { label: "⚙", onPress: onOpenLogs },
         ]}
       />

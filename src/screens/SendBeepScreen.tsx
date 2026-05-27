@@ -21,6 +21,7 @@ type Props = {
   onSend: () => void;
   onBack: () => void;
   onOpenLogs: () => void;
+  showBackAction?: boolean;
 };
 
 export function SendBeepScreen({
@@ -36,6 +37,7 @@ export function SendBeepScreen({
   onSend,
   onBack,
   onOpenLogs,
+  showBackAction = true,
 }: Props) {
   const cleanCode = code || "____";
 
@@ -45,7 +47,7 @@ export function SendBeepScreen({
         title="Send"
         centered
         actions={[
-          { label: "‹", onPress: onBack },
+          ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
           { label: "⚙", onPress: onOpenLogs },
         ]}
       />

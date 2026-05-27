@@ -7,6 +7,7 @@ describe("TodayScreen product sections", () => {
     ["Today", "Quick Reply", "Queue", "Done", "View", "BlinkHeroPreview"].forEach((label) => {
       expect(source).toContain(label);
     });
+    expect(source).toContain("showAvatar={false}");
     expect(source).not.toContain("INCOMING NOW");
     expect(source).not.toContain("TODAY QUEUE");
     expect(source).not.toContain("FRIEND PULSE");

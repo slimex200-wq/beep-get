@@ -119,6 +119,7 @@ export function TodayScreen() {
     <AppSurface backgroundColor="#F8F6F1">
       <KotlinHeader
         title="Today"
+        showAvatar={false}
         actions={[
           { label: loading ? "…" : "◐", onPress: refresh },
           { label: "◎" },

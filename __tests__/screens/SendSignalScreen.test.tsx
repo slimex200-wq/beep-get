@@ -27,6 +27,17 @@ describe("SendSignalScreen product sections", () => {
     expect(blinkSource).toContain("const shouldRenderCaptureFrames = !deckHeader");
   });
 
+  it("hides the back action on the primary Send tab and keeps it for modal sends", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
+    const beepSource = readFileSync(path.join(process.cwd(), "src/screens/SendBeepScreen.tsx"), "utf8");
+    const blinkSource = readFileSync(path.join(process.cwd(), "src/screens/SendBlinkScreen.tsx"), "utf8");
+
+    expect(source).toContain('const isModalFlow = route.name === "Send"');
+    expect(source).toContain("showBackAction={isModalFlow}");
+    expect(beepSource).toContain("showBackAction = true");
+    expect(blinkSource).toContain("showBackAction = true");
+  });
+
   it("uses a two-phase Blink flow so capture preview happens before upload", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
 
