@@ -9,7 +9,9 @@ import {
   getUserProfile,
   isValidBeepId,
   signInWithApple,
+  signInWithAppleOAuth,
   signInWithGoogle,
+  signInWithKakao,
   signOut,
 } from "@/services/authService";
 
@@ -87,6 +89,42 @@ describe("signInWithGoogle", () => {
     supabase.auth.signInWithOAuth.mockResolvedValue({ data: null, error: err });
 
     await expect(signInWithGoogle()).rejects.toEqual(err);
+  });
+});
+
+describe("signInWithAppleOAuth", () => {
+  it("starts the Supabase Apple OAuth flow for non-iOS native fallbacks", async () => {
+    const mockData = { url: "https://appleid.apple.com/auth" };
+    supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
+
+    await expect(signInWithAppleOAuth()).resolves.toEqual(mockData);
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "apple",
+      options: {
+        redirectTo: "beepget://auth/callback",
+        skipBrowserRedirect: true,
+      },
+    });
+    expect(Linking.openURL).toHaveBeenCalledWith("https://appleid.apple.com/auth");
+  });
+});
+
+describe("signInWithKakao", () => {
+  it("starts the Supabase Kakao OAuth flow", async () => {
+    const mockData = { url: "https://kauth.kakao.com/oauth/authorize" };
+    supabase.auth.signInWithOAuth.mockResolvedValue({ data: mockData, error: null });
+
+    await expect(signInWithKakao()).resolves.toEqual(mockData);
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "kakao",
+      options: {
+        redirectTo: "beepget://auth/callback",
+        skipBrowserRedirect: true,
+      },
+    });
+    expect(Linking.openURL).toHaveBeenCalledWith(
+      "https://kauth.kakao.com/oauth/authorize"
+    );
   });
 });
 

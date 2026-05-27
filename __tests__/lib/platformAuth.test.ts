@@ -1,7 +1,9 @@
 import {
   getPlatformAuthLabel,
   getPlatformAuthProvider,
+  getPlatformAuthProviders,
   getPlatformAuthVariant,
+  shouldUseNativeAppleSignIn,
 } from "@/lib/platformAuth";
 
 describe("platform auth", () => {
@@ -19,6 +21,25 @@ describe("platform auth", () => {
     expect(provider).toBe("google");
     expect(getPlatformAuthLabel(provider)).toContain("Google");
     expect(getPlatformAuthVariant(provider)).toBe("light");
+  });
+
+  it("lists Google, Apple, and Kakao in the requested button order", () => {
+    const providers = getPlatformAuthProviders("ios");
+
+    expect(providers).toEqual(["google", "apple", "kakao"]);
+    expect(providers.map(getPlatformAuthLabel)).toEqual([
+      "Continue with Google",
+      "Continue with Apple",
+      "Continue with Kakao",
+    ]);
+    expect(getPlatformAuthVariant("kakao")).toBe("kakao");
+  });
+
+  it("uses native Apple sign-in only on iOS", () => {
+    expect(shouldUseNativeAppleSignIn("apple", "ios")).toBe(true);
+    expect(shouldUseNativeAppleSignIn("apple", "android")).toBe(false);
+    expect(shouldUseNativeAppleSignIn("google", "ios")).toBe(false);
+    expect(shouldUseNativeAppleSignIn("kakao", "ios")).toBe(false);
   });
 
   it("defaults web and unknown platforms to Google", () => {

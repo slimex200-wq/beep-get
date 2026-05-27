@@ -46,6 +46,14 @@ export async function signInWithGoogle() {
   return signInWithOAuthProvider("google");
 }
 
+export async function signInWithAppleOAuth() {
+  return signInWithOAuthProvider("apple");
+}
+
+export async function signInWithKakao() {
+  return signInWithOAuthProvider("kakao");
+}
+
 export async function signInWithApple() {
   const rawNonce = createAppleRawNonce();
   const hashedNonce = await sha256Hex(rawNonce);
@@ -96,7 +104,7 @@ export async function exchangeOAuthCodeFromUrl(url: string): Promise<boolean> {
   return true;
 }
 
-async function signInWithOAuthProvider(provider: "google" | "apple") {
+async function signInWithOAuthProvider(provider: "google" | "apple" | "kakao") {
   const redirectTo = Linking.createURL("auth/callback");
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,

@@ -13,6 +13,7 @@
     "supabase:lint": "supabase db lint",
     "apple:oauth-secret": "node scripts/apple-client-secret.mjs",
     "apple:supabase-provider": "node scripts/configure-supabase-apple-provider.mjs",
+    "kakao:supabase-provider": "node scripts/configure-supabase-kakao-provider.mjs",
     "apple:supabase-iap-secrets": "node scripts/set-supabase-apple-iap-secrets.mjs",
     "apple:create-iaps": "node scripts/create-app-store-iaps.mjs",
     "eas:info": "npx eas-cli@latest project:info",

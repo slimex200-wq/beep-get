@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 
-type Variant = 'light' | 'dark' | 'ghost' | 'danger' | 'success';
+type Variant = 'light' | 'dark' | 'ghost' | 'danger' | 'success' | 'kakao';
 
 type Props = {
   label: string;
@@ -29,7 +29,14 @@ export function ActionButton({ label, variant = 'light', mono = false, flex = fa
         style,
       ]}
     >
-      <Text style={[mono ? type.buttonMono : type.button, variant === 'dark' && styles.darkText, variant === 'danger' && styles.dangerText]}>
+      <Text
+        style={[
+          mono ? type.buttonMono : type.button,
+          variant === 'dark' && styles.darkText,
+          variant === 'danger' && styles.dangerText,
+          variant === 'kakao' && styles.kakaoText,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -67,6 +74,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lcd,
     borderColor: colors.green,
   },
+  kakao: {
+    backgroundColor: '#FEE500',
+    borderColor: '#D6BE00',
+  },
   pressed: {
     transform: [{ translateY: 1 }],
     opacity: 0.86,
@@ -79,5 +90,8 @@ const styles = StyleSheet.create({
   },
   dangerText: {
     color: colors.white,
+  },
+  kakaoText: {
+    color: '#191600',
   },
 });

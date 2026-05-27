@@ -32,13 +32,13 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 - Base stage/shell colors are neutral black/charcoal; avoid warm near-black values such as `#11110F` because they read as mugwort/olive on Android emulator screenshots.
 - Login now uses a frameless cream paper-slip surface with the approved concept-1 Beepy pager mascot; the production mascot is a handdrawn PNG asset at `assets/brand/beepy-handdrawn.png`, not the earlier clean code-vector drawing. Do not add a literal phone/iPhone frame inside the app UI.
 - Runtime app screens now use a frameless cream `AppSurface` instead of the black `PagerFrame` hardware shell; `PagerFrame` should stay reserved for non-runtime mockup/widget demonstration contexts.
-- Platform auth CTAs are split by runtime platform: iOS uses Apple, Android/web/other platforms use Google. Android UI preview should show Google plus UI Preview only.
+- Platform auth CTAs now show Google, Apple, and Kakao in that order. iOS keeps native Apple sign-in, while non-native Apple fallback, Google, and Kakao use Supabase OAuth with the existing PKCE deep-link callback.
 - iOS native Apple login now includes the nonce pair expected by Supabase native ID-token auth: the app sends a SHA-256 hashed nonce to `expo-apple-authentication` and the raw nonce to `supabase.auth.signInWithIdToken`, with a no-SubtleCrypto fallback covered by tests.
 - Direct widget preset replies are now considered required product behavior for the strong widget loop; implementation should start with latest-signal preset Beep replies, then add idempotency before native direct-send actions ship.
 - Android widget action URLs now cover open reply room, confirm, save, and preset quick reply; the app handles these deep links and preview mode syncs native widget sample data after entering UI Preview.
 - The `DESIGN.md` slip screens are now wired to live app state instead of mock-only starter data: Today reads received Beep/Blink signals, People reads and adds relationships, Send uses the Beep/Blink send services, Reply Room fetches cold deep-link signals and sends quick replies, Logs reads saved signals, and Studio syncs widget data plus live reply slots.
 - App-side widget/reply quick replies are idempotent end-to-end through the remote `reply_with_preset_once` RPC on `beep-get-prod`; duplicate widget/app taps reuse the same actor/client-action reservation instead of creating duplicate Beeps.
-- OAuth is implemented with Supabase PKCE callback exchange through `expo-linking`; Google provider dashboard settings are configured for `beep-get-prod`, while Apple provider settings and production EAS public env values remain external configuration, not commit-safe repo changes.
+- OAuth is implemented with Supabase PKCE callback exchange through `expo-linking`; Google, non-native Apple fallback, and Kakao share the same callback path, while provider secrets/dashboard settings remain external configuration, not commit-safe repo changes.
 - `package-lock.json` has been security-refreshed with `npm audit fix`; the remaining audit findings are low/moderate Expo/Jest transitive issues whose suggested fix requires breaking major-version force changes.
 - Android Glance widgets are moving from the old green LCD look toward the Swiss Paper slip style; the medium widget includes `OK / 8282 / OPEN` action chips for home-screen QA.
 - Android Glance widget colors must use Compose `Color(...)` values inside `ColorProvider`; Android `Color.parseColor(...)` ints are treated as resource IDs by RemoteViews hosts and can show `Can't load widget`.
@@ -72,7 +72,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 ## Next Work Queue
 
 - Add production EAS env values for `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
-- Add Apple OAuth provider settings in Supabase for `beep-get-prod` if/when iOS ships.
+- Enable the Kakao provider in Supabase for `beep-get-prod` once Kakao REST API key/client secret are available; `npm run kakao:supabase-provider` is wired for the Management API path.
 - Confirm real authenticated Android camera/file upload against Supabase Storage with a non-preview sender/receiver pair.
 - Publish real privacy policy and account deletion web request URLs before store submission; current app code supports `EXPO_PUBLIC_PRIVACY_URL` and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
 - Decide whether v2 should reintroduce collection/season/icon rewards; production collection/season services currently return empty safe fallbacks because those tables are intentionally absent from the v2 migration.
@@ -89,7 +89,7 @@ Beep-get Expo/React Native app with product/visual direction captured in `.brand
 ## Known Blockers
 
 - Android emulator QA is available, but Pixel Launcher widget placement is manual because `adb shell cmd appwidget` reported `No shell command implementation.`
-- EAS production environment has the public Supabase URL/anon key configured; provider secrets and dashboard auth-provider settings still live outside git.
+- EAS production environment has the public Supabase URL/anon key configured; provider secrets and dashboard auth-provider settings still live outside git. Kakao provider enablement still needs Kakao app credentials outside the repo.
 - Google Play service account credentials are not configured in the repo and must not be committed.
 - Collection/season/icon rewards are preview-only until a v2 rewards schema is designed.
 - Status labels are UI-only for now; v2 persists `profiles.status_icon`, not separate `status_broadcasts.label`.

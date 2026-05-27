@@ -16,26 +16,36 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import {
   getPlatformAuthLabel,
-  getPlatformAuthProvider,
+  getPlatformAuthProviders,
   getPlatformAuthVariant,
+  shouldUseNativeAppleSignIn,
   type PlatformAuthProvider,
 } from "@/lib/platformAuth";
 import { isUiPreviewEnabled } from "@/lib/uiPreview";
-import { signInWithApple, signInWithGoogle } from "@/services/authService";
+import {
+  signInWithApple,
+  signInWithAppleOAuth,
+  signInWithGoogle,
+  signInWithKakao,
+} from "@/services/authService";
 import { useAuthStore } from "@/stores/authStore";
 
 export function AuthScreen() {
   const { enterPreviewMode, initProfile, user } = useAuthStore();
   const [nickname, setNickname] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const authProvider = getPlatformAuthProvider(Platform.OS);
+  const authProviders = getPlatformAuthProviders(Platform.OS);
   const showNicknameForm = Boolean(user);
 
   const handleProviderLogin = async (provider: PlatformAuthProvider) => {
     try {
       setStatusMessage(null);
-      if (provider === "apple") {
+      if (shouldUseNativeAppleSignIn(provider, Platform.OS)) {
         await signInWithApple();
+      } else if (provider === "apple") {
+        await signInWithAppleOAuth();
+      } else if (provider === "kakao") {
+        await signInWithKakao();
       } else {
         await signInWithGoogle();
       }
@@ -108,17 +118,15 @@ export function AuthScreen() {
             </View>
           ) : (
             <View style={styles.buttons}>
-              <ActionButton
-                label={getPlatformAuthLabel(authProvider)}
-                onPress={() => handleProviderLogin(authProvider)}
-                variant={getPlatformAuthVariant(authProvider)}
-                style={styles.fullButton}
-              />
-              {Platform.OS === "ios" ? (
-                <Text style={styles.providerNote}>
-                  Google login is disabled on iOS until the provider is enabled in Supabase.
-                </Text>
-              ) : null}
+              {authProviders.map((provider) => (
+                <ActionButton
+                  key={provider}
+                  label={getPlatformAuthLabel(provider)}
+                  onPress={() => handleProviderLogin(provider)}
+                  variant={getPlatformAuthVariant(provider)}
+                  style={styles.fullButton}
+                />
+              ))}
               {isUiPreviewEnabled ? (
                 <ActionButton
                   label="UI PREVIEW"
@@ -150,7 +158,7 @@ export function AuthScreen() {
 function normalizeAuthError(message?: string): string {
   if (!message) return "Try again.";
   if (message.includes("Unsupported provider")) {
-    return "This login provider is not enabled yet. Try Apple sign-in.";
+    return "This login provider is not enabled yet. Try another sign-in option.";
   }
   return message;
 }
@@ -244,10 +252,6 @@ const styles = StyleSheet.create({
   },
   fullButton: {
     width: "100%",
-  },
-  providerNote: {
-    ...type.bodyMuted,
-    textAlign: "center",
   },
   form: {
     gap: spacing[4],
