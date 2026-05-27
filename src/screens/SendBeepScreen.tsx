@@ -1,13 +1,11 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { HeaderBar } from "@/components/HeaderBar";
-import { MetaRow } from "@/components/MetaRow";
+import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
 import { SignalCode } from "@/components/SignalCode";
-import { SlipFrame } from "@/components/SlipFrame";
 
 type Props = {
   modeSwitch?: React.ReactNode;
@@ -35,7 +33,6 @@ export function SendBeepScreen({
   sending,
   onCodeChange,
   onMemoChange,
-  onPreset,
   onSend,
   onBack,
   onOpenLogs,
@@ -43,68 +40,49 @@ export function SendBeepScreen({
   const cleanCode = code || "____";
 
   return (
-    <AppSurface>
-      <HeaderBar title="Send" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
+    <AppSurface backgroundColor="#F8F6F1">
+      <KotlinHeader
+        title="Send"
+        centered
+        actions={[
+          { label: "‹", onPress: onBack },
+          { label: "⚙", onPress: onOpenLogs },
+        ]}
+      />
       {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="Outgoing Beep" accent={false}>
-          <View style={styles.recipientRow}>
-            <View style={styles.recipientText}>
-              <MetaRow label="TO:" value={`${recipientName} - NO ${recipientNo}`} />
-            </View>
-            <View style={styles.stamp}>
-              <Text style={type.tinyMono}>CODE</Text>
-              <Text style={type.codeSmall}>{recipientNo}</Text>
-            </View>
-          </View>
+        <MockupCard style={styles.beepPreview}>
+          <Text style={type.tinyMono}>READY TO TRANSMIT</Text>
+          <SignalCode code={cleanCode} style={styles.previewCode} />
+          <Text style={styles.previewMeaning}>{memo || `NO ${recipientNo} / ${recipientName}`}</Text>
+        </MockupCard>
 
-          <View style={styles.codeArea}>
-            <Text style={type.tinyMono}>CODE</Text>
-            <SignalCode code={cleanCode} />
-            <TextInput
-              value={code}
-              onChangeText={(value) => onCodeChange(value.slice(0, 20))}
-              keyboardType="default"
-              maxLength={20}
-              placeholder="8282 or 배고픔"
-              placeholderTextColor={colors.muted2}
-              style={styles.hiddenInput}
-            />
-          </View>
+        <MockupCard soft style={styles.summary}>
+          <Text style={styles.summaryText}>
+            Will send code <Text style={styles.summaryCode}>{cleanCode}</Text> to {recipientName}
+          </Text>
+        </MockupCard>
 
-          <Text style={type.tinyMono}>SIGNAL DECK</Text>
-          <View style={styles.presets}>
-            {["8282", "486", "000", "1004"].map((preset) => (
-              <ActionButton
-                key={preset}
-                label={preset}
-                mono
-                flex
-                variant={code === preset ? "dark" : "light"}
-                onPress={() => onPreset(preset)}
-              />
-            ))}
-          </View>
+        <TextInput
+          value={code}
+          onChangeText={(value) => onCodeChange(value.slice(0, 20))}
+          keyboardType="default"
+          maxLength={20}
+          placeholder="Numeric Beep Code (e.g. 7942)"
+          placeholderTextColor={colors.muted2}
+          style={styles.input}
+        />
+        <TextInput
+          value={memo}
+          onChangeText={onMemoChange}
+          placeholder="Interpretation / Message Meaning"
+          placeholderTextColor={colors.muted2}
+          maxLength={30}
+          style={styles.input}
+        />
 
-          <View style={styles.memo}>
-            <Text style={type.tinyMono}>MEMO (OPTIONAL)</Text>
-            <TextInput
-              value={memo}
-              onChangeText={onMemoChange}
-              placeholder="tiny note"
-              placeholderTextColor={colors.muted2}
-              maxLength={30}
-              style={styles.memoInput}
-            />
-            <Text style={[type.tinyMono, styles.counter]}>{memo.length} / 30</Text>
-          </View>
-        </SlipFrame>
-        <View style={styles.summary}>
-          <Text style={type.tinyMono}>SUMMARY</Text>
-          <Text style={styles.summaryText}>Will send code {cleanCode} to {recipientName}</Text>
-        </View>
         <ActionButton
-          label={sending ? "SENDING" : "SEND BEEP"}
+          label={sending ? "Sending" : "▷  Send Beep"}
           variant="dark"
           disabled={!code || sending}
           onPress={onSend}
@@ -118,74 +96,44 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
     paddingBottom: 96,
-    gap: spacing[5],
+    gap: spacing[4],
   },
-  recipientRow: {
-    flexDirection: "row",
-    gap: spacing[5],
-    alignItems: "center",
-  },
-  recipientText: {
-    flex: 1,
-  },
-  stamp: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
+  beepPreview: {
+    minHeight: 164,
     alignItems: "center",
     justifyContent: "center",
-    transform: [{ rotate: "-8deg" }],
+    gap: spacing[2],
+    padding: spacing[5],
   },
-  codeArea: {
-    marginTop: spacing[6],
-    marginBottom: spacing[4],
+  previewCode: {
+    fontSize: 54,
+    lineHeight: 60,
+    letterSpacing: 0,
   },
-  hiddenInput: {
-    minHeight: 40,
-    marginTop: spacing[3],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: radius.button,
-    paddingHorizontal: spacing[4],
+  previewMeaning: {
+    ...type.metaValue,
+    fontSize: 12,
     textAlign: "center",
-    backgroundColor: "rgba(255,255,255,0.24)",
+  },
+  summary: {
+    minHeight: 48,
+    justifyContent: "center",
+    paddingHorizontal: spacing[4],
+  },
+  summaryText: {
     ...type.body,
     color: colors.ink,
   },
-  presets: {
-    flexDirection: "row",
-    gap: spacing[3],
-    marginTop: spacing[3],
+  summaryCode: {
+    ...type.buttonMono,
   },
-  memo: {
-    marginTop: spacing[5],
-    padding: spacing[4],
+  input: {
+    minHeight: 48,
     borderWidth: 1,
     borderColor: colors.rule,
     borderRadius: radius.control,
-    position: "relative",
-  },
-  memoInput: {
-    minHeight: 38,
-    ...type.body,
-    color: colors.ink,
-  },
-  counter: {
-    position: "absolute",
-    right: spacing[4],
-    bottom: spacing[4],
-  },
-  summary: {
-    gap: spacing[2],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: radius.control,
-    backgroundColor: colors.paperWarm,
-  },
-  summaryText: {
+    paddingHorizontal: spacing[4],
+    backgroundColor: "#EFE9F4",
     ...type.body,
     color: colors.ink,
   },

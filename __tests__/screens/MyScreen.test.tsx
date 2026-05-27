@@ -7,11 +7,12 @@ describe("MyScreen production tools", () => {
 
     [
       "My Settings",
-      "APPEARANCE",
-      "WIDGET LAYOUTS",
-      "QUICK REPLIES",
+      "Appearance",
+      "Widget Layouts",
+      "Quick Replies",
       "Configure Slots",
-      "SIGNAL DIRECTORY CODES",
+      "Signal Directory Codes (On-Demand)",
+      "Define New Signal Code",
     ].forEach((label) => {
       expect(source).toContain(label);
     });
@@ -21,8 +22,8 @@ describe("MyScreen production tools", () => {
   it("does not expose internal Studio or Collection tools in the user room", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/MyScreen.tsx"), "utf8");
 
-    ["WIDGET SETUP", "CODES", "LOGS", "ACCOUNT"].forEach((label) => {
-      expect(source).toContain(`label="${label}"`);
+    ["SM Widget", "MD List Widget", "Classic Paper Light Theme"].forEach((label) => {
+      expect(source).toContain(label);
     });
     expect(source).not.toContain('label="STUDIO"');
     expect(source).not.toContain('label="COLLECTION"');

@@ -9,6 +9,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendPickerStrip, type PickableFriend } from "@/components/FriendPickerStrip";
 import { HeaderBar } from "@/components/HeaderBar";
+import { MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
@@ -27,7 +28,7 @@ import { SendBlinkScreen } from "@/screens/SendBlinkScreen";
 type SendMode = "beep" | "blink";
 type SendRouteParams = Partial<RootStackParamList["Send"]>;
 
-const DEFAULT_SLOT_DECK = ["배고픔", "집중중", "끝나고", "8282", "486", "1004", "000"];
+const DEFAULT_SLOT_DECK = ["8282", "486", "1004", "7942", "0404"];
 
 export function SendSignalScreen() {
   const route = useRoute();
@@ -117,13 +118,25 @@ export function SendSignalScreen() {
 
   const deckHeader = recipient ? (
     <View style={styles.deck}>
-      <View style={styles.deckTopRow}>
-        <View>
-          <Text style={type.tinyMono}>SEND</Text>
-          <Text style={styles.deckTitle}>Signal Deck</Text>
+      <MockupCard soft style={styles.capturePreview}>
+        <View style={styles.captureTopRow}>
+          <StatusPill label={mode.toUpperCase()} tone={mode === "blink" ? "red" : "muted"} />
+          <StatusPill label={mode === "blink" ? "2.0s" : "ready"} />
         </View>
-        <View style={styles.deckBadge}>
-          <Text style={type.tinyMono}>{friendOptions.length.toString().padStart(2, "0")} FRIENDS</Text>
+        <View style={styles.captureGrid}>
+          <View style={styles.crosshairHorizontal} />
+          <View style={styles.crosshairVertical} />
+          <View style={styles.crosshairCircle} />
+        </View>
+        <Text style={styles.captureHint}>Ready to transmit</Text>
+      </MockupCard>
+      <MockupSection label="Captured Frames" />
+      <View style={styles.capturedRow}>
+        {["#153E37", "#D17A23", "#E9C4A0"].map((color, index) => (
+          <View key={color} style={[styles.capturedThumb, { backgroundColor: color }, index === 0 && styles.capturedActive]} />
+        ))}
+        <View style={styles.capturedCamera}>
+          <Text style={styles.capturedCameraText}>▣</Text>
         </View>
       </View>
       <Text style={type.tinyMono}>TO:</Text>
@@ -133,7 +146,7 @@ export function SendSignalScreen() {
         onSelect={(friend) => setSelectedRecipientId(friend.id)}
       />
       <Text style={type.tinyMono}>SIGNAL TYPE</Text>
-      {modeSwitch}
+      <View style={styles.inlineSwitch}>{modeSwitch}</View>
       <Text style={type.tinyMono}>SIGNAL DECK</Text>
       <SignalSlotRail slots={slotDeck} selected={code} onSelect={setCode} />
     </View>
@@ -398,29 +411,79 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing[5],
     padding: spacing[3],
     borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: colors.paperWarm,
+    borderColor: colors.rule,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
   },
-  deckTopRow: {
+  capturePreview: {
+    minHeight: 116,
+    padding: spacing[4],
+    gap: spacing[3],
+  },
+  captureTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing[4],
-    paddingBottom: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rule,
   },
-  deckTitle: {
-    ...type.slipTitle,
+  captureGrid: {
+    flex: 1,
+    minHeight: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
-  deckBadge: {
+  crosshairHorizontal: {
+    position: "absolute",
+    width: "72%",
+    height: 1,
+    backgroundColor: "rgba(10,10,10,0.08)",
+  },
+  crosshairVertical: {
+    position: "absolute",
+    width: 1,
+    height: "72%",
+    backgroundColor: "rgba(10,10,10,0.08)",
+  },
+  crosshairCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    backgroundColor: colors.paper,
+    borderColor: "rgba(10,10,10,0.10)",
+  },
+  captureHint: {
+    ...type.tinyMono,
+    textAlign: "center",
+  },
+  capturedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+  },
+  capturedThumb: {
+    width: 48,
+    height: 38,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: colors.rule,
+  },
+  capturedActive: {
+    borderColor: colors.ink,
+    borderWidth: 2,
+  },
+  capturedCamera: {
+    width: 42,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 7,
+    backgroundColor: "#F0EEE9",
+  },
+  capturedCameraText: {
+    ...type.metaValue,
+  },
+  inlineSwitch: {
+    maxWidth: 260,
   },
   switcher: {
     alignSelf: "stretch",

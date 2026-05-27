@@ -6,9 +6,14 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { HeaderBar } from "@/components/HeaderBar";
-import { SectionHeader } from "@/components/SectionHeader";
-import { SignalSlip } from "@/components/SignalSlip";
+import {
+  KotlinHeader,
+  MiniFrameStrip,
+  MockupCard,
+  MockupSection,
+  StatusPill,
+} from "@/components/KotlinMockupUI";
+import { SignalCode } from "@/components/SignalCode";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import { StatusDot } from "@/components/StatusDot";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
@@ -19,6 +24,13 @@ import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 
 const FALLBACK_REPLY_SLOTS = ["Done", "8282", "View"];
+const FALLBACK_MEANINGS: Record<string, string> = {
+  "8282": "빨리 와줘",
+  "486": "보고 싶어",
+  "1004": "집 도착",
+  "7942": "친구사이",
+  "0404": "영원히 사랑해",
+};
 
 export function TodayScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -70,6 +82,12 @@ export function TodayScreen() {
     const savedSlots = entries.map((entry) => entry.code).filter(Boolean);
     return Array.from(new Set([...savedSlots, ...FALLBACK_REPLY_SLOTS])).slice(0, 6);
   }, [entries]);
+  const latestMeaning = latestSignal
+    ? entries.find((entry) => entry.code === latestSignal.code)?.meaning ??
+      latestSignal.note ??
+      FALLBACK_MEANINGS[latestSignal.code] ??
+      "빨리 와줘"
+    : null;
 
   const refresh = () => {
     if (!profile) return;
@@ -98,37 +116,53 @@ export function TodayScreen() {
   };
 
   return (
-    <AppSurface>
-      <HeaderBar
+    <AppSurface backgroundColor="#F8F6F1">
+      <KotlinHeader
         title="Today"
-        right={loading ? "SYNC" : "LIVE"}
-        showDot
-        onRightPress={refresh}
+        actions={[
+          { label: loading ? "…" : "◐", onPress: refresh },
+          { label: "◎" },
+          { label: "⚙" },
+        ]}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SectionHeader label="TODAY" hint="LATEST SIGNAL" />
         {latestSignal ? (
           <View style={styles.latestStack}>
-            <SignalSlip
-              signal={latestSignal}
-              title={latestSignal.hasBlink ? "Incoming Blink" : "Incoming Beep"}
-            />
-            <View style={styles.latestActions}>
-              <ActionButton
-                label="View"
-                variant="dark"
-                flex
-                onPress={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
-              />
-              <ActionButton
-                label="Done"
-                flex
-                onPress={() => read(latestMessage.id).catch(reportError)}
-              />
-            </View>
+            <MockupCard style={styles.latestCard}>
+              <View style={styles.latestTopRow}>
+                <View style={styles.senderRow}>
+                  <View style={styles.senderAvatar}>
+                    <Text style={styles.senderInitial}>{latestSignal.sender.slice(0, 1)}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.senderName}>{latestSignal.sender}</Text>
+                    <Text style={styles.senderTime}>{latestSignal.time}</Text>
+                  </View>
+                </View>
+                <StatusPill label={latestSignal.hasBlink ? "Blink" : "Private"} tone="red" />
+              </View>
+              <View style={styles.codeBlock}>
+                <SignalCode code={latestSignal.code} style={styles.todayCode} />
+                <Text style={styles.meaningText}>{latestMeaning}</Text>
+              </View>
+              {latestSignal.hasBlink ? <MiniFrameStrip /> : null}
+              <View style={styles.latestActions}>
+                <ActionButton
+                  label="◉  View"
+                  variant="dark"
+                  flex
+                  onPress={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
+                />
+                <ActionButton
+                  label="Done"
+                  flex
+                  onPress={() => read(latestMessage.id).catch(reportError)}
+                />
+              </View>
+            </MockupCard>
           </View>
         ) : (
-          <View style={styles.empty}>
+          <MockupCard style={styles.empty}>
             <Text style={type.metaValue}>WAITING FOR SIGNAL</Text>
             <Text style={type.bodyMuted}>New Beeps and Blinks land here first.</Text>
             <ActionButton
@@ -138,42 +172,37 @@ export function TodayScreen() {
                 navigation.navigate("Main", { screen: friends.length > 0 ? "Compose" : "People" })
               }
             />
-          </View>
+          </MockupCard>
         )}
 
-        <SectionHeader label="QUICK REPLY" hint="DONE / CODE / VIEW" />
+        <MockupSection label="Quick Reply" />
         <SignalSlotRail slots={quickReplySlots} disabled={!latestMessage} onSelect={handleQuickReply} />
 
-        <SectionHeader label="QUEUE" hint={`${signalQueue.length} WAITING`} />
+        <MockupSection label="Queue" />
         <View style={styles.queue}>
           {signalQueue.length > 0 ? (
-            signalQueue.map((item) => (
+            signalQueue.map((item, index) => (
               <View key={item.id} style={styles.queueRow}>
-                <View style={styles.noColumn}>
-                  <Text style={type.tinyMono}>NO.</Text>
-                  <Text style={type.codeSmall}>{item.code}</Text>
-                </View>
-                <View style={styles.fromColumn}>
-                  <Text style={type.tinyMono}>FROM.</Text>
-                  <Text style={type.metaValue}>{item.sender}</Text>
+                <StatusDot size={7} color={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot} />
+                <View style={styles.queueCopy}>
+                  <Text style={styles.queueCode}>
+                    {item.code}
+                    <Text style={styles.queueMeaning}>
+                      {"  "}
+                      {entries.find((entry) => entry.code === item.code)?.meaning ?? item.note ?? FALLBACK_MEANINGS[item.code] ?? "signal"}
+                    </Text>
+                  </Text>
                 </View>
                 <Text style={type.monoValue}>{item.time}</Text>
-                <StatusDot size={7} color={item.status === "new" ? colors.red : colors.faint} />
               </View>
             ))
           ) : (
-            <View style={styles.softPanel}>
+            <MockupCard soft style={styles.softPanel}>
               <Text style={type.bodyMuted}>No more signals queued.</Text>
-            </View>
+            </MockupCard>
           )}
         </View>
-
-        <ActionButton
-          label="SAVE LOG"
-          variant="ghost"
-          disabled={!latestMessage}
-          onPress={() => latestMessage && save(latestMessage.id).catch(reportError)}
-        />
+        <ActionButton label="Save Log" variant="ghost" disabled={!latestMessage} onPress={() => latestMessage && save(latestMessage.id).catch(reportError)} />
       </ScrollView>
     </AppSurface>
   );
@@ -196,61 +225,103 @@ const styles = StyleSheet.create({
     paddingBottom: 96,
     gap: spacing[4],
   },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    marginTop: spacing[2],
-  },
-  sectionLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.rule,
-  },
   queue: {
     gap: spacing[2],
   },
   latestStack: {
     gap: spacing[3],
   },
+  latestCard: {
+    minHeight: 300,
+    padding: spacing[4],
+    gap: spacing[4],
+  },
+  latestTopRow: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[4],
+  },
+  senderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+  },
+  senderAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.redSoft,
+    overflow: "hidden",
+  },
+  senderInitial: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  senderName: {
+    ...type.metaValue,
+    fontSize: 11,
+  },
+  senderTime: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  codeBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: spacing[4],
+    paddingBottom: spacing[3],
+  },
+  todayCode: {
+    fontSize: 58,
+    lineHeight: 66,
+    letterSpacing: 0,
+  },
+  meaningText: {
+    ...type.metaValue,
+    fontSize: 12,
+    marginTop: spacing[2],
+  },
   latestActions: {
     flexDirection: "row",
     gap: spacing[3],
   },
   queueRow: {
-    minHeight: 56,
+    minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[4],
+    gap: spacing[3],
     paddingHorizontal: spacing[4],
     borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    backgroundColor: colors.paperWarm,
-    borderRadius: 10,
+    borderColor: colors.rule,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 9,
   },
-  noColumn: {
-    width: 86,
-  },
-  fromColumn: {
+  queueCopy: {
     flex: 1,
+  },
+  queueCode: {
+    ...type.codeSmall,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: 0,
+  },
+  queueMeaning: {
+    ...type.bodyMuted,
+    fontSize: 11,
   },
   empty: {
     minHeight: 180,
     justifyContent: "center",
     gap: spacing[2],
     padding: spacing[5],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: colors.paperWarm,
   },
   softPanel: {
     minHeight: 48,
     justifyContent: "center",
     padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: radius.control,
-    backgroundColor: "rgba(255,255,255,0.14)",
   },
 });

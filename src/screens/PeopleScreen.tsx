@@ -1,16 +1,21 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors, spacing } from "@/design/tokens";
+import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { FriendCard } from "@/components/FriendCard";
-import { HeaderBar } from "@/components/HeaderBar";
-import { SectionHeader } from "@/components/SectionHeader";
+import {
+  Avatar,
+  IconButton,
+  KotlinHeader,
+  MockupCard,
+  MockupSection,
+  NameDot,
+} from "@/components/KotlinMockupUI";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
-import { relationshipToSlipFriend } from "@/lib/slipUiModels";
+import { relationshipToSlipFriend, type SlipFriend } from "@/lib/slipUiModels";
 import { generateShareText } from "@/services/contactService";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
@@ -25,9 +30,10 @@ export function PeopleScreen() {
   const { friends, loading, fetch, add } = useFriendStore();
   const { received, fetchReceived } = useMessageStore();
   const [beepId, setBeepId] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPreset, setSelectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
-  const inviteInputRef = useRef<TextInput>(null);
+  const [addDialogVisible, setAddDialogVisible] = useState(false);
+  const [selectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
 
   useEffect(() => {
     if (!profile) return;
@@ -41,13 +47,13 @@ export function PeopleScreen() {
 
   const slipFriends = useMemo(
     () => friends.map((friend, index) => relationshipToSlipFriend(friend, index)),
-    [friends]
+    [friends],
   );
   const visibleFriends = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return slipFriends;
     return slipFriends.filter((friend) =>
-      `${friend.name} ${friend.no} ${friend.relation}`.toLowerCase().includes(query)
+      `${friend.name} ${friend.no} ${friend.relation}`.toLowerCase().includes(query),
     );
   }, [searchQuery, slipFriends]);
 
@@ -55,8 +61,8 @@ export function PeopleScreen() {
     const map = new Map<string, string>();
     received.forEach((message) => {
       if (map.has(message.from_user)) return;
-      const kind = message.kind === "blink" || message.media ? "Blink" : "Beep";
-      map.set(message.from_user, `${kind} / ${message.number_code}`);
+      const kind = message.kind === "blink" || message.media ? "Widget seen" : "uses code often";
+      map.set(message.from_user, kind);
     });
     return map;
   }, [received]);
@@ -64,9 +70,11 @@ export function PeopleScreen() {
   const addByBeepId = async () => {
     if (!profile || !beepId.trim()) return;
     try {
-      await add(profile.id, beepId.trim(), undefined, selectedPreset);
+      await add(profile.id, beepId.trim(), displayName.trim() || undefined, selectedPreset);
       setBeepId("");
-      Alert.alert("Friend added", `${selectedPreset} contact is ready.`);
+      setDisplayName("");
+      setAddDialogVisible(false);
+      Alert.alert("Friend added", "Close friend is ready.");
     } catch (err: any) {
       Alert.alert("Add failed", err?.message ?? "Try again.");
     }
@@ -78,16 +86,12 @@ export function PeopleScreen() {
     fetchReceived(profile.id, friends).catch(reportError);
   };
 
-  const focusInvite = () => {
-    inviteInputRef.current?.focus();
-  };
-
   const shareMyBeepId = async () => {
     if (!profile) return;
     await Share.share({ message: generateShareText(profile.beep_id, profile.nickname) });
   };
 
-  const navigateSend = (friend: { id: string; name: string; no: string }, mode: "beep" | "blink") => {
+  const navigateSend = (friend: SlipFriend, mode: "beep" | "blink") => {
     navigation.navigate("Send", {
       friendId: friend.id,
       friendName: friend.name,
@@ -97,15 +101,15 @@ export function PeopleScreen() {
   };
 
   return (
-    <AppSurface>
-      <HeaderBar
+    <AppSurface backgroundColor="#F8F6F1">
+      <KotlinHeader
         title="Friends"
-        right={loading ? "SYNC" : "+"}
-        showDot
-        onRightPress={loading ? refreshPeople : focusInvite}
+        centered
+        actions={[{ label: loading ? "…" : "⚙", onPress: loading ? refreshPeople : undefined }]}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.searchPanel}>
+          <Text style={styles.searchGlyph}>⌕</Text>
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -115,102 +119,110 @@ export function PeopleScreen() {
           />
         </View>
 
-        <CompactBeepIdCard
-          beepId={profile?.beep_id ?? "00000000"}
-          nickname={profile?.nickname ?? "ME"}
-          onShare={profile ? shareMyBeepId : undefined}
-        />
+        <MockupSection label="My Beep ID" />
+        <MockupCard style={styles.myIdCard}>
+          <Avatar label="Me" size={42} />
+          <View style={styles.myIdCopy}>
+            <Text style={styles.friendName}>{profile?.nickname ?? "Alex Chen"}</Text>
+            <Text style={styles.handle}>@{profile?.beep_id ?? "alex"}</Text>
+          </View>
+          <IconButton label="⧉" onPress={profile ? shareMyBeepId : undefined} />
+        </MockupCard>
 
-        <View style={styles.addFriendCard}>
+        <MockupSection label="Discover" />
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setAddDialogVisible(true)}
+          style={({ pressed }) => [styles.addFriendCard, pressed && styles.pressed]}
+        >
           <View style={styles.addIcon}>
-            <Text style={styles.addIconText}>+</Text>
+            <Text style={styles.addIconText}>☻+</Text>
           </View>
           <View style={styles.addCopy}>
-            <Text style={type.metaValue}>Add new friends</Text>
-            <Text style={type.bodyMuted}>Invite via link or Beep ID.</Text>
+            <Text style={styles.friendName}>Add new friends</Text>
+            <Text style={type.bodyMuted}>Invite via link or contacts</Text>
           </View>
-          <ActionButton label="ADD" variant="ghost" onPress={focusInvite} />
-        </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
 
-        <SectionHeader label="CLOSE FRIENDS" hint={`${visibleFriends.length} ONLINE`} />
-        <View style={styles.friendRow}>
+        <MockupSection label="Close Friends" hint={`${visibleFriends.length} Online`} />
+        <View style={styles.friendList}>
           {visibleFriends.length > 0 ? (
-            visibleFriends.map((friend) => (
-              <FriendCard
+            visibleFriends.map((friend, index) => (
+              <FriendRow
                 key={friend.id}
                 friend={friend}
-                lastSignal={lastSignalByFriend.get(friend.id)}
-                onPress={() => navigateSend(friend, "beep")}
-                onSendBeep={() => navigateSend(friend, "beep")}
-                onSendBlink={() => navigateSend(friend, "blink")}
+                status={lastSignalByFriend.get(friend.id) ?? (index === 0 ? "Widget seen" : "quiet receiving")}
+                time={index === 0 ? "18:05" : index === 1 ? "17:30" : "14:12"}
+                accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
+                onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
               />
             ))
           ) : (
-            <View style={styles.empty}>
+            <MockupCard soft style={styles.empty}>
               <Text style={type.metaValue}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
               <Text style={type.bodyMuted}>Add a friend by Beep ID to start sending slips.</Text>
-            </View>
+            </MockupCard>
           )}
         </View>
+      </ScrollView>
 
-        <SectionHeader label="INVITE SLIP" hint="BEEP ID + RELATION" />
-        <View style={styles.invitePanel}>
-          <Text style={type.tinyMono}>INVITE BY BEEP ID</Text>
-          <View style={styles.inviteRow}>
+      <Modal transparent visible={addDialogVisible} animationType="fade" onRequestClose={() => setAddDialogVisible(false)}>
+        <View style={styles.dialogOverlay}>
+          <View style={styles.dialog}>
+            <Text style={styles.dialogTitle}>Configure Friend Info</Text>
             <TextInput
-              ref={inviteInputRef}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="Display Name"
+              placeholderTextColor={colors.muted2}
+              style={styles.dialogInput}
+            />
+            <TextInput
               value={beepId}
               onChangeText={(value) => setBeepId(value.replace(/[^0-9]/g, ""))}
               keyboardType="number-pad"
               maxLength={8}
-              placeholder="8 DIGITS"
+              placeholder="ID Handle / Beep ID"
               placeholderTextColor={colors.muted2}
-              style={styles.input}
+              style={styles.dialogInput}
             />
-            <ActionButton label="ADD" variant="dark" onPress={addByBeepId} disabled={!beepId} />
+            <View style={styles.dialogActions}>
+              <ActionButton label="Cancel" variant="ghost" onPress={() => setAddDialogVisible(false)} />
+              <ActionButton label="Add" variant="dark" onPress={addByBeepId} disabled={!beepId} />
+            </View>
           </View>
         </View>
-
-        <Text style={type.tinyMono}>RELATIONSHIP PRESETS</Text>
-        <View style={styles.chips}>
-          {relationshipPresets.map((label) => (
-            <ActionButton
-              key={label}
-              label={label}
-              variant={selectedPreset === label ? "dark" : "light"}
-              onPress={() => setSelectedPreset(label)}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      </Modal>
     </AppSurface>
   );
 }
 
-
-function CompactBeepIdCard({
-  beepId,
-  nickname,
-  onShare,
+function FriendRow({
+  friend,
+  status,
+  time,
+  accent,
+  onPress,
 }: {
-  beepId: string;
-  nickname: string;
-  onShare?: () => void;
+  friend: SlipFriend;
+  status: string;
+  time: string;
+  accent: string;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.idCard}>
-      <View style={styles.idCardHead}>
-        <Text style={type.tinyMono}>MY BEEP ID</Text>
-        <Text style={type.tinyMono}>SHARE</Text>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, pressed && styles.pressed]}>
+      <View style={styles.friendAvatar}>
+        <Text style={styles.friendInitial}>{friend.name.slice(0, 1)}</Text>
+        <NameDot color={accent} />
       </View>
-      <View style={styles.idCardBody}>
-        <View style={styles.idTextBlock}>
-          <Text style={styles.compactId}>{beepId}</Text>
-          <Text style={type.tinyMono}>{nickname} / PRIVATE INVITE</Text>
-        </View>
-        <ActionButton label="SHARE" mono variant="light" onPress={onShare} disabled={!onShare} />
+      <View style={styles.friendCopy}>
+        <Text style={styles.friendName}>{friend.name}</Text>
+        <Text style={styles.friendStatus}>{status}</Text>
       </View>
-    </View>
+      <Text style={styles.timeText}>{time}</Text>
+    </Pressable>
   );
 }
 
@@ -223,29 +235,41 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
     paddingBottom: 96,
-    gap: spacing[5],
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-  },
-  sectionLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.rule,
+    gap: spacing[4],
   },
   searchPanel: {
     minHeight: 48,
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
     paddingHorizontal: spacing[4],
-    borderRadius: 14,
-    backgroundColor: colors.paperDeep,
+    borderRadius: 11,
+    backgroundColor: "#F0EEE9",
+  },
+  searchGlyph: {
+    ...type.metaValue,
+    fontSize: 15,
   },
   searchInput: {
+    flex: 1,
     minHeight: 38,
     ...type.body,
     color: colors.ink,
+  },
+  myIdCard: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[4],
+    padding: spacing[4],
+  },
+  myIdCopy: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  handle: {
+    ...type.bodyMuted,
+    color: colors.muted,
   },
   addFriendCard: {
     minHeight: 68,
@@ -255,98 +279,110 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderWidth: 1,
     borderColor: colors.rule,
-    borderRadius: 14,
-    backgroundColor: colors.paperWarm,
+    borderRadius: radius.slipSmall,
+    backgroundColor: "#FFFFFF",
   },
   addIcon: {
-    width: 34,
-    height: 34,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 17,
-    backgroundColor: colors.paperDeep,
+    borderRadius: 19,
+    backgroundColor: "#F0EEE9",
   },
   addIconText: {
-    ...type.codeSmall,
-    lineHeight: 26,
+    ...type.metaValue,
+    fontSize: 12,
   },
   addCopy: {
     flex: 1,
     gap: spacing[1],
   },
-  idCard: {
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: colors.paperWarm,
-  },
-  idCardHead: {
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleStrong,
-  },
-  idCardBody: {
-    minHeight: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  idTextBlock: {
-    flex: 1,
-  },
-  compactId: {
+  chevron: {
     ...type.codeSmall,
-    lineHeight: 28,
+    fontSize: 22,
+    lineHeight: 26,
   },
-  invitePanel: {
+  friendList: {
     gap: spacing[3],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.16)",
-  },
-  inviteRow: {
-    flexDirection: "row",
-    gap: spacing[3],
-    alignItems: "center",
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 8,
-    paddingHorizontal: spacing[4],
-    textAlign: "center",
-    ...type.codeSmall,
-    color: colors.ink,
-    backgroundColor: colors.paperWarm,
   },
   friendRow: {
-    gap: spacing[3],
-  },
-  chips: {
+    minHeight: 68,
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[3],
+    alignItems: "center",
+    gap: spacing[4],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: radius.slipSmall,
+    backgroundColor: "#FFFFFF",
+  },
+  friendAvatar: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: colors.paperDeep,
+  },
+  friendInitial: {
+    ...type.metaValue,
+    fontSize: 13,
+  },
+  friendCopy: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  friendName: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  friendStatus: {
+    ...type.bodyMuted,
+  },
+  timeText: {
+    ...type.tinyMono,
   },
   empty: {
-    flex: 1,
-    minHeight: 120,
+    minHeight: 112,
     justifyContent: "center",
     gap: spacing[2],
     padding: spacing[5],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
+  },
+  dialogOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    padding: spacing[8],
+    backgroundColor: "rgba(0,0,0,0.58)",
+  },
+  dialog: {
+    gap: spacing[5],
+    padding: spacing[6],
+    borderRadius: 18,
+    backgroundColor: "#EFE9F4",
+  },
+  dialogTitle: {
+    ...type.screenTitle,
+    fontSize: 20,
+    lineHeight: 26,
+  },
+  dialogInput: {
+    minHeight: 52,
     borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: colors.paperWarm,
+    borderColor: "rgba(170,150,176,0.28)",
+    borderRadius: radius.control,
+    paddingHorizontal: spacing[4],
+    backgroundColor: "rgba(255,255,255,0.18)",
+    ...type.body,
+    color: colors.ink,
+  },
+  dialogActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: spacing[3],
   },
 });

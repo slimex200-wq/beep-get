@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { colors } from "@/design/tokens";
-import { type } from "@/design/typography";
+import { font, type } from "@/design/typography";
 import { AuthScreen } from "@/screens/AuthScreen";
 import { CollectionScreen } from "@/screens/CollectionScreen";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
@@ -51,6 +51,13 @@ const tabLabels: Record<keyof MainTabParamList, (typeof primaryTabLabels)[number
   My: "MY",
 };
 
+const tabGlyphs: Record<keyof MainTabParamList, string> = {
+  Today: "▣",
+  Compose: "▷",
+  People: "••",
+  My: "♙",
+};
+
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -60,25 +67,29 @@ function MainTabs() {
           position: "absolute",
           left: 10,
           right: 10,
-          bottom: 8,
-          minHeight: 58,
-          paddingTop: 7,
-          paddingBottom: 7,
+          bottom: 9,
+          minHeight: 56,
+          paddingTop: 6,
+          paddingBottom: 6,
           borderTopWidth: 0,
-          borderRadius: 24,
-          backgroundColor: colors.paperDeep,
+          borderRadius: 16,
+          backgroundColor: "#E6E3DE",
           shadowColor: colors.ink,
-          shadowOpacity: 0.10,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 4,
         },
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
-        tabBarIcon: () => null,
-        tabBarIconStyle: { height: 0 },
-        tabBarItemStyle: { paddingBottom: 0 },
-        tabBarLabel: ({ focused, color }) => <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />,
+        tabBarIcon: ({ focused, color }) => (
+          <TabIcon routeName={route.name} focused={focused} color={color} />
+        ),
+        tabBarIconStyle: { marginTop: 2 },
+        tabBarItemStyle: { paddingBottom: 1 },
+        tabBarLabel: ({ focused, color }) => (
+          <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />
+        ),
         tabBarShowLabel: true,
       })}
     >
@@ -90,14 +101,20 @@ function MainTabs() {
   );
 }
 
+function TabIcon({ routeName, focused, color }: { routeName: keyof MainTabParamList; focused: boolean; color: string }) {
+  return (
+    <View style={styles.tabIconWrap}>
+      <Text style={[styles.tabGlyph, { color }, focused && styles.tabGlyphActive]}>
+        {tabGlyphs[routeName]}
+      </Text>
+      {routeName === "People" ? <View style={styles.tabAlertDot} /> : null}
+    </View>
+  );
+}
+
 function TabLabel({ label, focused, color }: { label: string; focused: boolean; color: string }) {
   return (
-    <View style={styles.tabLabelWrap}>
-      <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-        <Text style={[styles.tabIconText, focused && styles.tabIconTextActive]}>{label[0]}</Text>
-      </View>
-      <Text style={[styles.tabLabel, { color }, focused && styles.tabLabelActive]}>{label}</Text>
-    </View>
+    <Text style={[styles.tabLabel, { color }, focused && styles.tabLabelActive]}>{label}</Text>
   );
 }
 
@@ -159,37 +176,33 @@ export function RootNavigator() {
 }
 
 const styles = StyleSheet.create({
-  tabLabelWrap: {
+  tabIconWrap: {
+    width: 24,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 62,
-    gap: 2,
   },
-  tabIcon: {
-    width: 20,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 9,
-    backgroundColor: colors.transparent,
+  tabGlyph: {
+    fontFamily: font.sansBold,
+    fontSize: 17,
+    lineHeight: 20,
   },
-  tabIconActive: {
-    backgroundColor: colors.ink,
+  tabGlyphActive: {
+    color: colors.ink,
   },
-  tabIconText: {
-    fontFamily: type.tinyMono.fontFamily,
-    fontSize: 9,
-    lineHeight: 11,
-    color: colors.muted,
-    fontWeight: "700",
-  },
-  tabIconTextActive: {
-    color: colors.paperWarm,
+  tabAlertDot: {
+    position: "absolute",
+    right: 1,
+    top: 1,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.red,
   },
   tabLabel: {
     fontFamily: type.tinyMono.fontFamily,
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 8,
+    lineHeight: 10,
     letterSpacing: 0,
     fontWeight: "700",
   },

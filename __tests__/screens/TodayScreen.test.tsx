@@ -4,7 +4,7 @@ import path from "path";
 describe("TodayScreen product sections", () => {
   it("keeps Today focused on latest signal, quick reply, and queue", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
-    ["TODAY", "QUICK REPLY", "QUEUE", "Done", "View"].forEach((label) => {
+    ["Today", "Quick Reply", "Queue", "Done", "View", "MiniFrameStrip"].forEach((label) => {
       expect(source).toContain(label);
     });
     expect(source).not.toContain("INCOMING NOW");
