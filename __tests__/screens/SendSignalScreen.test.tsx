@@ -2,11 +2,22 @@ import { readFileSync } from "fs";
 import path from "path";
 
 describe("SendSignalScreen product sections", () => {
-  it("renders Signal Deck section labels", () => {
+  it("renders the Kotlin mockup send flow labels", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
-    ["TO STRIP", "SIGNAL TYPE", "SLOT DECK", "RECENT COMBOS"].forEach((label) => {
+    ["TO:", "SIGNAL TYPE", "SIGNAL DECK"].forEach((label) => {
       expect(source).toContain(label);
     });
+    expect(source).not.toContain("RECENT COMBOS");
+    expect(source).not.toContain("SLOT DECK");
+  });
+
+  it("summarizes the outgoing code on Beep and Blink screens", () => {
+    const beepSource = readFileSync(path.join(process.cwd(), "src/screens/SendBeepScreen.tsx"), "utf8");
+    const blinkSource = readFileSync(path.join(process.cwd(), "src/screens/SendBlinkScreen.tsx"), "utf8");
+
+    expect(beepSource).toContain("Will send code");
+    expect(blinkSource).toContain("Will send code");
+    expect(blinkSource).toContain("CAPTURED FRAMES");
   });
 
   it("uses a two-phase Blink flow so capture preview happens before upload", () => {

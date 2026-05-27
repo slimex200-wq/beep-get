@@ -16,7 +16,7 @@ import { getOwnedIdentityPackSlugs, purchaseIdentityPack } from "@/services/purc
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 
-const DEFAULT_WIDGET_SLOTS = ["배고픔", "집중중", "끝나고"];
+const DEFAULT_WIDGET_SLOTS = ["Done", "8282", "View"];
 const DEFAULT_PACK = "classic-paper";
 const PACK_EMOTE_LABELS: Record<IdentityPackTone, readonly [string, string, string]> = {
   paper: ["PING", "OK", "OPEN"],
@@ -86,6 +86,13 @@ export function MyScreen() {
     });
   };
 
+  const openStyleShop = () => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(detailYRef.current - spacing[8], 0),
+      animated: true,
+    });
+  };
+
   return (
     <AppSurface backgroundColor={colors.paper} statusBarStyle="dark">
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -95,14 +102,23 @@ export function MyScreen() {
               <Text style={styles.headerKicker}>BEEP-GET</Text>
               <StatusDot size={6} color={colors.red} />
             </View>
-            <Text style={styles.headerTitle}>MY BEEP ROOM</Text>
-            <Text style={styles.headerBody}>내 위젯이 친구 폰에 어떻게 보일지 고르고, 답장 슬롯을 확인합니다.</Text>
+            <Text style={styles.headerTitle}>My Settings</Text>
+            <Text style={styles.headerBody}>Appearance, widget layouts, quick replies, and signal codes live here.</Text>
           </View>
           <View style={styles.mascotDock}>
             <Text style={styles.mascotBubble}>Beepy</Text>
             <BeepyMascot size={62} />
           </View>
         </View>
+
+        <SettingsOverview
+          pack={selectedPack}
+          replySlots={replySlots}
+          signalCodeCount={Math.max(entries.length, DEFAULT_WIDGET_SLOTS.length)}
+          onOpenStyle={openStyleShop}
+          onOpenWidget={() => navigation.navigate("WidgetStates", { size: "medium" })}
+          onOpenDictionary={() => navigation.navigate("Dictionary")}
+        />
 
         <ProfileSlip
           beepId={profile?.beep_id ?? "NO 04"}
@@ -118,10 +134,10 @@ export function MyScreen() {
           onOpenLogs={() => navigation.navigate("Logs")}
         />
 
-        <SectionHeader label="CURRENT WIDGET" hint="FRIEND HOME PREVIEW" />
+        <SectionHeader label="WIDGET LAYOUTS" hint="FRIEND HOME PREVIEW" />
         <WidgetPreview pack={selectedPack} replySlots={replySlots} />
 
-        <SectionHeader label="STYLE SHOP" hint="TAP TO TRY" />
+        <SectionHeader label="APPEARANCE" hint="TAP TO TRY" />
         <SelectedPackSummary pack={selectedPack} />
         <View style={styles.packPicker}>
           {identityPacks.map((pack) => (
@@ -158,6 +174,74 @@ export function MyScreen() {
         </View>
       </ScrollView>
     </AppSurface>
+  );
+}
+
+function SettingsOverview({
+  pack,
+  replySlots,
+  signalCodeCount,
+  onOpenStyle,
+  onOpenWidget,
+  onOpenDictionary,
+}: {
+  pack: IdentityPack;
+  replySlots: string[];
+  signalCodeCount: number;
+  onOpenStyle: () => void;
+  onOpenWidget: () => void;
+  onOpenDictionary: () => void;
+}) {
+  return (
+    <View style={styles.settingsPanel}>
+      <SettingsRow title="APPEARANCE" value={pack.name} action="Change" onPress={onOpenStyle} />
+      <SettingsRow
+        title="WIDGET LAYOUTS"
+        value="Small / Medium / Large"
+        action="Preview"
+        onPress={onOpenWidget}
+      />
+      <SettingsRow
+        title="QUICK REPLIES"
+        value={replySlots.join(" / ")}
+        action="Configure Slots"
+        onPress={onOpenDictionary}
+      />
+      <SettingsRow
+        title="SIGNAL DIRECTORY CODES"
+        value={`${signalCodeCount} codes / On-Demand`}
+        action="Add Code"
+        onPress={onOpenDictionary}
+      />
+    </View>
+  );
+}
+
+function SettingsRow({
+  title,
+  value,
+  action,
+  onPress,
+}: {
+  title: string;
+  value: string;
+  action: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.settingsRow, pressed && styles.pressed]}
+    >
+      <View style={styles.settingsCopy}>
+        <Text style={styles.settingsTitle}>{title}</Text>
+        <Text style={styles.settingsValue} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      <Text style={styles.settingsAction}>{action}</Text>
+    </Pressable>
   );
 }
 
@@ -885,8 +969,8 @@ const detailToneStyle = StyleSheet.create({
 const styles = StyleSheet.create({
   content: {
     padding: spacing[6],
-    paddingBottom: 110,
-    gap: spacing[8],
+    paddingBottom: 96,
+    gap: spacing[6],
   },
   header: {
     borderWidth: 1,
@@ -939,6 +1023,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[1],
     transform: [{ rotate: "-8deg" }],
+  },
+  settingsPanel: {
+    gap: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 12,
+    backgroundColor: colors.paperWarm,
+    padding: spacing[3],
+  },
+  settingsRow: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[3],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 8,
+    backgroundColor: colors.paper,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+  },
+  settingsCopy: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  settingsTitle: {
+    ...type.tinyMono,
+    color: colors.ink,
+    letterSpacing: 1,
+  },
+  settingsValue: {
+    ...type.body,
+    color: colors.muted,
+  },
+  settingsAction: {
+    ...type.buttonMono,
+    color: colors.ink,
+    fontSize: 10,
+    maxWidth: 96,
+    textAlign: "right",
   },
   profileSlip: {
     borderWidth: 1,

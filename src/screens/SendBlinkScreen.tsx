@@ -68,13 +68,13 @@ export function SendBlinkScreen({
 
   return (
     <AppSurface>
-      <HeaderBar title="SEND BLINK" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
+      <HeaderBar title="Send" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
       {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="Send Slip" accent={false}>
+        <SlipFrame title="Blink Capture" accent={false}>
           <View style={styles.recipientRow}>
             <View style={styles.recipientText}>
-              <MetaRow label="TO." value={`${recipientName} - NO ${recipientNo}`} />
+              <MetaRow label="TO:" value={`${recipientName} - NO ${recipientNo}`} />
             </View>
             <View style={styles.stamp}>
               <Text style={type.tinyMono}>CODE</Text>
@@ -117,7 +117,7 @@ export function SendBlinkScreen({
             )}
           </View>
 
-          <Text style={type.tinyMono}>CODE / TOKEN</Text>
+          <Text style={type.tinyMono}>SIGNAL DECK</Text>
           <View style={styles.presets}>
             {["8282", "486", "000"].map((preset) => (
               <ActionButton
@@ -150,10 +150,14 @@ export function SendBlinkScreen({
           />
 
           <Text style={type.tinyMono}>
-            {hasCapturedBlink ? "PREVIEW  3 FRAMES READY" : "PREVIEW  3 FRAMES"}
+            {hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}
           </Text>
           <BlinkStrip compact frameUris={previewFrameUris} />
         </SlipFrame>
+        <View style={styles.summary}>
+          <Text style={type.tinyMono}>SUMMARY</Text>
+          <Text style={styles.summaryText}>Will send code {code || "____"} to {recipientName}</Text>
+        </View>
         <View style={styles.actions}>
           <ActionButton
             label="RETAKE"
@@ -177,7 +181,7 @@ export function SendBlinkScreen({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
+    paddingBottom: 96,
     gap: spacing[5],
   },
   recipientRow: {
@@ -256,5 +260,17 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap: spacing[3],
+  },
+  summary: {
+    gap: spacing[2],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 8,
+    backgroundColor: colors.paperWarm,
+  },
+  summaryText: {
+    ...type.body,
+    color: colors.ink,
   },
 });

@@ -42,12 +42,12 @@ export type MainTabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
+export const primaryTabLabels = ["TODAY", "SEND", "FRIENDS", "MY"] as const;
 
 const tabLabels: Record<keyof MainTabParamList, (typeof primaryTabLabels)[number]> = {
   Today: "TODAY",
   Compose: "SEND",
-  People: "PEOPLE",
+  People: "FRIENDS",
   My: "MY",
 };
 
@@ -57,16 +57,27 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.stage,
-          borderTopColor: "rgba(247,243,234,0.16)",
-          paddingTop: 8,
-          minHeight: 62,
+          position: "absolute",
+          left: 10,
+          right: 10,
+          bottom: 8,
+          minHeight: 58,
+          paddingTop: 7,
+          paddingBottom: 7,
+          borderTopWidth: 0,
+          borderRadius: 24,
+          backgroundColor: colors.paperDeep,
+          shadowColor: colors.ink,
+          shadowOpacity: 0.10,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8,
         },
-        tabBarActiveTintColor: colors.paperWarm,
-        tabBarInactiveTintColor: "rgba(247,243,234,0.45)",
+        tabBarActiveTintColor: colors.ink,
+        tabBarInactiveTintColor: colors.muted,
         tabBarIcon: () => null,
         tabBarIconStyle: { height: 0 },
-        tabBarItemStyle: { paddingBottom: 7 },
+        tabBarItemStyle: { paddingBottom: 0 },
         tabBarLabel: ({ focused, color }) => <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />,
         tabBarShowLabel: true,
       })}
@@ -82,8 +93,10 @@ function MainTabs() {
 function TabLabel({ label, focused, color }: { label: string; focused: boolean; color: string }) {
   return (
     <View style={styles.tabLabelWrap}>
+      <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
+        <Text style={[styles.tabIconText, focused && styles.tabIconTextActive]}>{label[0]}</Text>
+      </View>
       <Text style={[styles.tabLabel, { color }, focused && styles.tabLabelActive]}>{label}</Text>
-      <View style={[styles.tabIndicator, focused && styles.tabIndicatorActive]} />
     </View>
   );
 }
@@ -149,26 +162,38 @@ const styles = StyleSheet.create({
   tabLabelWrap: {
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 54,
+    minWidth: 62,
+    gap: 2,
+  },
+  tabIcon: {
+    width: 20,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    backgroundColor: colors.transparent,
+  },
+  tabIconActive: {
+    backgroundColor: colors.ink,
+  },
+  tabIconText: {
+    fontFamily: type.tinyMono.fontFamily,
+    fontSize: 9,
+    lineHeight: 11,
+    color: colors.muted,
+    fontWeight: "700",
+  },
+  tabIconTextActive: {
+    color: colors.paperWarm,
   },
   tabLabel: {
     fontFamily: type.tinyMono.fontFamily,
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.65,
+    fontSize: 9,
+    lineHeight: 11,
+    letterSpacing: 0,
     fontWeight: "700",
   },
   tabLabelActive: {
     opacity: 1,
-  },
-  tabIndicator: {
-    width: 14,
-    height: 2,
-    marginTop: 3,
-    borderRadius: 2,
-    backgroundColor: colors.transparent,
-  },
-  tabIndicatorActive: {
-    backgroundColor: colors.paperWarm,
   },
 });

@@ -9,7 +9,6 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendPickerStrip, type PickableFriend } from "@/components/FriendPickerStrip";
 import { HeaderBar } from "@/components/HeaderBar";
-import { RecentSignalCombos, type RecentSignalCombo } from "@/components/RecentSignalCombos";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
@@ -109,20 +108,6 @@ export function SendSignalScreen() {
     if (!code && slotDeck[0]) setCode(slotDeck[0]);
   }, [code, slotDeck]);
 
-  const recentCombos = useMemo<RecentSignalCombo[]>(() => {
-    return friendOptions.slice(0, 3).map((friend, index) => {
-      const slot = slotDeck[index] ?? DEFAULT_SLOT_DECK[index] ?? "8282";
-      return {
-        id: `${friend.id}-${slot}`,
-        friendId: friend.id,
-        friendName: friend.name,
-        friendNo: friend.no,
-        slot,
-        label: `${friend.name} + ${slot}`,
-      };
-    });
-  }, [friendOptions, slotDeck]);
-
   const modeSwitch = (
     <View style={styles.switcher}>
       <ModeButton label="BEEP" active={mode === "beep"} onPress={() => setMode("beep")} />
@@ -132,13 +117,16 @@ export function SendSignalScreen() {
 
   const deckHeader = recipient ? (
     <View style={styles.deck}>
-      <HeroBlock
-        titleTop="Signal"
-        titleBottom="Deck"
-        copy="Pick a friend, choose a slot, preview the outgoing slip, then send."
-        badge={friendOptions.length.toString().padStart(2, "0")}
-      />
-      <Text style={type.tinyMono}>TO STRIP</Text>
+      <View style={styles.deckTopRow}>
+        <View>
+          <Text style={type.tinyMono}>SEND</Text>
+          <Text style={styles.deckTitle}>Signal Deck</Text>
+        </View>
+        <View style={styles.deckBadge}>
+          <Text style={type.tinyMono}>{friendOptions.length.toString().padStart(2, "0")} FRIENDS</Text>
+        </View>
+      </View>
+      <Text style={type.tinyMono}>TO:</Text>
       <FriendPickerStrip
         friends={friendOptions}
         selectedId={recipient.id}
@@ -146,16 +134,8 @@ export function SendSignalScreen() {
       />
       <Text style={type.tinyMono}>SIGNAL TYPE</Text>
       {modeSwitch}
-      <Text style={type.tinyMono}>SLOT DECK</Text>
+      <Text style={type.tinyMono}>SIGNAL DECK</Text>
       <SignalSlotRail slots={slotDeck} selected={code} onSelect={setCode} />
-      <Text style={type.tinyMono}>RECENT COMBOS</Text>
-      <RecentSignalCombos
-        combos={recentCombos}
-        onSelect={(combo) => {
-          setSelectedRecipientId(combo.friendId);
-          setCode(combo.slot);
-        }}
-      />
     </View>
   ) : null;
 
@@ -176,7 +156,7 @@ export function SendSignalScreen() {
     if (isDemoFriend(recipient.id)) {
       Alert.alert(
         "Beepy is a demo friend",
-        `${code} 송신 시연이에요. 진짜 친구는 PEOPLE 에서 Beep ID 로 추가하세요.`,
+        `${code} 송신 시연이에요. 진짜 친구는 FRIENDS 에서 Beep ID 로 추가하세요.`,
       );
       setMemo("");
       return;
@@ -279,19 +259,13 @@ export function SendSignalScreen() {
     return (
       <AppSurface>
         <HeaderBar
-          title="SEND SIGNAL"
+          title="Send"
           left="BACK"
-          right="PEOPLE"
+          right="FRIENDS"
           onLeftPress={goBackToFlow}
           onRightPress={() => navigation.navigate("Main", { screen: "People" })}
         />
         <ScrollView contentContainerStyle={styles.emptyContent} showsVerticalScrollIndicator={false}>
-          <HeroBlock
-            titleTop="Signal"
-            titleBottom="Deck"
-            copy="Friend picker, slot deck, outgoing slip, and recent combos stay in this order."
-            badge="04"
-          />
           <View style={styles.emptyDeck}>
             <View style={styles.emptyDeckTop}>
               <View>
@@ -304,14 +278,14 @@ export function SendSignalScreen() {
             </View>
 
             <Text style={type.bodyMuted}>
-              Your send screen will open here with Beep/Blink mode, reply slots, recent combos,
-              and the selected friend's widget preview.
+              Add a friend to unlock the To strip, Blink capture, reply chips, and outgoing summary.
             </Text>
 
+            <Text style={type.tinyMono}>TO:</Text>
             <Text style={type.tinyMono}>SIGNAL TYPE</Text>
             {modeSwitch}
 
-            <Text style={type.tinyMono}>DEFAULT SLOT DECK</Text>
+            <Text style={type.tinyMono}>SIGNAL DECK</Text>
             <View style={styles.slotPreviewRow}>
               {DEFAULT_SLOT_DECK.slice(0, 5).map((slot) => (
                 <View key={slot} style={styles.slotPreviewChip}>
@@ -320,13 +294,8 @@ export function SendSignalScreen() {
               ))}
             </View>
 
-            <View style={styles.recentPreview}>
-              <Text style={type.tinyMono}>RECENT COMBOS</Text>
-              <Text style={type.bodyMuted}>Add one friend and this becomes a one-tap send lane.</Text>
-            </View>
-
             <ActionButton
-              label="OPEN PEOPLE"
+              label="OPEN FRIENDS"
               variant="dark"
               onPress={() => navigation.navigate("Main", { screen: "People" })}
             />
@@ -412,31 +381,6 @@ function ModeButton({
   );
 }
 
-function HeroBlock({
-  titleTop,
-  titleBottom,
-  copy,
-  badge,
-}: {
-  titleTop: string;
-  titleBottom: string;
-  copy: string;
-  badge: string;
-}) {
-  return (
-    <View style={styles.hero}>
-      <View style={styles.heroText}>
-        <Text style={styles.heroTitle}>{titleTop}</Text>
-        <Text style={styles.heroTitle}>{titleBottom}</Text>
-        <Text style={styles.heroCopy}>{copy}</Text>
-      </View>
-      <View style={styles.heroBadge}>
-        <Text style={styles.heroBadgeText}>{badge}</Text>
-      </View>
-    </View>
-  );
-}
-
 function friendNo(label?: string) {
   const digits = label?.replace(/\D/g, "");
   return digits?.slice(-2) || "01";
@@ -449,7 +393,7 @@ function reportError(err: unknown) {
 
 const styles = StyleSheet.create({
   deck: {
-    gap: spacing[2],
+    gap: spacing[3],
     marginBottom: spacing[3],
     marginHorizontal: spacing[5],
     padding: spacing[3],
@@ -458,42 +402,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.paperWarm,
   },
-  hero: {
-    minHeight: 86,
+  deckTopRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing[4],
-    marginBottom: spacing[2],
+    paddingBottom: spacing[2],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
   },
-  heroText: {
-    flex: 1,
+  deckTitle: {
+    ...type.slipTitle,
   },
-  heroTitle: {
-    ...type.screenTitle,
-    fontSize: 34,
-    lineHeight: 33,
-    letterSpacing: -0.8,
-  },
-  heroCopy: {
-    ...type.bodyMuted,
-    marginTop: spacing[2],
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  heroBadge: {
-    width: 50,
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
+  deckBadge: {
     borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.lcd,
-  },
-  heroBadgeText: {
-    ...type.codeSmall,
-    fontSize: 18,
-    lineHeight: 20,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.paper,
   },
   switcher: {
     alignSelf: "stretch",
@@ -509,7 +436,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "flex-start",
     padding: spacing[5],
-    paddingBottom: spacing[8],
+    paddingBottom: 96,
     gap: spacing[5],
   },
   emptyDeck: {
@@ -558,13 +485,5 @@ const styles = StyleSheet.create({
   slotPreviewText: {
     ...type.buttonMono,
     color: colors.ink,
-  },
-  recentPreview: {
-    gap: spacing[1],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: radius.control,
-    backgroundColor: "rgba(255,255,255,0.18)",
   },
 });

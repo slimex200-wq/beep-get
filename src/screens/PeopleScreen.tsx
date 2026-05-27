@@ -25,6 +25,7 @@ export function PeopleScreen() {
   const { friends, loading, fetch, add } = useFriendStore();
   const { received, fetchReceived } = useMessageStore();
   const [beepId, setBeepId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedPreset, setSelectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
   const inviteInputRef = useRef<TextInput>(null);
 
@@ -42,6 +43,13 @@ export function PeopleScreen() {
     () => friends.map((friend, index) => relationshipToSlipFriend(friend, index)),
     [friends]
   );
+  const visibleFriends = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return slipFriends;
+    return slipFriends.filter((friend) =>
+      `${friend.name} ${friend.no} ${friend.relation}`.toLowerCase().includes(query)
+    );
+  }, [searchQuery, slipFriends]);
 
   const lastSignalByFriend = useMemo(() => {
     const map = new Map<string, string>();
@@ -91,18 +99,21 @@ export function PeopleScreen() {
   return (
     <AppSurface>
       <HeaderBar
-        title="PEOPLE"
+        title="Friends"
         right={loading ? "SYNC" : "+"}
         showDot
         onRightPress={loading ? refreshPeople : focusInvite}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <HeroBlock
-          titleTop="Close"
-          titleBottom="Circuit"
-          copy="Close friends, last signal context, and send shortcuts stay together."
-          badge={slipFriends.length.toString().padStart(2, "0")}
-        />
+        <View style={styles.searchPanel}>
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search ID or name"
+            placeholderTextColor={colors.muted2}
+            style={styles.searchInput}
+          />
+        </View>
 
         <CompactBeepIdCard
           beepId={profile?.beep_id ?? "00000000"}
@@ -110,10 +121,21 @@ export function PeopleScreen() {
           onShare={profile ? shareMyBeepId : undefined}
         />
 
-        <SectionHeader label="CLOSE CIRCUIT" hint={`${slipFriends.length} FRIENDS`} />
+        <View style={styles.addFriendCard}>
+          <View style={styles.addIcon}>
+            <Text style={styles.addIconText}>+</Text>
+          </View>
+          <View style={styles.addCopy}>
+            <Text style={type.metaValue}>Add new friends</Text>
+            <Text style={type.bodyMuted}>Invite via link or Beep ID.</Text>
+          </View>
+          <ActionButton label="ADD" variant="ghost" onPress={focusInvite} />
+        </View>
+
+        <SectionHeader label="CLOSE FRIENDS" hint={`${visibleFriends.length} ONLINE`} />
         <View style={styles.friendRow}>
-          {slipFriends.length > 0 ? (
-            slipFriends.map((friend) => (
+          {visibleFriends.length > 0 ? (
+            visibleFriends.map((friend) => (
               <FriendCard
                 key={friend.id}
                 friend={friend}
@@ -125,7 +147,7 @@ export function PeopleScreen() {
             ))
           ) : (
             <View style={styles.empty}>
-              <Text style={type.metaValue}>NO FRIENDS YET</Text>
+              <Text style={type.metaValue}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
               <Text style={type.bodyMuted}>Add a friend by Beep ID to start sending slips.</Text>
             </View>
           )}
@@ -166,31 +188,6 @@ export function PeopleScreen() {
 }
 
 
-function HeroBlock({
-  titleTop,
-  titleBottom,
-  copy,
-  badge,
-}: {
-  titleTop: string;
-  titleBottom: string;
-  copy: string;
-  badge: string;
-}) {
-  return (
-    <View style={styles.hero}>
-      <View style={styles.heroText}>
-        <Text style={styles.heroTitle}>{titleTop}</Text>
-        <Text style={styles.heroTitle}>{titleBottom}</Text>
-        <Text style={styles.heroCopy}>{copy}</Text>
-      </View>
-      <View style={styles.heroBadge}>
-        <Text style={styles.heroBadgeText}>{badge}</Text>
-      </View>
-    </View>
-  );
-}
-
 function CompactBeepIdCard({
   beepId,
   nickname,
@@ -225,7 +222,7 @@ function reportError(err: unknown) {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
+    paddingBottom: 96,
     gap: spacing[5],
   },
   sectionHeader: {
@@ -238,41 +235,44 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.rule,
   },
-  hero: {
-    minHeight: 86,
+  searchPanel: {
+    minHeight: 48,
+    justifyContent: "center",
+    paddingHorizontal: spacing[4],
+    borderRadius: 14,
+    backgroundColor: colors.paperDeep,
+  },
+  searchInput: {
+    minHeight: 38,
+    ...type.body,
+    color: colors.ink,
+  },
+  addFriendCard: {
+    minHeight: 68,
     flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
+    alignItems: "center",
     gap: spacing[4],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 14,
+    backgroundColor: colors.paperWarm,
   },
-  heroText: {
-    flex: 1,
-  },
-  heroTitle: {
-    ...type.screenTitle,
-    fontSize: 34,
-    lineHeight: 33,
-    letterSpacing: -0.8,
-  },
-  heroCopy: {
-    ...type.bodyMuted,
-    marginTop: spacing[2],
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  heroBadge: {
-    width: 50,
-    height: 50,
+  addIcon: {
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.ink,
-    backgroundColor: colors.lcd,
+    borderRadius: 17,
+    backgroundColor: colors.paperDeep,
   },
-  heroBadgeText: {
+  addIconText: {
     ...type.codeSmall,
-    fontSize: 18,
-    lineHeight: 20,
+    lineHeight: 26,
+  },
+  addCopy: {
+    flex: 1,
+    gap: spacing[1],
   },
   idCard: {
     borderWidth: 1,

@@ -44,13 +44,13 @@ export function SendBeepScreen({
 
   return (
     <AppSurface>
-      <HeaderBar title="SEND BEEP" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
+      <HeaderBar title="Send" left="BACK" right="LOGS" onLeftPress={onBack} onRightPress={onOpenLogs} />
       {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SlipFrame title="Send Slip" accent={false}>
+        <SlipFrame title="Outgoing Beep" accent={false}>
           <View style={styles.recipientRow}>
             <View style={styles.recipientText}>
-              <MetaRow label="TO." value={`${recipientName} - NO ${recipientNo}`} />
+              <MetaRow label="TO:" value={`${recipientName} - NO ${recipientNo}`} />
             </View>
             <View style={styles.stamp}>
               <Text style={type.tinyMono}>CODE</Text>
@@ -59,7 +59,7 @@ export function SendBeepScreen({
           </View>
 
           <View style={styles.codeArea}>
-            <Text style={type.tinyMono}>CODE / TOKEN.</Text>
+            <Text style={type.tinyMono}>CODE</Text>
             <SignalCode code={cleanCode} />
             <TextInput
               value={code}
@@ -72,7 +72,7 @@ export function SendBeepScreen({
             />
           </View>
 
-          <Text style={type.tinyMono}>CLASSIC CODES</Text>
+          <Text style={type.tinyMono}>SIGNAL DECK</Text>
           <View style={styles.presets}>
             {["8282", "486", "000", "1004"].map((preset) => (
               <ActionButton
@@ -99,6 +99,10 @@ export function SendBeepScreen({
             <Text style={[type.tinyMono, styles.counter]}>{memo.length} / 30</Text>
           </View>
         </SlipFrame>
+        <View style={styles.summary}>
+          <Text style={type.tinyMono}>SUMMARY</Text>
+          <Text style={styles.summaryText}>Will send code {cleanCode} to {recipientName}</Text>
+        </View>
         <ActionButton
           label={sending ? "SENDING" : "SEND BEEP"}
           variant="dark"
@@ -113,7 +117,7 @@ export function SendBeepScreen({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
+    paddingBottom: 96,
     gap: spacing[5],
   },
   recipientRow: {
@@ -172,5 +176,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: spacing[4],
     bottom: spacing[4],
+  },
+  summary: {
+    gap: spacing[2],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: radius.control,
+    backgroundColor: colors.paperWarm,
+  },
+  summaryText: {
+    ...type.body,
+    color: colors.ink,
   },
 });

@@ -18,7 +18,7 @@ import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 
-const FALLBACK_REPLY_SLOTS = ["OK", "8282", "OPEN"];
+const FALLBACK_REPLY_SLOTS = ["Done", "8282", "View"];
 
 export function TodayScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -79,12 +79,12 @@ export function TodayScreen() {
   const handleQuickReply = async (slot: string) => {
     if (!latestMessage) return;
 
-    if (slot === "OK") {
+    if (slot === "Done") {
       await read(latestMessage.id).catch(reportError);
       return;
     }
 
-    if (slot === "OPEN") {
+    if (slot === "View") {
       navigation.navigate("ReplyRoom", { signalId: latestMessage.id });
       return;
     }
@@ -100,18 +100,33 @@ export function TodayScreen() {
   return (
     <AppSurface>
       <HeaderBar
-        title="BEEP-GET"
+        title="Today"
         right={loading ? "SYNC" : "LIVE"}
         showDot
         onRightPress={refresh}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SectionHeader label="INCOMING NOW" hint="LATEST SIGNAL" />
+        <SectionHeader label="TODAY" hint="LATEST SIGNAL" />
         {latestSignal ? (
-          <SignalSlip
-            signal={latestSignal}
-            title={latestSignal.hasBlink ? "Incoming Blink" : "Incoming Beep"}
-          />
+          <View style={styles.latestStack}>
+            <SignalSlip
+              signal={latestSignal}
+              title={latestSignal.hasBlink ? "Incoming Blink" : "Incoming Beep"}
+            />
+            <View style={styles.latestActions}>
+              <ActionButton
+                label="View"
+                variant="dark"
+                flex
+                onPress={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
+              />
+              <ActionButton
+                label="Done"
+                flex
+                onPress={() => read(latestMessage.id).catch(reportError)}
+              />
+            </View>
+          </View>
         ) : (
           <View style={styles.empty}>
             <Text style={type.metaValue}>WAITING FOR SIGNAL</Text>
@@ -126,16 +141,10 @@ export function TodayScreen() {
           </View>
         )}
 
-        <SectionHeader label="QUICK REPLY" hint="MY SLOTS + CLASSIC CODES" />
+        <SectionHeader label="QUICK REPLY" hint="DONE / CODE / VIEW" />
         <SignalSlotRail slots={quickReplySlots} disabled={!latestMessage} onSelect={handleQuickReply} />
-        <ActionButton
-          label="SAVE LOG"
-          variant="ghost"
-          disabled={!latestMessage}
-          onPress={() => latestMessage && save(latestMessage.id).catch(reportError)}
-        />
 
-        <SectionHeader label="TODAY QUEUE" hint={`${signalQueue.length} WAITING`} />
+        <SectionHeader label="QUEUE" hint={`${signalQueue.length} WAITING`} />
         <View style={styles.queue}>
           {signalQueue.length > 0 ? (
             signalQueue.map((item) => (
@@ -159,7 +168,12 @@ export function TodayScreen() {
           )}
         </View>
 
-        <ActionButton label="REFRESH" variant="ghost" mono onPress={refresh} />
+        <ActionButton
+          label="SAVE LOG"
+          variant="ghost"
+          disabled={!latestMessage}
+          onPress={() => latestMessage && save(latestMessage.id).catch(reportError)}
+        />
       </ScrollView>
     </AppSurface>
   );
@@ -179,7 +193,7 @@ function reportError(err: unknown) {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
+    paddingBottom: 96,
     gap: spacing[4],
   },
   sectionHeader: {
@@ -195,6 +209,13 @@ const styles = StyleSheet.create({
   },
   queue: {
     gap: spacing[2],
+  },
+  latestStack: {
+    gap: spacing[3],
+  },
+  latestActions: {
+    flexDirection: "row",
+    gap: spacing[3],
   },
   queueRow: {
     minHeight: 56,
