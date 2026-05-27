@@ -1,415 +1,121 @@
-# BEEP-GET UI/UX Design System
+# BEEP-GET UI/UX Design Source
 
-> Version: Original Slip System v2
-> Target: Expo / React Native mobile app
-> Visual base: Swiss paper slip + private pager object
-> Current decision: use the generated board direction, but make the pager/widget silhouette closer to the original user mockup.
+> Active target: Kotlin final mockup refresh, 2026-05-26
+> Reference folder: `.lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/`
+> Product rule: BEEP-GET is a private pager for close friends, not chat, feed, or a generic dashboard.
 
----
+## Current Implementation Target
 
-## 1. Design Thesis
+The four authenticated tabs must match the Kotlin mockup family:
 
-**BEEP-GET is not a chat app. It is a home-screen pager object for close friends.**
+- `01-today-loaded.png` / `01b-today-lower.png`
+- `02-send-top.png` / `02b-send-lower.png`
+- `03-friends-top.png` / `03b-friends-add-dialog.png`
+- `04-my-top.png` / `04b-my-lower.png`
+- `04c-my-configure-slots-dialog.png` / `04d-my-add-code-dialog.png`
 
-The app should feel like the inside of the widget. Every surface is a variation of the same paper slip system:
+Use the mockup hierarchy first. Existing slip-system ideas are still valid only when they support this target.
 
-| Surface | Product metaphor | UI object |
-|---|---|---|
-| Widget | Incoming Slip | small paper ticket inside pager shell |
-| Today | Signal desk | latest slip + compact queue |
-| Reply Room | Signal detail | opened slip with Blink proof and quick reply |
-| Send Beep | Outgoing Slip | reverse slip prepared for someone else’s widget |
-| Send Blink | Signal camera slip | 2-second camera module embedded inside slip |
-| People | Close circuit | relationship index, not contact list |
-| Studio | Pager tuning desk | widget preview + permission/status checklist |
-| Logs | Ticket ledger | saved slips and expired Blink metadata |
+## Visual Commitments
 
-The original widget mockup remains the master component. The board UI direction remains the app direction. The implementation must combine both.
+- Background is warm ivory, not black stage, for the primary mobile tabs.
+- The app uses a compact native phone layout: status-safe header, content stack, bottom nav pill.
+- Cards are white or soft ivory with thin rules and restrained radius.
+- Primary actions are black, full-width where the mockup shows a major send/view action.
+- Numeric signal codes stay visually dominant and monospaced.
+- Blink should show actual video or real frame thumbnails, not placeholder color blocks.
+- Korean signal meanings are allowed and expected for default codes.
+- Avoid marketing hero layouts, chat bubbles, feeds, likes, comments, reward surfaces, and dashboard filler.
 
----
+## Primary Tabs
 
-## 2. Visual Commitments
+### Today
 
-Keep:
-
-- black stage background
-- cream paper UI
-- thin black grid lines
-- strict internal ticket grid
-- rounded pager/shell outer frame
-- red notification LED/dot
-- monospaced numeric hero code
-- radar/dot-field ornaments
-- mechanical rectangular action buttons
-- short mixed Korean/English labels
-
-Avoid:
-
-- generic smartphone cards
-- chat bubbles
-- public feed affordances
-- purple gradients
-- glassmorphism
-- cute/bubbly MZ typography
-- over-translating product words
-- free-text widget input
-
----
-
-## 3. Language Rules
-
-BEEP-GET should not be fully Koreanized. Product words remain English where they carry identity.
-
-| Keep English | Koreanize |
-|---|---|
-| `BEEP-GET` | `오늘` |
-| `Beep` | `도착한 Beep` |
-| `Blink` | `도착한 Blink` |
-| `OK` | `열기` |
-| `NO.` | `저장` |
-| `FROM.` / `TIME.` / `TO.` | `비프 보내기` |
-| numeric codes: `8282`, `486`, `000`, `1004` | `기록`, `친구`, `스튜디오` |
-
-Preferred labels:
-
-```txt
-도착한 Beep
-도착한 Blink
-보낼 Beep
-보낼 Blink
-신호 상세
-민아 - NO 04
-2초 Blink 있음
-OK / 8282 / 열기 / 저장
-Blink로 답장
-비프 보내기
-Blink 보내기
-전송 중
-보냄
-앱 열기
-```
-
----
-
-## 4. Typography
-
-### Target font direction
-
-Do not use round/cute Korean fonts. Use a paper/editorial + technical mix.
-
-| Role | Preferred production font | In this starter code |
-|---|---|---|
-| Korean display/title | MaruBuri SemiBold or equivalent Korean serif | platform serif fallback |
-| English product word | Fraunces SemiBold Italic or warm editorial serif | serif italic fallback |
-| UI Korean text | IBM Plex Sans KR / Pretendard | platform sans fallback |
-| Code/time/NO | IBM Plex Mono / Space Mono | platform monospace fallback |
-
-Font files are not included. Add them to `assets/fonts` and map them in `src/design/typography.ts` when ready.
-
----
-
-## 5. Design Tokens
-
-```ts
-colors = {
-  stage: '#050505',
-  stageSoft: '#10100F',
-  shell: '#12110F',
-  shellEdge: '#282622',
-  paper: '#F4EFE5',
-  paperDeep: '#E8DDCD',
-  paperWarm: '#FFF5E4',
-  ink: '#0A0A0A',
-  muted: '#6B6259',
-  faint: '#BDB3A5',
-  rule: 'rgba(10,10,10,0.22)',
-  red: '#D8361E',
-  redDeep: '#9E2115',
-  lcd: '#DCEBCB',
-  green: '#6F8762',
-  white: '#F7F3EA',
-}
-
-radius = {
-  pager: 34,
-  pagerInner: 24,
-  slip: 15,
-  control: 8,
-  button: 6,
-}
-```
-
----
-
-## 6. Component System
-
-### `PagerFrame`
-
-The hardware-like shell. It is not a normal phone frame.
-
-Anatomy:
-
-1. rounded black/cream shell
-2. inner cream screen well
-3. bottom grille
-4. red LED pair
-5. tiny `BEEP-GET` emboss label
-
-Variants:
-
-- `dark`: black shell, main app screens
-- `cream`: cream hardware shell, Studio/Logs special object mode
-
-### `SlipFrame`
-
-The master paper ticket component.
-
-Anatomy:
-
-1. title row
-2. red status dot
-3. thin rule
-4. grid content
-5. optional dashed/perforated edge
-
-Variants:
-
-- `incoming`
-- `outgoing`
-- `widget`
-- `success`
-- `danger`
-
-### `SignalCode`
-
-Hero numeric display. Must remain visually dominant.
-
-Rules:
-
-- use mono/tabular numerals
-- codes use 68–88px in hero slips
-- small widgets use 34–44px
-- do not add emoji or decorative icon near code
-
-### `MetaRow`
-
-Ticket metadata row.
-
-Examples:
-
-```txt
-FROM. 민아 - NO 04
-TIME. 14:56
-NOTE. 2초 Blink 있음
-```
-
-### `ActionButton`
-
-Mechanical buttons.
-
-Variants:
-
-- `light`
-- `dark`
-- `danger`
-- `success`
-- `ghost`
-
-### `BlinkStrip`
-
-2-second Blink proof as 3 frames.
-
-Rules:
-
-- never make it look like a social video feed
-- 3-frame strip is enough for preview
-- full playback can happen in Reply Room only
-
-### `DotRadar`
-
-Close circuit and sending visualizer.
-
-Use for:
-
-- People screen
-- sending state
-- empty state
-- relationship diagram
-
-### `WidgetCard`
-
-Home-screen widget UI states.
-
-States:
-
-- `empty`
-- `incoming-beep`
-- `incoming-blink`
-- `sending`
-- `sent`
-- `failed`
-
-### `TicketLogRow`
-
-Ledger row for Logs.
-
-Rules:
-
-- saved Blink can display metadata
-- expired Blink leaves metadata only
-- no feed, no likes, no comments
-
-### `CameraLensPanel`
-
-Blink capture module.
-
-Rules:
-
-- integrated inside Outgoing Slip
-- visible 2-second rule
-- no generic media uploader look
-
----
-
-## 7. Screen System
-
-### 01 First Run
-
-Purpose: make the product premise clear before sign-in.
+Purpose: latest private signal first.
 
 Hierarchy:
 
-1. BEEP-GET logo
-2. `친한 친구끼리 쓰는 작은 호출기`
-3. tiny incoming slip preview
-4. Apple / Google sign in
+1. Header with avatar/title/actions
+2. Latest incoming card
+3. Sender, time, private status
+4. Hero signal code and meaning
+5. Blink playback on the main card when media is present
+6. View / Done actions
+7. Quick Reply chips
+8. Compact queue rows
 
-### 02 Today
+Today is video-first for incoming Blink. Full detail still lives in Reply Room, but the main card must preview the received Blink directly.
 
-Purpose: latest signal first.
+### Send
 
-Hierarchy:
-
-1. app header
-2. latest incoming slip
-3. quick actions
-4. compact queue
-5. pull-to-refresh note
-
-### 03 Reply Room
-
-Purpose: signal detail, not chat thread.
+Purpose: create the next Beep or Blink for one close friend.
 
 Hierarchy:
 
-1. `NO. 8282` header
-2. incoming slip
-3. Blink strip
-4. quick replies
-5. `Blink로 답장`
-6. `기록`
+1. Centered Send header
+2. Capture panel, defaulting to Blink
+3. Captured frame strip using real frames
+4. To rail with close friends
+5. Signal type segmented control
+6. Signal deck chips
+7. Summary pill: `Will send code ... to ...`
+8. Large black Send action
 
-### 04 Send Beep
+The Send screen must not duplicate camera/capture panels. There is one capture surface, followed by the recipient and code controls.
 
-Purpose: prepare a code to appear on someone’s widget.
+### Friends
 
-Hierarchy:
-
-1. `TO. 민아 - NO 04`
-2. hero code input
-3. preset chips
-4. optional memo
-5. `비프 보내기`
-
-### 05 Send Blink
-
-Purpose: send a 2-second moment.
+Purpose: close circuit management.
 
 Hierarchy:
 
-1. recipient stamp
-2. camera/lens module
-3. 2-second rule + timer
-4. 3-frame preview
-5. retake / send
+1. Centered Friends header
+2. Search field
+3. My Beep ID card
+4. Add new friends card
+5. Close Friends list rows
+6. Configure Friend Info dialog
 
-### 06 People
+Friends is not a public discovery surface.
 
-Purpose: close circuit, not contact list.
+### My
 
-Hierarchy:
-
-1. radar/circuit visual
-2. friend number cards
-3. relationship chips
-4. invite + quick send
-
-### 07 Studio
-
-Purpose: tune widget object.
+Purpose: user settings and widget configuration.
 
 Hierarchy:
 
-1. permission/status checklist
-2. widget preview
-3. size toggles
-4. skin selector
-5. direct reply slots
-6. test button
+1. Centered My Settings header
+2. Appearance row
+3. Widget Layout cards
+4. Quick Replies with Configure Slots dialog
+5. Signal Directory Codes with Add New dialog
 
-### 08 Logs
+Do not surface internal Studio/Collection labels as primary user-facing sections here.
 
-Purpose: slip ledger.
+## Default Signal Codes
 
-Hierarchy:
+| Code | Meaning |
+| --- | --- |
+| `8282` | 빨리 와줘 |
+| `486` | 보고 싶어 |
+| `1004` | 집 도착 |
+| `7942` | 친구사이 |
+| `0404` | 영원히 사랑해 |
 
-1. saved rows
-2. expired metadata rows
-3. note explaining Blink expiry
+## Component Rules
 
----
+- `KotlinHeader` is the shared app header for the four primary tabs.
+- `MiniFrameStrip` and `BlinkStrip` must render real Blink frames when available.
+- `SignalSlotRail` is the shared code deck / quick reply rail.
+- `FriendPickerStrip` is the shared To rail for Send.
+- The bottom nav is exactly four tabs: `TODAY`, `SEND`, `FRIENDS`, `MY`.
+- Prefer editing shared components when the mismatch appears across multiple tabs.
 
-## 8. Interaction and Motion
+## Verification Checklist
 
-Use short mechanical motion only.
-
-| Interaction | Motion rule |
-|---|---|
-| new Beep | slip drops 8–12px, red dot pulses once |
-| direct reply | button depresses 1px, state changes to `전송 중` |
-| sent | LCD green flash, check mark, `보냄` |
-| failed | red state, no full-screen shake |
-| open Reply Room | slip expands into detail |
-| Blink record | timer fills for exactly 2 seconds |
-| save | small `기록` stamp appears |
-
----
-
-## 9. Implementation Notes
-
-This starter code uses pure React Native components and no navigation dependency. It is intentionally modular so it can be copied into an existing Expo app.
-
-Recommended production work:
-
-1. load actual fonts with `expo-font`
-2. connect screens to React Navigation or Expo Router
-3. replace mock data in `src/data/mockSignals.ts`
-4. connect widget states to native widget extension data
-5. implement Blink capture using Expo camera/media modules only in the app, never inside widget
-6. move direct widget reply logic to native extension / notification action layer
-
----
-
-## 10. What Not To Build
-
-Do not build:
-
-- a chat thread UI
-- a feed
-- comments / likes
-- public discovery
-- long onboarding carousel
-- free-text widget reply
-- camera capture inside widget
-- generic dashboard cards
-- reward screen as primary MVP
+- No placeholder frame color blocks on primary Send/Today paths.
+- No duplicated Blink camera panels.
+- Today renders received Blink video or frames on the main card.
+- Send defaults to the Blink mockup flow.
+- Friends and My preserve the Kotlin mockup section order and dialogs.
+- Typecheck, focused tests, full Jest, and Expo export pass before shipping.

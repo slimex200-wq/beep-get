@@ -3,9 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
 
-export function CameraLensPanel() {
+export function CameraLensPanel({ compact = false }: { compact?: boolean } = {}) {
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, compact && styles.wrapCompact]}>
       <View style={styles.tape}>
         <Text style={[type.tinyMono, styles.tapeText]}>SELECT</Text>
       </View>
@@ -36,6 +36,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.slipSmall,
     overflow: 'hidden',
     backgroundColor: colors.paperDeep,
+  },
+  wrapCompact: {
+    minHeight: 124,
   },
   tape: {
     width: 31,

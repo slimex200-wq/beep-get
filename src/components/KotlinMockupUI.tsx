@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
+import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 
 const beepyAvatar = require("../../assets/brand/beepy-handdrawn.png");
 
@@ -134,16 +135,25 @@ export function StatusPill({ label, tone = "muted" }: { label: string; tone?: "m
   );
 }
 
-export function MiniFrameStrip({ compact = false }: { compact?: boolean }) {
+export function MiniFrameStrip({
+  compact = false,
+  frameUris,
+}: {
+  compact?: boolean;
+  frameUris?: readonly string[] | null;
+}) {
+  const frames = (frameUris?.length ? frameUris : DEMO_BLINK_FRAME_DATA_URIS).slice(0, 3);
+
   return (
     <View style={[styles.frameStrip, compact && styles.frameStripCompact]}>
-      {["#1A554F", "#D98F32", "#E7C6A2"].map((backgroundColor, index) => (
-        <View key={backgroundColor} style={[styles.frameThumb, compact && styles.frameThumbCompact, { backgroundColor }]}>
-          <View style={[styles.frameGlow, index === 0 && styles.frameGlowDark]} />
+      {frames.map((uri, index) => (
+        <View key={`${uri}-${index}`} style={[styles.frameThumb, compact && styles.frameThumbCompact]}>
+          <Image source={{ uri }} style={styles.frameImage} resizeMode="cover" />
+          <Text style={styles.frameIndex}>{index + 1}</Text>
         </View>
       ))}
       <View style={[styles.cameraChip, compact && styles.cameraChipCompact]}>
-        <Text style={styles.cameraGlyph}>▣</Text>
+        <Text style={styles.cameraGlyph}>2s</Text>
       </View>
     </View>
   );
@@ -307,18 +317,23 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.rule,
+    backgroundColor: colors.ink,
   },
   frameThumbCompact: {
     width: 48,
     height: 38,
   },
-  frameGlow: {
-    flex: 1,
-    marginTop: 18,
-    backgroundColor: "rgba(255,255,255,0.22)",
+  frameImage: {
+    width: "100%",
+    height: "100%",
   },
-  frameGlowDark: {
-    backgroundColor: "rgba(0,0,0,0.26)",
+  frameIndex: {
+    position: "absolute",
+    left: 4,
+    bottom: 3,
+    fontFamily: font.monoBold,
+    fontSize: 7,
+    color: colors.paperWarm,
   },
   cameraChip: {
     width: 52,

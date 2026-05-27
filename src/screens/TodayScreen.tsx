@@ -139,7 +139,7 @@ export function TodayScreen() {
                     <Text style={styles.senderTime}>{latestSignal.time}</Text>
                   </View>
                 </View>
-                <StatusPill label={latestSignal.hasBlink ? "Blink" : "Private"} tone="red" />
+                <StatusPill label="Private" tone="red" />
               </View>
               <View style={styles.codeBlock}>
                 <SignalCode code={latestSignal.code} style={styles.todayCode} />
@@ -154,7 +154,7 @@ export function TodayScreen() {
               ) : null}
               <View style={styles.latestActions}>
                 <ActionButton
-                  label="◉  View"
+                  label="View"
                   variant="dark"
                   flex
                   onPress={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
@@ -238,9 +238,10 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   latestCard: {
-    minHeight: 300,
-    padding: spacing[4],
+    minHeight: 374,
+    padding: spacing[5],
     gap: spacing[4],
+    borderRadius: 17,
   },
   latestTopRow: {
     minHeight: 38,
@@ -282,8 +283,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[3],
   },
   todayCode: {
-    fontSize: 58,
-    lineHeight: 66,
+    fontSize: 64,
+    lineHeight: 70,
     letterSpacing: 0,
   },
   meaningText: {

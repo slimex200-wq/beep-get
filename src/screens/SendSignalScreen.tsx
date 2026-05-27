@@ -7,9 +7,10 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { CameraLensPanel } from "@/components/CameraLensPanel";
 import { FriendPickerStrip, type PickableFriend } from "@/components/FriendPickerStrip";
 import { HeaderBar } from "@/components/HeaderBar";
-import { MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
+import { MiniFrameStrip, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
@@ -40,7 +41,7 @@ export function SendSignalScreen() {
   const { send } = useMessageStore();
   const cameraRef = useRef<CameraView | null>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [mode, setMode] = useState<SendMode>(params.mode ?? "beep");
+  const [mode, setMode] = useState<SendMode>(params.mode ?? "blink");
   const [selectedRecipientId, setSelectedRecipientId] = useState<string | null>(params.friendId ?? null);
   const [code, setCode] = useState("");
   const [memo, setMemo] = useState("");
@@ -123,22 +124,49 @@ export function SendSignalScreen() {
           <StatusPill label={mode.toUpperCase()} tone={mode === "blink" ? "red" : "muted"} />
           <StatusPill label={mode === "blink" ? "2.0s" : "ready"} />
         </View>
-        <View style={styles.captureGrid}>
-          <View style={styles.crosshairHorizontal} />
-          <View style={styles.crosshairVertical} />
-          <View style={styles.crosshairCircle} />
-        </View>
-        <Text style={styles.captureHint}>Ready to transmit</Text>
+        {mode === "blink" ? (
+          cameraPermission?.granted ? (
+            <View style={styles.captureCameraFrame}>
+              <CameraView
+                ref={cameraRef}
+                active
+                facing="front"
+                mirror
+                mode="video"
+                mute
+                style={styles.captureCamera}
+                videoBitrate={2500000}
+                videoQuality="480p"
+              />
+            </View>
+          ) : (
+            <View style={styles.captureFallback}>
+              <CameraLensPanel compact />
+              {!previewMode ? (
+                <ActionButton
+                  label="Allow Camera"
+                  variant="dark"
+                  style={styles.permissionButton}
+                  onPress={() => {
+                    void requestCameraPermission();
+                  }}
+                />
+              ) : null}
+            </View>
+          )
+        ) : (
+          <View style={styles.captureGrid}>
+            <View style={styles.crosshairHorizontal} />
+            <View style={styles.crosshairVertical} />
+            <View style={styles.crosshairCircle} />
+          </View>
+        )}
+        <Text style={styles.captureHint}>
+          {mode === "blink" ? "Ready to capture 2 second Blink" : "Ready to transmit"}
+        </Text>
       </MockupCard>
       <MockupSection label="Captured Frames" />
-      <View style={styles.capturedRow}>
-        {["#153E37", "#D17A23", "#E9C4A0"].map((color, index) => (
-          <View key={color} style={[styles.capturedThumb, { backgroundColor: color }, index === 0 && styles.capturedActive]} />
-        ))}
-        <View style={styles.capturedCamera}>
-          <Text style={styles.capturedCameraText}>▣</Text>
-        </View>
-      </View>
+      <MiniFrameStrip compact frameUris={blinkDraft?.previewFrameUris ?? DEMO_BLINK_FRAME_DATA_URIS} />
       <Text style={type.tinyMono}>TO:</Text>
       <FriendPickerStrip
         friends={friendOptions}
@@ -409,14 +437,10 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     marginBottom: spacing[3],
     marginHorizontal: spacing[5],
-    padding: spacing[3],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 13,
-    backgroundColor: "#FFFFFF",
+    paddingTop: spacing[1],
   },
   capturePreview: {
-    minHeight: 116,
+    minHeight: 188,
     padding: spacing[4],
     gap: spacing[3],
   },
@@ -427,10 +451,12 @@ const styles = StyleSheet.create({
   },
   captureGrid: {
     flex: 1,
-    minHeight: 64,
+    minHeight: 104,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    borderRadius: radius.control,
+    backgroundColor: "#EAE4DA",
   },
   crosshairHorizontal: {
     position: "absolute",
@@ -445,42 +471,30 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(10,10,10,0.08)",
   },
   crosshairCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
     borderWidth: 1,
     borderColor: "rgba(10,10,10,0.10)",
+  },
+  captureCameraFrame: {
+    minHeight: 118,
+    borderRadius: radius.control,
+    overflow: "hidden",
+    backgroundColor: colors.ink,
+  },
+  captureCamera: {
+    flex: 1,
+  },
+  captureFallback: {
+    gap: spacing[3],
   },
   captureHint: {
     ...type.tinyMono,
     textAlign: "center",
   },
-  capturedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[2],
-  },
-  capturedThumb: {
-    width: 48,
-    height: 38,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: colors.rule,
-  },
-  capturedActive: {
-    borderColor: colors.ink,
-    borderWidth: 2,
-  },
-  capturedCamera: {
-    width: 42,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 7,
-    backgroundColor: "#F0EEE9",
-  },
-  capturedCameraText: {
-    ...type.metaValue,
+  permissionButton: {
+    alignSelf: "stretch",
   },
   inlineSwitch: {
     maxWidth: 260,

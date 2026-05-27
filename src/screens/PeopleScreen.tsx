@@ -105,7 +105,7 @@ export function PeopleScreen() {
       <KotlinHeader
         title="Friends"
         centered
-        actions={[{ label: loading ? "…" : "⚙", onPress: loading ? refreshPeople : undefined }]}
+        actions={[{ label: loading ? "…" : "⚙", onPress: refreshPeople }]}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.searchPanel}>

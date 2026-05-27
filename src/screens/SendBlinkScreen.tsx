@@ -60,8 +60,9 @@ export function SendBlinkScreen({
     : sending
       ? "Sending"
       : hasCapturedBlink
-        ? "▷  Send Blink"
+        ? "Send Blink"
         : "Capture Blink";
+  const shouldRenderCameraCard = !deckHeader;
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -75,35 +76,37 @@ export function SendBlinkScreen({
       />
       {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <MockupCard style={styles.cameraCard}>
-          {cameraPermissionGranted ? (
-            <View style={styles.cameraFrame}>
-              <CameraView
-                ref={cameraRef}
-                active
-                facing="front"
-                mirror
-                mode="video"
-                mute
-                style={styles.camera}
-                videoBitrate={2500000}
-                videoQuality="480p"
-              />
-            </View>
-          ) : (
-            <View>
-              <CameraLensPanel />
-              {!previewMode ? (
-                <ActionButton
-                  label="Allow Camera"
-                  variant="dark"
-                  style={styles.permissionButton}
-                  onPress={onRequestPermission}
+        {shouldRenderCameraCard ? (
+          <MockupCard style={styles.cameraCard}>
+            {cameraPermissionGranted ? (
+              <View style={styles.cameraFrame}>
+                <CameraView
+                  ref={cameraRef}
+                  active
+                  facing="front"
+                  mirror
+                  mode="video"
+                  mute
+                  style={styles.camera}
+                  videoBitrate={2500000}
+                  videoQuality="480p"
                 />
-              ) : null}
-            </View>
-          )}
-        </MockupCard>
+              </View>
+            ) : (
+              <View>
+                <CameraLensPanel />
+                {!previewMode ? (
+                  <ActionButton
+                    label="Allow Camera"
+                    variant="dark"
+                    style={styles.permissionButton}
+                    onPress={onRequestPermission}
+                  />
+                ) : null}
+              </View>
+            )}
+          </MockupCard>
+        ) : null}
 
         <Text style={type.tinyMono}>{hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}</Text>
         <BlinkStrip compact frameUris={previewFrameUris} />
@@ -143,6 +146,7 @@ export function SendBlinkScreen({
             label={primaryLabel}
             variant="dark"
             flex
+            style={styles.primaryAction}
             onPress={onSend}
             disabled={!code || sending || recording}
           />
@@ -200,5 +204,8 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap: spacing[3],
+  },
+  primaryAction: {
+    minHeight: 62,
   },
 });

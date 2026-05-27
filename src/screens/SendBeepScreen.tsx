@@ -82,9 +82,10 @@ export function SendBeepScreen({
         />
 
         <ActionButton
-          label={sending ? "Sending" : "▷  Send Beep"}
+          label={sending ? "Sending" : "Send Beep"}
           variant="dark"
           disabled={!code || sending}
+          style={styles.primaryAction}
           onPress={onSend}
         />
       </ScrollView>
@@ -126,6 +127,9 @@ const styles = StyleSheet.create({
   },
   summaryCode: {
     ...type.buttonMono,
+  },
+  primaryAction: {
+    minHeight: 58,
   },
   input: {
     minHeight: 48,
