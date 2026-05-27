@@ -44,7 +44,7 @@ export function SendSignalScreen() {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mode, setMode] = useState<SendMode>(params.mode ?? "blink");
   const [selectedRecipientId, setSelectedRecipientId] = useState<string | null>(params.friendId ?? null);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(params.initialCode ?? "");
   const [memo, setMemo] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -60,6 +60,10 @@ export function SendSignalScreen() {
   useEffect(() => {
     if (params.mode) setMode(params.mode);
   }, [params.mode]);
+
+  useEffect(() => {
+    if (params.initialCode) setCode(params.initialCode);
+  }, [params.initialCode]);
 
   const friendOptions = useMemo<PickableFriend[]>(() => {
     const routeFriend = params.friendId

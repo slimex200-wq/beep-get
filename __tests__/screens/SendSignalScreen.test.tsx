@@ -45,4 +45,13 @@ describe("SendSignalScreen product sections", () => {
     expect(source).toContain("createBlinkDraft");
     expect(source).toContain("createTeaser: async () => blinkDraft.teaser");
   });
+
+  it("can open from a Friends shortcut with an initial signal code", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
+    const navSource = readFileSync(path.join(process.cwd(), "src/navigation/RootNavigator.tsx"), "utf8");
+
+    expect(navSource).toContain("initialCode?: string");
+    expect(source).toContain('useState(params.initialCode ?? "")');
+    expect(source).toContain("if (params.initialCode) setCode(params.initialCode)");
+  });
 });
