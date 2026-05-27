@@ -60,13 +60,20 @@ struct BeepWidget: Widget {
     let kind = "BeepWidget"
 
     var body: some WidgetConfiguration {
+        if #available(iOSApplicationExtension 17.0, *) {
+            baseConfiguration.contentMarginsDisabled()
+        } else {
+            baseConfiguration
+        }
+    }
+
+    private var baseConfiguration: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BeepWidgetTimelineProvider()) { entry in
             BeepWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Beep Get")
         .description("Latest Beep or Blink with quick reply.")
         .supportedFamilies([.systemSmall, .systemMedium])
-        .contentMarginsDisabled()
     }
 }
 
