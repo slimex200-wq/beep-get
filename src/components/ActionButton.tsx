@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 
 type Variant = 'light' | 'dark' | 'ghost' | 'danger' | 'success' | 'kakao';
 
@@ -16,6 +17,8 @@ type Props = {
 };
 
 export function ActionButton({ label, variant = 'light', mono = false, flex = false, onPress, disabled = false, style }: Props) {
+  const palette = useAppPalette();
+
   return (
     <Pressable
       onPress={onPress}
@@ -23,7 +26,12 @@ export function ActionButton({ label, variant = 'light', mono = false, flex = fa
       style={({ pressed }) => [
         styles.base,
         flex && styles.flex,
-        styles[variant],
+        variant === 'light' && { backgroundColor: palette.chip, borderColor: palette.rule },
+        variant === 'dark' && { backgroundColor: palette.primary, borderColor: palette.primary },
+        variant === 'ghost' && { backgroundColor: colors.transparent, borderColor: palette.rule },
+        variant === 'danger' && styles.danger,
+        variant === 'success' && styles.success,
+        variant === 'kakao' && styles.kakao,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
@@ -32,7 +40,7 @@ export function ActionButton({ label, variant = 'light', mono = false, flex = fa
       <Text
         style={[
           mono ? type.buttonMono : type.button,
-          variant === 'dark' && styles.darkText,
+          { color: variant === 'dark' ? palette.primaryText : palette.text },
           variant === 'danger' && styles.dangerText,
           variant === 'kakao' && styles.kakaoText,
         ]}
@@ -56,16 +64,6 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  light: {
-    backgroundColor: 'rgba(255,255,255,0.23)',
-  },
-  dark: {
-    backgroundColor: colors.ink,
-    borderColor: colors.ink,
-  },
-  ghost: {
-    backgroundColor: colors.transparent,
-  },
   danger: {
     backgroundColor: colors.red,
     borderColor: colors.redDeep,
@@ -84,9 +82,6 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.44,
-  },
-  darkText: {
-    color: colors.paperWarm,
   },
   dangerText: {
     color: colors.white,

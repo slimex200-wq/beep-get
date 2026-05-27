@@ -1,7 +1,8 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
-import { colors, radius, spacing } from "@/design/tokens";
+import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 
 type Props = {
   label: string;
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function SignalSlotChip({ label, selected = false, disabled = false, onPress, style }: Props) {
+  const palette = useAppPalette();
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -20,13 +23,16 @@ export function SignalSlotChip({ label, selected = false, disabled = false, onPr
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        selected && styles.selected,
+        {
+          backgroundColor: selected ? palette.primary : palette.chip,
+          borderColor: selected ? palette.primary : palette.rule,
+        },
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}
     >
-      <Text numberOfLines={1} style={[styles.label, selected && styles.selectedLabel]}>
+      <Text numberOfLines={1} style={[styles.label, { color: selected ? palette.primaryText : palette.text }]}>
         {label}
       </Text>
     </Pressable>
@@ -42,12 +48,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    backgroundColor: "rgba(255,255,255,0.24)",
-  },
-  selected: {
-    backgroundColor: colors.ink,
-    borderColor: colors.ink,
   },
   pressed: {
     transform: [{ translateY: 1 }],
@@ -60,8 +60,5 @@ const styles = StyleSheet.create({
     ...type.buttonMono,
     fontSize: 10,
     lineHeight: 13,
-  },
-  selectedLabel: {
-    color: colors.paperWarm,
   },
 });

@@ -1,13 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useVideoPlayer, VideoView } from "expo-video";
-import { colors, radius, spacing } from "@/design/tokens";
+import { colors, spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { BlinkStrip } from "@/components/BlinkStrip";
-import { HeaderBar } from "@/components/HeaderBar";
-import { SignalSlip } from "@/components/SignalSlip";
+import { BlinkHeroPreview } from "@/components/BlinkHeroPreview";
+import {
+  KotlinHeader,
+  MockupCard,
+  MockupSection,
+  StatusPill,
+} from "@/components/KotlinMockupUI";
+import { SignalCode } from "@/components/SignalCode";
+import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useMessageStore } from "@/stores/messageStore";
@@ -16,10 +23,20 @@ import { getMessageById, type LegacyMessage } from "@/services/messageService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ReplyRoom">;
 
+const DEFAULT_REPLY_SLOTS = ["Done", "8282", "486"];
+const FALLBACK_MEANINGS: Record<string, string> = {
+  "8282": "빨리 와줘",
+  "486": "보고 싶어",
+  "1004": "집 도착",
+  "7942": "친구사이",
+  "0404": "영원히 사랑해",
+};
+
 export function ReplyRoomScreen({ route, navigation }: Props) {
   const { signalId } = route.params;
   const { profile } = useAuthStore();
   const { received, saved, fetchReceived, fetchSaved, quickReply, read, save } = useMessageStore();
+  const palette = useAppPalette();
   const [fetchedMessage, setFetchedMessage] = useState<LegacyMessage | null>(null);
 
   useEffect(() => {
@@ -36,12 +53,6 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
     [received, saved, fetchedMessage, signalId]
   );
   const signal = useMemo(() => (message ? messageToSlipSignal(message) : null), [message]);
-  const playbackUri = message?.media?.playbackUri ?? null;
-  const player = useVideoPlayer(playbackUri, (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.play();
-  });
 
   const returnToToday = () => {
     if (navigation.canGoBack()) {
@@ -58,11 +69,17 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
       .catch(reportError);
   }, [profile?.id, message, signalId]);
 
-  const sendQuickReply = async (code: string) => {
+  const handleReply = async (slot: string) => {
     if (!message) return;
+
+    if (slot === "Done") {
+      await read(message.id).catch(reportError);
+      return;
+    }
+
     try {
-      await quickReply(message.id, code);
-      Alert.alert("Reply sent", `${code} Beep sent back.`);
+      await quickReply(message.id, slot);
+      Alert.alert("Reply sent", `${slot} Beep sent back.`);
     } catch (err: any) {
       Alert.alert("Reply failed", err?.message ?? "Try again.");
     }
@@ -70,58 +87,70 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
 
   if (!message || !signal) {
     return (
-      <AppSurface>
-        <HeaderBar title="NO SIGNAL" left="BACK" right="--" onLeftPress={returnToToday} />
-        <View style={styles.empty}>
-          <ActionButton label="BACK TO TODAY" variant="dark" onPress={returnToToday} />
-        </View>
+      <AppSurface backgroundColor="#F8F6F1">
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <KotlinHeader title="Signal" centered actions={[{ label: "×", onPress: returnToToday }]} />
+          <MockupCard style={styles.empty}>
+            <Text style={[type.metaValue, { color: palette.text }]}>NO SIGNAL</Text>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>This widget signal is no longer available.</Text>
+            <ActionButton label="Back to Today" variant="dark" onPress={returnToToday} />
+          </MockupCard>
+        </ScrollView>
       </AppSurface>
     );
   }
 
+  const meaning = signal.note ?? FALLBACK_MEANINGS[signal.code] ?? "signal";
+
   return (
-    <AppSurface>
-      <HeaderBar
-        title={`NO. ${signal.code}`}
-        left="BACK"
-        right={(signal.status ?? "active").toUpperCase()}
-        onLeftPress={returnToToday}
-      />
+    <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <SignalSlip signal={signal} title={signal.hasBlink ? "Incoming Blink" : "Incoming Beep"} />
-        {signal.hasBlink ? (
-          playbackUri ? (
-            <VideoView
-              player={player}
-              style={styles.video}
-              nativeControls={false}
-              contentFit="cover"
+        <KotlinHeader title={`NO. ${signal.code}`} centered actions={[{ label: "×", onPress: returnToToday }]} />
+
+        <MockupCard style={styles.signalCard}>
+          <View style={styles.topRow}>
+            <View>
+              <Text style={[styles.senderName, { color: palette.text }]}>{signal.sender}</Text>
+              <Text style={[type.tinyMono, { color: palette.muted }]}>{signal.time}</Text>
+            </View>
+            <StatusPill label="Private" tone="red" />
+          </View>
+          <View style={styles.codeBlock}>
+            <SignalCode code={signal.code} style={styles.code} />
+            <Text style={[styles.meaning, { color: palette.text }]}>{meaning}</Text>
+          </View>
+          {signal.hasBlink ? (
+            <BlinkHeroPreview
+              playbackUri={message.media?.playbackUri}
+              frameUris={message.media?.stripFrameUris}
+              sender={signal.sender}
             />
-          ) : (
-            <BlinkStrip frameUris={message.media?.stripFrameUris} />
-          )
-        ) : null}
-        <View style={styles.replyRow}>
-          <ActionButton label="OK" mono flex onPress={() => read(message.id).catch(reportError)} />
-          <ActionButton label="8282" mono flex onPress={() => sendQuickReply("8282")} />
-          <ActionButton label="486" mono flex onPress={() => sendQuickReply("486")} />
+          ) : null}
+        </MockupCard>
+
+        <MockupSection label="Quick Reply" />
+        <SignalSlotRail slots={DEFAULT_REPLY_SLOTS} onSelect={handleReply} />
+
+        <View style={styles.actions}>
+          <ActionButton
+            label="Blink Back"
+            variant="dark"
+            flex
+            onPress={() =>
+              navigation.navigate("Send", {
+                friendId: message.from_user,
+                friendName: signal.sender,
+                mode: "blink",
+              })
+            }
+          />
+          <ActionButton
+            label="Save Log"
+            flex
+            onPress={() => save(message.id).catch(reportError)}
+            disabled={message.is_saved}
+          />
         </View>
-        <ActionButton
-          label="BLINK BACK"
-          variant="ghost"
-          onPress={() =>
-            navigation.navigate("Send", {
-              friendId: message.from_user,
-              friendName: signal.sender,
-            })
-          }
-        />
-        <ActionButton
-          label="SAVE LOG"
-          variant="ghost"
-          onPress={() => save(message.id).catch(reportError)}
-          disabled={message.is_saved}
-        />
       </ScrollView>
     </AppSurface>
   );
@@ -134,24 +163,51 @@ function reportError(err: unknown) {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
-    gap: spacing[5],
+    paddingBottom: 96,
+    gap: spacing[4],
   },
-  replyRow: {
+  signalCard: {
+    minHeight: 330,
+    gap: spacing[4],
+    marginHorizontal: spacing[5],
+    padding: spacing[5],
+    borderRadius: 17,
+  },
+  topRow: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[4],
+  },
+  senderName: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  codeBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing[3],
+  },
+  code: {
+    fontSize: 64,
+    lineHeight: 70,
+    letterSpacing: 0,
+  },
+  meaning: {
+    ...type.metaValue,
+    marginTop: spacing[2],
+  },
+  actions: {
     flexDirection: "row",
     gap: spacing[3],
+    paddingHorizontal: spacing[5],
   },
   empty: {
-    flex: 1,
+    minHeight: 180,
     justifyContent: "center",
+    gap: spacing[3],
+    marginHorizontal: spacing[5],
     padding: spacing[5],
-  },
-  video: {
-    width: "100%",
-    aspectRatio: 9 / 16,
-    borderRadius: radius.control,
-    overflow: "hidden",
-    backgroundColor: colors.ink,
   },
 });

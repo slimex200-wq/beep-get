@@ -102,12 +102,12 @@ export function PeopleScreen() {
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
-      <KotlinHeader
-        title="Friends"
-        centered
-        actions={[{ label: loading ? "…" : "⚙", onPress: refreshPeople }]}
-      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <KotlinHeader
+          title="Friends"
+          centered
+          actions={[{ label: loading ? "…" : "⚙", onPress: refreshPeople }]}
+        />
         <View style={styles.searchPanel}>
           <Text style={styles.searchGlyph}>⌕</Text>
           <TextInput

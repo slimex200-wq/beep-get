@@ -43,16 +43,16 @@ export function SendBeepScreen({
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
-      <KotlinHeader
-        title="Send"
-        centered
-        actions={[
-          ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
-          { label: "⚙", onPress: onOpenLogs },
-        ]}
-      />
-      {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <KotlinHeader
+          title="Send"
+          centered
+          actions={[
+            ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
+            { label: "⚙", onPress: onOpenLogs },
+          ]}
+        />
+        {deckHeader ?? modeSwitch}
         <MockupCard style={styles.beepPreview}>
           <Text style={type.tinyMono}>READY TO TRANSMIT</Text>
           <SignalCode code={cleanCode} style={styles.previewCode} />

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 
 const beepyAvatar = require("../../assets/brand/beepy-handdrawn.png");
@@ -36,6 +37,8 @@ export function KotlinHeader({
   centered = false,
   showAvatar = true,
 }: HeaderProps) {
+  const palette = useAppPalette();
+
   return (
     <View style={[styles.header, centered && styles.headerCentered]}>
       {showAvatar ? (
@@ -43,7 +46,7 @@ export function KotlinHeader({
           <Avatar label={avatarLabel} source={avatarSource} size={34} />
         </View>
       ) : null}
-      <Text style={[styles.headerTitle, centered && styles.headerTitleCentered]}>{title}</Text>
+      <Text style={[styles.headerTitle, { color: palette.text }, centered && styles.headerTitleCentered]}>{title}</Text>
       <View style={[styles.headerActions, centered && styles.headerSide]}>
         {actions.map((action) => (
           <IconButton key={action.label} label={action.label} onPress={action.onPress} />
@@ -64,12 +67,20 @@ export function Avatar({
   size?: number;
   style?: ViewStyle;
 }) {
+  const palette = useAppPalette();
+
   return (
-    <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }, style]}>
+    <View
+      style={[
+        styles.avatar,
+        { width: size, height: size, borderRadius: size / 2, borderColor: palette.ruleStrong, backgroundColor: palette.input },
+        style,
+      ]}
+    >
       {source ? (
         <Image source={source} style={styles.avatarImage} resizeMode="cover" />
       ) : (
-        <Text style={styles.avatarLabel}>{label.slice(0, 2)}</Text>
+        <Text style={[styles.avatarLabel, { color: palette.text }]}>{label.slice(0, 2)}</Text>
       )}
     </View>
   );
@@ -86,6 +97,8 @@ export function IconButton({
   dark?: boolean;
   size?: number;
 }) {
+  const palette = useAppPalette();
+
   return (
     <Pressable
       accessibilityRole={onPress ? "button" : undefined}
@@ -94,11 +107,11 @@ export function IconButton({
       style={({ pressed }) => [
         styles.iconButton,
         { width: size, height: size, borderRadius: size / 2 },
-        dark && styles.iconButtonDark,
+        dark && { backgroundColor: palette.primary },
         pressed && styles.pressed,
       ]}
     >
-      <Text style={[styles.iconText, dark && styles.iconTextDark]}>{label}</Text>
+      <Text style={[styles.iconText, { color: dark ? palette.primaryText : palette.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -112,7 +125,21 @@ export function MockupCard({
   style?: ViewStyle;
   soft?: boolean;
 }) {
-  return <View style={[styles.card, soft && styles.cardSoft, style]}>{children}</View>;
+  const palette = useAppPalette();
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          borderColor: palette.rule,
+          backgroundColor: soft ? palette.cardSoft : palette.card,
+        },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 export function MockupSection({
@@ -122,19 +149,30 @@ export function MockupSection({
   label: string;
   hint?: string;
 }) {
+  const palette = useAppPalette();
+
   return (
     <View style={styles.sectionRow}>
-      <Text style={styles.sectionLabel}>{label}</Text>
-      {hint ? <Text style={styles.sectionHint}>{hint}</Text> : null}
+      <Text style={[styles.sectionLabel, { color: palette.muted }]}>{label}</Text>
+      {hint ? <Text style={[styles.sectionHint, { color: palette.muted }]}>{hint}</Text> : null}
     </View>
   );
 }
 
 export function StatusPill({ label, tone = "muted" }: { label: string; tone?: "muted" | "red" | "green" }) {
+  const palette = useAppPalette();
+
   return (
-    <View style={[styles.statusPill, tone === "red" && styles.statusPillRed, tone === "green" && styles.statusPillGreen]}>
+    <View
+      style={[
+        styles.statusPill,
+        { backgroundColor: tone === "muted" ? palette.chip : undefined },
+        tone === "red" && styles.statusPillRed,
+        tone === "green" && styles.statusPillGreen,
+      ]}
+    >
       <View style={[styles.statusDot, tone === "red" && styles.statusDotRed, tone === "green" && styles.statusDotGreen]} />
-      <Text style={styles.statusPillText}>{label}</Text>
+      <Text style={[styles.statusPillText, { color: palette.muted }]}>{label}</Text>
     </View>
   );
 }
