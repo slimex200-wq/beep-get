@@ -28,7 +28,8 @@ struct SwissPaperMediumView: View {
                     numberBlock
                         .padding(.leading, 16)
                         .padding(.trailing, 12)
-                        .frame(width: max(CGFloat(96), min(CGFloat(116), proxy.size.width * 0.30)), maxHeight: .infinity, alignment: .leading)
+                        .frame(width: max(CGFloat(96), min(CGFloat(116), proxy.size.width * 0.30)), alignment: .leading)
+                        .frame(maxHeight: .infinity, alignment: .leading)
                         .layoutPriority(1)
                         .overlay(alignment: .trailing) { vDivider }
 

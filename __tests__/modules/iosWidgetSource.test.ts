@@ -43,6 +43,7 @@ describe("iOS widget source", () => {
   it("uses the full widget canvas instead of a nested card surface", () => {
     expect(widgetTargetConfig).toContain('deploymentTarget: "16.0"');
     expect(widgetSource).toContain("#available(iOSApplicationExtension 17.0, *)");
+    expect(widgetSource).toContain("BeepWidgetWithMarginsDisabled");
     expect(widgetSource).toContain(".contentMarginsDisabled()");
     expect(widgetSource.indexOf("#available(iOSApplicationExtension 17.0, *)")).toBeLessThan(
       widgetSource.indexOf(".contentMarginsDisabled()")
@@ -50,6 +51,7 @@ describe("iOS widget source", () => {
     expect(skinSource).toContain("containerBackground(for: .widget)");
     expect(mediumSource).not.toMatch(/frame\(width:\s*(200|240|260|280)/);
     expect(smallSource).not.toMatch(/frame\(width:\s*(200|240|260|280)/);
+    expect(mediumSource).not.toContain("width: max(CGFloat(96), min(CGFloat(116), proxy.size.width * 0.30)), maxHeight:");
   });
 
   it("renders inline demo Blink preview frames in WidgetKit", () => {
