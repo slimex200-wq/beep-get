@@ -4,10 +4,10 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { HeaderBar } from "@/components/HeaderBar";
-import { StatusDot } from "@/components/StatusDot";
-import { colors, spacing } from "@/design/tokens";
+import { Avatar, KotlinHeader, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
+import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
@@ -35,6 +35,7 @@ const ACCOUNT_DELETION_URL =
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, setSession } = useAuthStore();
+  const palette = useAppPalette();
   const [busy, setBusy] = useState(false);
 
   const closeToMy = () => {
@@ -101,116 +102,85 @@ export function SettingsScreen() {
   };
 
   return (
-    <AppSurface>
-      <HeaderBar
-        title="ACCOUNT"
-        left="CLOSE"
-        right={busy ? "..." : "ME"}
-        showDot
-        onLeftPress={closeToMy}
-      />
+    <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.slip}>
-          <View style={styles.slipHeader}>
-            <Text style={type.slipTitle}>My Beep Slip</Text>
-            <StatusDot size={7} />
+        <KotlinHeader title="Account" centered actions={[{ label: "×", onPress: closeToMy }]} />
+
+        <MockupSection label="My Beep ID" />
+        <MockupCard style={styles.identityCard}>
+          <Avatar label={profile?.nickname ?? "Me"} size={46} />
+          <View style={styles.identityCopy}>
+            <Text style={[styles.name, { color: palette.text }]}>{profile?.nickname ?? "Unknown"}</Text>
+            <Text selectable style={[styles.handle, { color: palette.muted }]}>
+              @{profile?.beep_id ?? "--------"}
+            </Text>
           </View>
-          <InfoRow label="NO." value={profile?.beep_id ?? "--------"} mono />
-          <InfoRow label="NICKNAME" value={profile?.nickname ?? "Unknown"} />
-          <InfoRow label="STATUS" value={profile?.status_icon ?? "online"} />
-        </View>
+          <StatusPill label={profile?.status_icon ?? "online"} tone="green" />
+        </MockupCard>
 
-        <View style={styles.panel}>
-          <Text style={type.metaValue}>ACCOUNT ACTIONS</Text>
-          <ActionButton label="SHARE BEEP ID" onPress={shareBeepId} disabled={!profile || busy} />
-          <ActionButton label="LOG OUT" variant="ghost" onPress={logout} disabled={busy} />
-        </View>
+        <MockupSection label="Account Actions" />
+        <MockupCard style={styles.actionCard}>
+          <ActionButton label="Share Beep ID" onPress={shareBeepId} disabled={!profile || busy} />
+          <ActionButton label="Log Out" variant="ghost" onPress={logout} disabled={busy} />
+        </MockupCard>
 
-        <View style={styles.panel}>
-          <Text style={type.metaValue}>PRIVACY & DATA</Text>
-          <Text style={type.bodyMuted}>
-            Account deletion starts in-app and removes your account record plus personal Beep/Blink data.
+        <MockupSection label="Privacy & Data" />
+        <MockupCard style={styles.actionCard}>
+          <Text style={[type.bodyMuted, { color: palette.muted }]}>
+            Account deletion removes your profile, relationships, Beeps, Blinks, and private Blink media.
           </Text>
           <ActionButton
-            label="PRIVACY POLICY"
+            label="Privacy Policy"
             variant="ghost"
             onPress={() => openUrl(PRIVACY_POLICY_URL)}
             disabled={busy}
           />
           <ActionButton
-            label="WEB DELETE REQUEST"
+            label="Web Delete Request"
             variant="ghost"
             onPress={() => openUrl(ACCOUNT_DELETION_URL)}
             disabled={busy}
           />
           <ActionButton
-            label={busy ? "DELETING..." : "DELETE ACCOUNT"}
+            label={busy ? "Deleting" : "Delete Account"}
             variant="danger"
             onPress={confirmDeleteAccount}
             disabled={busy}
           />
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={type.tinyMono}>BEEP-GET / PRIVATE PAGER SYSTEM</Text>
-          <Text style={type.bodyMuted}>Use this page for review, privacy, and account control.</Text>
-        </View>
+        </MockupCard>
       </ScrollView>
     </AppSurface>
   );
 }
 
-function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={type.metaLabel}>{label}</Text>
-      <Text selectable style={mono ? type.codeSmall : type.metaValue}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
-    gap: spacing[5],
+    paddingBottom: 96,
+    gap: spacing[4],
   },
-  slip: {
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: colors.paperWarm,
-  },
-  slipHeader: {
-    minHeight: 46,
-    paddingHorizontal: spacing[5],
+  identityCard: {
+    minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleStrong,
+    gap: spacing[4],
+    marginHorizontal: spacing[5],
+    padding: spacing[4],
   },
-  infoRow: {
-    minHeight: 48,
-    paddingHorizontal: spacing[5],
-    justifyContent: "center",
+  identityCopy: {
+    flex: 1,
     gap: spacing[1],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rule,
   },
-  panel: {
+  name: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  handle: {
+    ...type.bodyMuted,
+  },
+  actionCard: {
     gap: spacing[3],
-    padding: spacing[5],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.16)",
-  },
-  footer: {
-    gap: spacing[2],
-    paddingTop: spacing[3],
+    marginHorizontal: spacing[5],
+    padding: spacing[4],
+    borderRadius: radius.slipSmall,
   },
 });

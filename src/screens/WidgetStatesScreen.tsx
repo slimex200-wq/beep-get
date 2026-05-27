@@ -1,53 +1,35 @@
 import React, { useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
 import { ActionButton } from "@/components/ActionButton";
-import { HeaderBar } from "@/components/HeaderBar";
-import { WidgetCard, type WidgetState } from "@/components/WidgetCard";
-import { colors, spacing } from "@/design/tokens";
+import {
+  KotlinHeader,
+  MiniFrameStrip,
+  MockupCard,
+  MockupSection,
+  StatusPill,
+} from "@/components/KotlinMockupUI";
+import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 
-const DEFAULT_REPLY_SLOTS = ["OK", "8282", "OPEN"];
+const DEFAULT_REPLY_SLOTS = ["Done", "8282", "View"];
 
-const setupCopy =
-  Platform.OS === "ios"
-    ? {
-        body:
-          "Add BEEP-GET to your iPhone Home Screen, then use these reply slots from the widget.",
-        installLabel: "INSTALL ON IOS",
-        steps: [
-          "Long-press the Home Screen.",
-          "Tap + and search BEEP-GET.",
-          "Choose Medium for reply buttons, then Add Widget.",
-        ],
-        note:
-          "Widget setup is controlled by iOS. The app can preview and sync the widget data, but placement happens on the Home Screen.",
-      }
-    : {
-        body:
-          "Add BEEP-GET from your Android launcher widget picker. Medium shows reply chips that open the app-owned reply flow.",
-        installLabel: "INSTALL ON ANDROID",
-        steps: [
-          "Long-press an empty spot on the Home screen.",
-          "Tap Widgets and find BEEP-GET.",
-          "Drag the Medium widget for OK / reply / OPEN chips.",
-        ],
-        note:
-          "Widget taps open BEEP-GET through deep links, then the app sends idempotent quick replies or opens the Reply Room.",
-      };
+type PreviewState = "empty" | "incoming-beep" | "incoming-blink";
 
 export function WidgetStatesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "WidgetStates">>();
   const { profile } = useAuthStore();
   const { entries } = useDictionaryStore();
+  const palette = useAppPalette();
   const [size, setSize] = useState<"small" | "medium">(route.params?.size ?? "medium");
-  const [previewState, setPreviewState] = useState<WidgetState>("incoming-blink");
+  const [previewState, setPreviewState] = useState<PreviewState>("incoming-blink");
 
   const replySlots = useMemo(() => {
     const saved = entries.map((entry) => entry.code).filter(Boolean);
@@ -63,51 +45,21 @@ export function WidgetStatesScreen() {
   };
 
   return (
-    <AppSurface backgroundColor={colors.paper} statusBarStyle="dark">
-      <HeaderBar title="WIDGET SETUP" left="CLOSE" onLeftPress={close} />
+    <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Friend-home widget</Text>
-          <Text style={type.bodyMuted}>{setupCopy.body}</Text>
-        </View>
+        <KotlinHeader title="Widget Layouts" centered actions={[{ label: "×", onPress: close }]} />
 
-        <View style={styles.setupCard}>
-          <Text style={type.tinyMono}>{setupCopy.installLabel}</Text>
-          <View style={styles.stepList}>
-            {setupCopy.steps.map((step, index) => (
-              <Step key={step} number={`0${index + 1}`} text={step} />
-            ))}
-          </View>
-          <Text style={styles.platformNote}>{setupCopy.note}</Text>
-        </View>
-
-        <View style={styles.controlPanel}>
-          <View style={styles.panelHeader}>
-            <Text style={type.tinyMono}>CURRENT REPLY SLOTS</Text>
-            <Text style={type.tinyMono}>{profile?.beep_id ?? "NO ID"}</Text>
-          </View>
-          <View style={styles.slotRow}>
-            {replySlots.map((slot) => (
-              <View key={slot} style={styles.slotChip}>
-                <Text style={styles.slotText}>{slot}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={type.bodyMuted}>
-            Edit slots from the signal presets. The medium widget shows the first three.
-          </Text>
-        </View>
-
-        <View style={styles.sizeRow}>
+        <MockupSection label="Preview Size" hint={profile?.beep_id ?? "NO ID"} />
+        <View style={styles.segmentRow}>
           <ActionButton
-            label="SMALL"
+            label="SM Widget"
             mono
             flex
             variant={size === "small" ? "dark" : "light"}
             onPress={() => setSize("small")}
           />
           <ActionButton
-            label="MEDIUM"
+            label="MD List Widget"
             mono
             flex
             variant={size === "medium" ? "dark" : "light"}
@@ -115,133 +67,207 @@ export function WidgetStatesScreen() {
           />
         </View>
 
-        <View style={styles.previewPanel}>
-          <View style={styles.panelHeader}>
-            <Text style={type.tinyMono}>LIVE PREVIEW</Text>
-            <Text style={type.tinyMono}>{size.toUpperCase()}</Text>
+        <MockupCard style={styles.previewCard}>
+          <View style={styles.previewTop}>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>LIVE PREVIEW</Text>
+            <StatusPill label={size === "medium" ? "3 queued slots" : "active preview"} tone="green" />
           </View>
-          <WidgetCard state={previewState} size={size} />
-          <View style={styles.sizeRow}>
-            <ActionButton
-              label="EMPTY"
-              mono
-              flex
-              variant={previewState === "empty" ? "dark" : "light"}
-              onPress={() => setPreviewState("empty")}
-            />
-            <ActionButton
-              label="BEEP"
-              mono
-              flex
-              variant={previewState === "incoming-beep" ? "dark" : "light"}
-              onPress={() => setPreviewState("incoming-beep")}
-            />
-            <ActionButton
-              label="BLINK"
-              mono
-              flex
-              variant={previewState === "incoming-blink" ? "dark" : "light"}
-              onPress={() => setPreviewState("incoming-blink")}
-            />
-          </View>
+          <WidgetMockup size={size} state={previewState} slots={replySlots} />
+        </MockupCard>
+
+        <MockupSection label="Widget State" />
+        <View style={styles.segmentRow}>
+          {(["empty", "incoming-beep", "incoming-blink"] as const).map((state) => (
+            <Pressable
+              key={state}
+              accessibilityRole="button"
+              onPress={() => setPreviewState(state)}
+              style={({ pressed }) => [
+                styles.stateChip,
+                {
+                  backgroundColor: previewState === state ? palette.primary : palette.chip,
+                  borderColor: previewState === state ? palette.primary : palette.rule,
+                },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.stateChipText,
+                  { color: previewState === state ? palette.primaryText : palette.text },
+                ]}
+              >
+                {state === "empty" ? "Empty" : state === "incoming-beep" ? "Beep" : "Blink"}
+              </Text>
+            </Pressable>
+          ))}
         </View>
+
+        <MockupSection label="Quick Replies" />
+        <MockupCard style={styles.replyCard}>
+          {replySlots.map((slot) => (
+            <View key={slot} style={[styles.replySlot, { borderColor: palette.rule, backgroundColor: palette.card }]}>
+              <Text style={[styles.replyText, { color: palette.text }]}>{slot}</Text>
+            </View>
+          ))}
+        </MockupCard>
       </ScrollView>
     </AppSurface>
   );
 }
 
-function Step({ number, text }: { number: string; text: string }) {
+function WidgetMockup({
+  size,
+  state,
+  slots,
+}: {
+  size: "small" | "medium";
+  state: PreviewState;
+  slots: string[];
+}) {
+  const palette = useAppPalette();
+  const isEmpty = state === "empty";
+  const isBlink = state === "incoming-blink";
+
   return (
-    <View style={styles.step}>
-      <Text style={styles.stepNumber}>{number}</Text>
-      <Text style={styles.stepText}>{text}</Text>
+    <View style={[styles.widgetShell, size === "medium" && styles.widgetShellMedium, { backgroundColor: palette.input }]}>
+      <View style={styles.widgetHeader}>
+        <Text style={[styles.widgetLabel, { color: palette.muted }]}>BEEP-GET</Text>
+        <View style={styles.widgetDot} />
+      </View>
+      {isEmpty ? (
+        <View style={styles.emptyWidget}>
+          <Text style={[styles.widgetCode, { color: palette.muted }]}>----</Text>
+          <Text style={[type.tinyMono, { color: palette.muted }]}>WAITING</Text>
+        </View>
+      ) : (
+        <>
+          <Text style={[styles.widgetCode, { color: palette.text }]}>8282</Text>
+          <Text style={[styles.widgetMeaning, { color: palette.text }]}>빨리 와줘</Text>
+          {isBlink ? <MiniFrameStrip compact /> : null}
+          {size === "medium" ? (
+            <View style={styles.widgetReplyRow}>
+              {slots.map((slot) => (
+                <View key={slot} style={[styles.widgetReplyChip, { backgroundColor: palette.primary }]}>
+                  <Text style={[styles.widgetReplyText, { color: palette.primaryText }]}>{slot}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing[5],
-    paddingBottom: spacing[8],
-    gap: spacing[5],
-  },
-  hero: {
-    gap: spacing[2],
-    paddingTop: spacing[2],
-  },
-  heroTitle: {
-    ...type.screenTitle,
-    fontSize: 28,
-    lineHeight: 32,
-  },
-  setupCard: {
+    paddingBottom: 96,
     gap: spacing[4],
-    padding: spacing[5],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: colors.paperWarm,
   },
-  stepList: {
-    gap: spacing[3],
-  },
-  step: {
+  segmentRow: {
     flexDirection: "row",
-    alignItems: "center",
     gap: spacing[3],
+    paddingHorizontal: spacing[5],
   },
-  stepNumber: {
-    ...type.tinyMono,
-    width: 24,
-    color: colors.ink,
-  },
-  stepText: {
-    ...type.body,
-    flex: 1,
-  },
-  platformNote: {
-    ...type.bodyMuted,
-    paddingTop: spacing[2],
-    borderTopWidth: 1,
-    borderTopColor: colors.rule,
-  },
-  controlPanel: {
+  previewCard: {
     gap: spacing[4],
-    padding: spacing[5],
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    marginHorizontal: spacing[5],
+    padding: spacing[4],
   },
-  previewPanel: {
-    gap: spacing[4],
-  },
-  panelHeader: {
+  previewTop: {
+    minHeight: 28,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing[4],
-  },
-  slotRow: {
-    flexDirection: "row",
     gap: spacing[3],
   },
-  slotChip: {
+  stateChip: {
     flex: 1,
     minHeight: 38,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: 7,
-    backgroundColor: colors.ink,
+    borderRadius: radius.pill,
   },
-  slotText: {
-    ...type.buttonMono,
-    color: colors.paperWarm,
+  stateChipText: {
+    ...type.button,
+    fontSize: 11,
   },
-  sizeRow: {
+  replyCard: {
+    minHeight: 64,
     flexDirection: "row",
     gap: spacing[3],
+    marginHorizontal: spacing[5],
+    padding: spacing[4],
+  },
+  replySlot: {
+    flex: 1,
+    minHeight: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: radius.control,
+  },
+  replyText: {
+    ...type.button,
+  },
+  widgetShell: {
+    minHeight: 156,
+    gap: spacing[3],
+    padding: spacing[4],
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+  },
+  widgetShellMedium: {
+    minHeight: 220,
+  },
+  widgetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  widgetLabel: {
+    ...type.tinyMono,
+  },
+  widgetDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.red,
+  },
+  widgetCode: {
+    ...type.codeMedium,
+    fontSize: 44,
+    lineHeight: 52,
+    textAlign: "center",
+  },
+  widgetMeaning: {
+    ...type.metaValue,
+    textAlign: "center",
+  },
+  emptyWidget: {
+    flex: 1,
+    justifyContent: "center",
+    gap: spacing[2],
+  },
+  widgetReplyRow: {
+    flexDirection: "row",
+    gap: spacing[2],
+  },
+  widgetReplyChip: {
+    flex: 1,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.button,
+  },
+  widgetReplyText: {
+    ...type.tinyMono,
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
   },
 });

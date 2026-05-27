@@ -133,6 +133,9 @@
 - Fixed: the primary Send tab suppresses the back action; modal Send flows can still show back.
 - Fixed: Send Blink no longer duplicates camera or captured-frame sections when the shared mockup deck owns them.
 - Fixed: primary Send/Today Blink previews use real media/frames instead of color placeholders.
+- Fixed: widget preview, widget tap Reply Room, and account settings no longer use the old `HeaderBar`/slip shell.
+- Fixed: Appearance is an in-place light/dark toggle instead of opening the old collection UI.
+- Fixed: primary screen headers live inside the scroll surface so the top content does not feel pinned while only the lower content moves.
 - Watch: the Send top-right gear currently opens logs; if product expects settings there, update the action destination or icon label together.
 - Watch: final visual confidence still needs TestFlight/device screenshots because iOS simulator access is not available in this workspace.
 

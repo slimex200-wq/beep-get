@@ -1,31 +1,28 @@
 import { readFileSync } from "fs";
 import path from "path";
 
-describe("WidgetStatesScreen platform setup copy", () => {
-  it("keeps Android widget setup Android-first and tied to app-owned reply links", () => {
+describe("WidgetStatesScreen Kotlin mockup shell", () => {
+  it("uses the current widget layout surface instead of the old setup page", () => {
     const source = readFileSync(
       path.join(process.cwd(), "src/screens/WidgetStatesScreen.tsx"),
       "utf8"
     );
 
-    [
-      "INSTALL ON ANDROID",
-      "Android launcher widget picker",
-      "OK / reply / OPEN chips",
-      "deep links",
-      "idempotent quick replies",
-    ].forEach((label) => {
+    ["Widget Layouts", "Preview Size", "LIVE PREVIEW", "Widget State", "Quick Replies"].forEach((label) => {
       expect(source).toContain(label);
     });
+    expect(source).toContain("KotlinHeader");
+    expect(source).not.toContain("HeaderBar");
+    expect(source).not.toContain("INSTALL ON ANDROID");
+    expect(source).not.toContain("iPhone Home Screen");
   });
 
-  it("keeps the iOS setup branch separate", () => {
+  it("keeps the whole widget configuration in one scroll surface", () => {
     const source = readFileSync(
       path.join(process.cwd(), "src/screens/WidgetStatesScreen.tsx"),
       "utf8"
     );
 
-    expect(source).toContain("INSTALL ON IOS");
-    expect(source).toContain("iPhone Home Screen");
+    expect(source.indexOf("<ScrollView")).toBeLessThan(source.indexOf("<KotlinHeader"));
   });
 });

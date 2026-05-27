@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { BlinkHeroPreview } from "@/components/BlinkHeroPreview";
@@ -34,6 +35,7 @@ const FALLBACK_MEANINGS: Record<string, string> = {
 
 export function TodayScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const palette = useAppPalette();
   const { profile } = useAuthStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const { friends, fetch: fetchFriends } = useFriendStore();
@@ -117,16 +119,16 @@ export function TodayScreen() {
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
-      <KotlinHeader
-        title="Today"
-        showAvatar={false}
-        actions={[
-          { label: loading ? "…" : "◐", onPress: refresh },
-          { label: "◎" },
-          { label: "⚙" },
-        ]}
-      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <KotlinHeader
+          title="Today"
+          showAvatar={false}
+          actions={[
+            { label: loading ? "…" : "◐", onPress: refresh },
+            { label: "◎" },
+            { label: "⚙" },
+          ]}
+        />
         {latestSignal ? (
           <View style={styles.latestStack}>
             <MockupCard style={styles.latestCard}>
@@ -136,15 +138,15 @@ export function TodayScreen() {
                     <Text style={styles.senderInitial}>{latestSignal.sender.slice(0, 1)}</Text>
                   </View>
                   <View>
-                    <Text style={styles.senderName}>{latestSignal.sender}</Text>
-                    <Text style={styles.senderTime}>{latestSignal.time}</Text>
+                    <Text style={[styles.senderName, { color: palette.text }]}>{latestSignal.sender}</Text>
+                    <Text style={[styles.senderTime, { color: palette.muted }]}>{latestSignal.time}</Text>
                   </View>
                 </View>
                 <StatusPill label="Private" tone="red" />
               </View>
               <View style={styles.codeBlock}>
                 <SignalCode code={latestSignal.code} style={styles.todayCode} />
-                <Text style={styles.meaningText}>{latestMeaning}</Text>
+                <Text style={[styles.meaningText, { color: palette.text }]}>{latestMeaning}</Text>
               </View>
               {latestSignal.hasBlink ? (
                 <BlinkHeroPreview
@@ -189,18 +191,18 @@ export function TodayScreen() {
         <View style={styles.queue}>
           {signalQueue.length > 0 ? (
             signalQueue.map((item, index) => (
-              <View key={item.id} style={styles.queueRow}>
+              <View key={item.id} style={[styles.queueRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
                 <StatusDot size={7} color={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot} />
                 <View style={styles.queueCopy}>
-                  <Text style={styles.queueCode}>
+                  <Text style={[styles.queueCode, { color: palette.text }]}>
                     {item.code}
-                    <Text style={styles.queueMeaning}>
+                    <Text style={[styles.queueMeaning, { color: palette.muted }]}>
                       {"  "}
                       {entries.find((entry) => entry.code === item.code)?.meaning ?? item.note ?? FALLBACK_MEANINGS[item.code] ?? "signal"}
                     </Text>
                   </Text>
                 </View>
-                <Text style={type.monoValue}>{item.time}</Text>
+                <Text style={[type.monoValue, { color: palette.text }]}>{item.time}</Text>
               </View>
             ))
           ) : (

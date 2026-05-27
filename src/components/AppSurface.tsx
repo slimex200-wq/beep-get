@@ -3,6 +3,7 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import { StatusBar, type StatusBarStyle } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../design/tokens';
+import { useAppPalette } from '../design/appTheme';
 
 type Props = {
   children: React.ReactNode;
@@ -14,13 +15,19 @@ type Props = {
 export function AppSurface({
   children,
   style,
-  backgroundColor = colors.paper,
-  statusBarStyle = 'dark',
+  backgroundColor,
+  statusBarStyle,
 }: Props) {
+  const palette = useAppPalette();
+  const usesThemeBackground =
+    !backgroundColor || backgroundColor === colors.paper || backgroundColor === "#F8F6F1";
+  const resolvedBackground = usesThemeBackground ? palette.background : backgroundColor;
+  const resolvedStatusBarStyle = statusBarStyle ?? palette.statusBar;
+
   return (
-    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor }]}>
-      <StatusBar style={statusBarStyle} backgroundColor={backgroundColor} />
-      <View style={[styles.surface, { backgroundColor }, style]}>{children}</View>
+    <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: resolvedBackground }]}>
+      <StatusBar style={resolvedStatusBarStyle} backgroundColor={resolvedBackground} />
+      <View style={[styles.surface, { backgroundColor: resolvedBackground }, style]}>{children}</View>
     </SafeAreaView>
   );
 }

@@ -69,16 +69,16 @@ export function SendBlinkScreen({
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
-      <KotlinHeader
-        title="Send"
-        centered
-        actions={[
-          ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
-          { label: "⚙", onPress: onOpenLogs },
-        ]}
-      />
-      {deckHeader ?? modeSwitch}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <KotlinHeader
+          title="Send"
+          centered
+          actions={[
+            ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
+            { label: "⚙", onPress: onOpenLogs },
+          ]}
+        />
+        {deckHeader ?? modeSwitch}
         {shouldRenderCameraCard ? (
           <MockupCard style={styles.cameraCard}>
             {cameraPermissionGranted ? (

@@ -43,6 +43,7 @@ interface SkinState {
   fetchActiveSkin: (userId: string) => Promise<void>;
   purchase: (userId: string, skinId: string) => Promise<void>;
   apply: (userId: string, skinId: string, slug: string) => Promise<void>;
+  setLocalActiveSkin: (slug: string) => void;
 }
 
 export const useSkinStore = create<SkinState>((set, get) => ({
@@ -66,6 +67,11 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     }
     const allSkins = await getAllSkins();
     set({ allSkins });
+  },
+
+  setLocalActiveSkin: (slug) => {
+    set({ activeSkinSlug: slug });
+    triggerWidgetReload();
   },
 
   fetchOwned: async (userId) => {
