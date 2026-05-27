@@ -6,9 +6,9 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { BlinkHeroPreview } from "@/components/BlinkHeroPreview";
 import {
   KotlinHeader,
-  MiniFrameStrip,
   MockupCard,
   MockupSection,
   StatusPill,
@@ -145,7 +145,13 @@ export function TodayScreen() {
                 <SignalCode code={latestSignal.code} style={styles.todayCode} />
                 <Text style={styles.meaningText}>{latestMeaning}</Text>
               </View>
-              {latestSignal.hasBlink ? <MiniFrameStrip /> : null}
+              {latestSignal.hasBlink ? (
+                <BlinkHeroPreview
+                  playbackUri={latestMessage.media?.playbackUri}
+                  frameUris={latestMessage.media?.stripFrameUris}
+                  sender={latestSignal.sender}
+                />
+              ) : null}
               <View style={styles.latestActions}>
                 <ActionButton
                   label="◉  View"
