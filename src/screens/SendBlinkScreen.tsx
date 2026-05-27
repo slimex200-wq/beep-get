@@ -63,6 +63,7 @@ export function SendBlinkScreen({
         ? "Send Blink"
         : "Capture Blink";
   const shouldRenderCameraCard = !deckHeader;
+  const shouldRenderCaptureFrames = !deckHeader;
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -108,8 +109,12 @@ export function SendBlinkScreen({
           </MockupCard>
         ) : null}
 
-        <Text style={type.tinyMono}>{hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}</Text>
-        <BlinkStrip compact frameUris={previewFrameUris} />
+        {shouldRenderCaptureFrames ? (
+          <>
+            <Text style={type.tinyMono}>{hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}</Text>
+            <BlinkStrip compact frameUris={previewFrameUris} />
+          </>
+        ) : null}
 
         <MockupCard soft style={styles.summary}>
           <Text style={styles.summaryText}>

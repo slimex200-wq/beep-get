@@ -20,6 +20,13 @@ describe("SendSignalScreen product sections", () => {
     expect(blinkSource).toContain("CAPTURED FRAMES");
   });
 
+  it("does not duplicate capture sections when the mockup deck owns the Send header", () => {
+    const blinkSource = readFileSync(path.join(process.cwd(), "src/screens/SendBlinkScreen.tsx"), "utf8");
+
+    expect(blinkSource).toContain("const shouldRenderCameraCard = !deckHeader");
+    expect(blinkSource).toContain("const shouldRenderCaptureFrames = !deckHeader");
+  });
+
   it("uses a two-phase Blink flow so capture preview happens before upload", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
 
