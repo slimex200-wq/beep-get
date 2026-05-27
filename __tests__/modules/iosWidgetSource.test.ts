@@ -43,7 +43,7 @@ describe("iOS widget source", () => {
   it("uses the full widget canvas instead of a nested card surface", () => {
     expect(widgetTargetConfig).toContain('deploymentTarget: "16.0"');
     expect(widgetSource).toContain("#available(iOSApplicationExtension 17.0, *)");
-    expect(widgetSource).toContain("BeepWidgetWithMarginsDisabled");
+    expect(widgetSource).toContain("contentMarginsDisabledOnNewOperatingSystem");
     expect(widgetSource).toContain(".contentMarginsDisabled()");
     expect(widgetSource.indexOf("#available(iOSApplicationExtension 17.0, *)")).toBeLessThan(
       widgetSource.indexOf(".contentMarginsDisabled()")

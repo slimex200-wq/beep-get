@@ -61,27 +61,7 @@ struct BeepWidget: Widget {
 
     var body: some WidgetConfiguration {
         makeBeepWidgetConfiguration(kind: kind)
-    }
-}
-@main
-struct BeepWidgetBundle: WidgetBundle {
-    @WidgetBundleBuilder
-    var body: some Widget {
-        if #available(iOSApplicationExtension 17.0, *) {
-            BeepWidgetWithMarginsDisabled()
-        } else {
-            BeepWidget()
-        }
-    }
-}
-
-@available(iOSApplicationExtension 17.0, *)
-struct BeepWidgetWithMarginsDisabled: Widget {
-    let kind = "BeepWidget"
-
-    var body: some WidgetConfiguration {
-        makeBeepWidgetConfiguration(kind: kind)
-            .contentMarginsDisabled()
+            .contentMarginsDisabledOnNewOperatingSystem()
     }
 }
 
@@ -92,6 +72,16 @@ private func makeBeepWidgetConfiguration(kind: String) -> some WidgetConfigurati
     .configurationDisplayName("Beep Get")
     .description("Latest Beep or Blink with quick reply.")
     .supportedFamilies([.systemSmall, .systemMedium])
+}
+
+extension WidgetConfiguration {
+    func contentMarginsDisabledOnNewOperatingSystem() -> some WidgetConfiguration {
+        if #available(iOSApplicationExtension 17.0, *) {
+            return self.contentMarginsDisabled()
+        } else {
+            return self
+        }
+    }
 }
 
 struct BeepWidgetEntryView: View {
@@ -105,5 +95,12 @@ struct BeepWidgetEntryView: View {
         default:
             BeepWidgetSmallView(entry: entry)
         }
+    }
+}
+
+@main
+struct BeepWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        BeepWidget()
     }
 }
