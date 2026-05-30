@@ -1,4 +1,6 @@
 const { supabase } = require("@/lib/supabase");
+import { readFileSync } from "fs";
+import path from "path";
 import {
   checkDropCondition,
   equipStatusIcon,
@@ -163,5 +165,28 @@ describe("collection RPC layer", () => {
     supabase.rpc.mockResolvedValue({ data: null, error: err });
 
     await expect(equipStatusIcon("streak-3")).rejects.toEqual(err);
+  });
+});
+
+describe("collection table grants", () => {
+  it("keeps icon Data API tables reachable only to authenticated users and service_role", () => {
+    const migration = readFileSync(
+      path.join(process.cwd(), "supabase/migrations/20260527150000_grant_icons_table_access.sql"),
+      "utf8",
+    ).toLowerCase();
+    const sourceMigration = readFileSync(
+      path.join(process.cwd(), "supabase/migrations/20260524100000_icons_collection.sql"),
+      "utf8",
+    ).toLowerCase();
+
+    expect(migration).toContain("grant select on table public.icons to authenticated");
+    expect(migration).toContain("grant select on table public.user_icons to authenticated");
+    expect(migration).toContain("grant all privileges on table public.icons to service_role");
+    expect(migration).toContain("grant all privileges on table public.user_icons to service_role");
+    expect(migration).toContain("revoke all privileges on table public.icons from anon");
+    expect(migration).toContain("revoke all privileges on table public.user_icons from anon");
+    expect(migration).not.toMatch(/grant\s+.+\s+to\s+anon/);
+    expect(sourceMigration).toContain("grant execute on function public.grant_icon(text) to authenticated");
+    expect(sourceMigration).toContain("grant execute on function public.equip_status_icon(text) to authenticated");
   });
 });

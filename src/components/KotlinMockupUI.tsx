@@ -17,7 +17,9 @@ const beepyAvatar = require("../../assets/brand/beepy-handdrawn.png");
 
 type HeaderAction = {
   label: string;
+  icon?: React.ReactNode;
   onPress?: () => void;
+  accessibilityLabel?: string;
 };
 
 type HeaderProps = {
@@ -27,6 +29,8 @@ type HeaderProps = {
   actions?: HeaderAction[];
   centered?: boolean;
   showAvatar?: boolean;
+  onAvatarPress?: () => void;
+  avatarAccessibilityLabel?: string;
 };
 
 export function KotlinHeader({
@@ -36,6 +40,8 @@ export function KotlinHeader({
   actions = [{ label: "◐" }, { label: "◎" }, { label: "⚙" }],
   centered = false,
   showAvatar = true,
+  onAvatarPress,
+  avatarAccessibilityLabel = "Change avatar",
 }: HeaderProps) {
   const palette = useAppPalette();
 
@@ -43,13 +49,29 @@ export function KotlinHeader({
     <View style={[styles.header, centered && styles.headerCentered]}>
       {showAvatar ? (
         <View style={[styles.headerLeft, centered && styles.headerSide]}>
-          <Avatar label={avatarLabel} source={avatarSource} size={34} />
+          <Pressable
+            accessibilityLabel={avatarAccessibilityLabel}
+            accessibilityRole={onAvatarPress ? "button" : undefined}
+            disabled={!onAvatarPress}
+            onPress={onAvatarPress}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Avatar label={avatarLabel} source={avatarSource} size={34} />
+          </Pressable>
         </View>
+      ) : centered ? (
+        <View style={styles.headerSide} />
       ) : null}
       <Text style={[styles.headerTitle, { color: palette.text }, centered && styles.headerTitleCentered]}>{title}</Text>
       <View style={[styles.headerActions, centered && styles.headerSide]}>
-        {actions.map((action) => (
-          <IconButton key={action.label} label={action.label} onPress={action.onPress} />
+        {actions.map((action, index) => (
+          <IconButton
+            key={`${action.label}-${index}`}
+            label={action.label}
+            icon={action.icon}
+            accessibilityLabel={action.accessibilityLabel}
+            onPress={action.onPress}
+          />
         ))}
       </View>
     </View>
@@ -88,11 +110,15 @@ export function Avatar({
 
 export function IconButton({
   label,
+  icon,
+  accessibilityLabel,
   onPress,
   dark = false,
   size = 34,
 }: {
   label: string;
+  icon?: React.ReactNode;
+  accessibilityLabel?: string;
   onPress?: () => void;
   dark?: boolean;
   size?: number;
@@ -101,6 +127,7 @@ export function IconButton({
 
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole={onPress ? "button" : undefined}
       onPress={onPress}
       disabled={!onPress}
@@ -111,7 +138,7 @@ export function IconButton({
         pressed && styles.pressed,
       ]}
     >
-      <Text style={[styles.iconText, { color: dark ? palette.primaryText : palette.text }]}>{label}</Text>
+      {icon ?? <Text style={[styles.iconText, { color: dark ? palette.primaryText : palette.text }]}>{label}</Text>}
     </Pressable>
   );
 }
@@ -145,14 +172,16 @@ export function MockupCard({
 export function MockupSection({
   label,
   hint,
+  style,
 }: {
   label: string;
   hint?: string;
+  style?: ViewStyle;
 }) {
   const palette = useAppPalette();
 
   return (
-    <View style={styles.sectionRow}>
+    <View style={[styles.sectionRow, style]}>
       <Text style={[styles.sectionLabel, { color: palette.muted }]}>{label}</Text>
       {hint ? <Text style={[styles.sectionHint, { color: palette.muted }]}>{hint}</Text> : null}
     </View>
@@ -303,6 +332,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     color: colors.muted,
     textTransform: "uppercase",
+    flexShrink: 0,
   },
   sectionHint: {
     fontFamily: font.monoBold,
@@ -310,6 +340,9 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     letterSpacing: 0,
     color: colors.muted,
+    flex: 1,
+    flexShrink: 1,
+    textAlign: "right",
   },
   statusPill: {
     minHeight: 22,

@@ -1,5 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import type { LegacyMessage } from "@/services/messageService";
+import { mockupBlinkFrameUris, mockupPhotoUris } from "@/design/mockupPhotos";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
 export const isUiPreviewEnabled = process.env.EXPO_PUBLIC_UI_PREVIEW === "1";
@@ -7,10 +8,11 @@ export const isUiPreviewUser = (userId?: string | null) => userId === UI_PREVIEW
 
 export const uiPreviewProfile = {
   id: UI_PREVIEW_USER_ID,
-  beep_id: "48624862",
-  nickname: "BEEP TESTER",
+  beep_id: "alexc",
+  nickname: "Alex Chen",
   status_icon: "online",
   active_skin_id: "skin-swiss-paper",
+  avatar_url: mockupPhotoUris.profile,
 };
 
 export function createUiPreviewSession(): Session {
@@ -45,26 +47,38 @@ export const uiPreviewMessages: LegacyMessage[] = [
     is_saved: false,
     expires_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     created_at: new Date().toISOString(),
-    from_user_profile: { nickname: "Mina", beep_id: "12031997" },
+    from_user_profile: { nickname: "비피", beep_id: "12031997" },
     media: {
       durationMs: 2000,
       status: "processed",
       thumbnailUri: "preview-blink-thumb",
-      stripFrameUris: ["preview-strip-1", "preview-strip-2", "preview-strip-3"],
-      playbackUri: "preview-private-playback",
+      stripFrameUris: [...mockupBlinkFrameUris],
+      playbackUri: null,
     },
   },
   {
     id: "preview-message-2",
     from_user: "friend-2",
     to_user: UI_PREVIEW_USER_ID,
-    number_code: "1004",
-    memo: "home safe",
+    number_code: "486",
+    memo: "보고 싶어",
     is_read: true,
     is_saved: true,
     expires_at: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(),
     created_at: new Date(Date.now() - 1000 * 60 * 11).toISOString(),
-    from_user_profile: { nickname: "Joon", beep_id: "01012026" },
+    from_user_profile: { nickname: "민아", beep_id: "01012026" },
+  },
+  {
+    id: "preview-message-3",
+    from_user: "friend-3",
+    to_user: UI_PREVIEW_USER_ID,
+    number_code: "1004",
+    memo: "집 도착",
+    is_read: true,
+    is_saved: false,
+    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 3).toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    from_user_profile: { nickname: "준", beep_id: "01012027" },
   },
 ];
 
@@ -73,12 +87,12 @@ export const uiPreviewFriends = [
     id: "preview-friendship-1",
     user_id: UI_PREVIEW_USER_ID,
     friend_id: "friend-1",
-    nickname: "Mina",
+    nickname: "비피",
     vibration_pattern: "short-short-long",
     friend: {
       id: "friend-1",
       beep_id: "12031997",
-      nickname: "Mina",
+      nickname: "비피",
       status_icon: "busy",
     },
   },
@@ -91,8 +105,21 @@ export const uiPreviewFriends = [
     friend: {
       id: "friend-2",
       beep_id: "01012026",
-      nickname: "Joon",
+      nickname: "민아",
       status_icon: "online",
+    },
+  },
+  {
+    id: "preview-friendship-3",
+    user_id: UI_PREVIEW_USER_ID,
+    friend_id: "friend-3",
+    nickname: "준",
+    vibration_pattern: "long",
+    friend: {
+      id: "friend-3",
+      beep_id: "01012027",
+      nickname: "준",
+      status_icon: "away",
     },
   },
 ];
@@ -102,22 +129,28 @@ export const uiPreviewDictionary = [
     id: "preview-code-1",
     user_id: UI_PREVIEW_USER_ID,
     code: "8282",
-    meaning: "call me now",
+    meaning: "빨리 와줘",
     created_at: new Date().toISOString(),
+    sort_order: 0,
+    is_widget_slot: false,
   },
   {
     id: "preview-code-2",
     user_id: UI_PREVIEW_USER_ID,
     code: "1004",
-    meaning: "made it home",
+    meaning: "집 도착",
     created_at: new Date().toISOString(),
+    sort_order: 0,
+    is_widget_slot: false,
   },
   {
     id: "preview-code-3",
     user_id: UI_PREVIEW_USER_ID,
-    code: "486",
-    meaning: "thinking of you",
+    code: "집중중 🔕",
+    meaning: "방해 금지",
     created_at: new Date().toISOString(),
+    sort_order: 0,
+    is_widget_slot: false,
   },
 ];
 

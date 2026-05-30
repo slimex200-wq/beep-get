@@ -101,21 +101,32 @@ describe("purchaseSkin", () => {
 
 describe("setActiveSkin", () => {
   it("updates profile active skin successfully", async () => {
-    const chain = createMockChain({ data: null, error: null });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
 
     await setActiveSkin("u1", "s1");
 
-    expect(supabase.from).toHaveBeenCalledWith("profiles");
-    expect(chain.update).toHaveBeenCalledWith({ active_skin_id: "s1" });
-    expect(chain.eq).toHaveBeenCalledWith("id", "u1");
+    expect(supabase.rpc).toHaveBeenCalledWith("set_active_skin", { p_skin_id: "s1" });
   });
 
   it("throws on error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "fail" } });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
 
     await expect(setActiveSkin("u1", "s1")).rejects.toEqual({ message: "fail" });
+  });
+
+  it("documents the restricted profile write surface migration", () => {
+    const source = require("fs").readFileSync(
+      require("path").join(
+        process.cwd(),
+        "supabase/migrations/20260529113000_tighten_profile_update_surface.sql"
+      ),
+      "utf8"
+    );
+
+    expect(source).toContain("revoke update on table public.profiles from authenticated");
+    expect(source).toContain("grant update (avatar_url) on table public.profiles to authenticated");
+    expect(source).toContain("create or replace function public.set_active_skin");
+    expect(source).toContain("where user_id = v_user_id");
   });
 });
 

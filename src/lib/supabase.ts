@@ -1,9 +1,16 @@
 import "react-native-url-polyfill/auto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 
 const SECURE_STORE_CHUNK_SIZE = 1800;
 const SECURE_STORE_CHUNK_MARKER = "__beepget_chunked_v1__:";
+
+type AuthStorage = {
+  getItem: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => Promise<void>;
+  removeItem: (key: string) => Promise<void>;
+};
 
 const ExpoSecureStoreAdapter = {
   getItem: async (key: string) => {
@@ -34,6 +41,42 @@ const ExpoSecureStoreAdapter = {
   },
   removeItem: (key: string) => removeChunkedItem(key),
 };
+
+const memoryWebStorage = new Map<string, string>();
+
+const WebStorageAdapter: AuthStorage = {
+  getItem: async (key: string) => {
+    const storage = getWebStorage();
+    return storage ? storage.getItem(key) : memoryWebStorage.get(key) ?? null;
+  },
+  setItem: async (key: string, value: string) => {
+    const storage = getWebStorage();
+    if (storage) {
+      storage.setItem(key, value);
+      return;
+    }
+    memoryWebStorage.set(key, value);
+  },
+  removeItem: async (key: string) => {
+    const storage = getWebStorage();
+    if (storage) {
+      storage.removeItem(key);
+      return;
+    }
+    memoryWebStorage.delete(key);
+  },
+};
+
+function getWebStorage() {
+  const maybeWindow = globalThis as typeof globalThis & {
+    localStorage?: {
+      getItem: (key: string) => string | null;
+      setItem: (key: string, value: string) => void;
+      removeItem: (key: string) => void;
+    };
+  };
+  return maybeWindow.localStorage ?? null;
+}
 
 function getChunkKey(key: string, index: number) {
   return `${key}.__chunk.${index}`;
@@ -126,7 +169,13 @@ function createMissingSupabaseClient(): SupabaseClient {
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
-        storage: ExpoSecureStoreAdapter,
+        storage:
+          Platform.OS === "web" ||
+          typeof SecureStore.getItemAsync !== "function" ||
+          typeof SecureStore.setItemAsync !== "function" ||
+          typeof SecureStore.deleteItemAsync !== "function"
+            ? WebStorageAdapter
+            : ExpoSecureStoreAdapter,
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,

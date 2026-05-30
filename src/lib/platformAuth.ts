@@ -4,7 +4,7 @@ export type PlatformAuthProvider = "google" | "apple" | "kakao";
 
 type RuntimePlatform = PlatformOSType | string;
 
-const AUTH_PROVIDER_ORDER: PlatformAuthProvider[] = ["google", "apple", "kakao"];
+const AUTH_PROVIDER_ORDER: PlatformAuthProvider[] = ["apple", "google", "kakao"];
 
 export function getPlatformAuthProvider(platform: RuntimePlatform): PlatformAuthProvider {
   return platform === "ios" ? "apple" : "google";
@@ -26,11 +26,11 @@ export function shouldUseNativeAppleSignIn(
 export function getPlatformAuthLabel(provider: PlatformAuthProvider): string {
   switch (provider) {
     case "apple":
-      return "Continue with Apple";
+      return "Sign in with Apple";
     case "kakao":
-      return "Continue with Kakao";
+      return "Log in with Kakao";
     case "google":
-      return "Continue with Google";
+      return "Sign in with Google";
   }
 }
 

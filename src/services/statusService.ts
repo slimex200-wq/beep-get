@@ -8,13 +8,10 @@ type ProfileStatusRow = {
 
 export const STATUS_PRESETS = [
   { icon: "online", label: "온라인" },
-  { icon: "study", label: "공부중" },
-  { icon: "sleep", label: "수면중" },
-  { icon: "move", label: "이동중" },
-  { icon: "eat", label: "식사중" },
-  { icon: "work", label: "근무중" },
-  { icon: "game", label: "게임중" },
+  { icon: "busy", label: "바쁨" },
+  { icon: "focus", label: "집중" },
   { icon: "away", label: "자리비움" },
+  { icon: "sleeping", label: "수면중" },
 ] as const;
 
 export async function setMyStatus(
@@ -22,12 +19,10 @@ export async function setMyStatus(
   statusIcon: string,
   label?: string
 ) {
+  void userId;
   void label;
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ status_icon: statusIcon })
-    .eq("id", userId);
+  const { error } = await supabase.rpc("equip_status_icon", { p_slug: statusIcon });
   if (error) throw error;
 }
 

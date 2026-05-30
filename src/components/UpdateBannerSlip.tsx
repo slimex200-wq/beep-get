@@ -75,16 +75,7 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
 
         <View style={styles.footerRow}>
           <Text style={styles.footerMono}>{busy ? "RELOADING" : "TAP TO REFRESH"}</Text>
-          {onDismiss && !busy ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="나중에 적용"
-              onPress={onDismiss}
-              hitSlop={8}
-            >
-              <Text style={styles.dismissMono}>LATER</Text>
-            </Pressable>
-          ) : null}
+          {onDismiss && !busy ? <View style={styles.dismissPlaceholder} /> : null}
         </View>
 
         <View style={styles.perforation}>
@@ -93,6 +84,17 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
           ))}
         </View>
       </Pressable>
+      {onDismiss && !busy ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="나중에 적용"
+          onPress={onDismiss}
+          hitSlop={8}
+          style={styles.dismissOverlay}
+        >
+          <Text style={styles.dismissMono}>LATER</Text>
+        </Pressable>
+      ) : null}
     </Animated.View>
   );
 }
@@ -205,6 +207,16 @@ const styles = StyleSheet.create({
     ...type.tinyMono,
     color: colors.muted,
     letterSpacing: 1.3,
+  },
+  dismissPlaceholder: {
+    width: 36,
+    height: 14,
+  },
+  dismissOverlay: {
+    position: "absolute",
+    right: spacing[6],
+    bottom: spacing[7],
+    zIndex: 1,
   },
   perforation: {
     position: "absolute",

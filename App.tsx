@@ -4,7 +4,7 @@ import type { NavigationContainerRef } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { parseWidgetActionUrl } from "@/lib/widgetActions";
@@ -213,6 +213,18 @@ export default function App() {
   useEffect(() => {
     const timeout = setTimeout(() => setStartupTimedOut(true), 2500);
     return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    if (document.getElementById("beepget-tab-focus-reset")) return;
+
+    const style = document.createElement("style");
+    style.id = "beepget-tab-focus-reset";
+    style.textContent =
+      '[role="tab"]:focus,[role="tab"]:focus-visible,[role="button"]:focus,[role="button"]:focus-visible{outline:none!important;}';
+    document.head.appendChild(style);
+    return () => style.remove();
   }, []);
 
   useEffect(() => {

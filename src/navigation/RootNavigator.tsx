@@ -5,7 +5,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { colors } from "@/design/tokens";
-import { font, type } from "@/design/typography";
+import { font } from "@/design/typography";
+import {
+  FriendsGroupIcon,
+  MyUserIcon,
+  SendPlaneIcon,
+  TodayCalendarIcon,
+} from "@/components/MockupLineIcons";
 import { AuthScreen } from "@/screens/AuthScreen";
 import { CollectionScreen } from "@/screens/CollectionScreen";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
@@ -44,18 +50,11 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const primaryTabLabels = ["TODAY", "SEND", "FRIENDS", "MY"] as const;
 
-const tabLabels: Record<keyof MainTabParamList, (typeof primaryTabLabels)[number]> = {
-  Today: "TODAY",
-  Compose: "SEND",
-  People: "FRIENDS",
-  My: "MY",
-};
-
-const tabGlyphs: Record<keyof MainTabParamList, string> = {
-  Today: "▣",
-  Compose: "▷",
-  People: "••",
-  My: "♙",
+const tabLabels: Record<keyof MainTabParamList, string> = {
+  Today: "Today",
+  Compose: "Send",
+  People: "Friends",
+  My: "My",
 };
 
 function MainTabs() {
@@ -65,28 +64,30 @@ function MainTabs() {
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 8,
-          minHeight: 58,
-          paddingTop: 7,
-          paddingBottom: 6,
+          left: 14,
+          right: 14,
+          bottom: 9,
+          minHeight: 52,
+          paddingTop: 4,
+          paddingBottom: 4,
           borderTopWidth: 0,
-          borderRadius: 18,
-          backgroundColor: "#E3E0DB",
+          borderWidth: 1,
+          borderColor: "rgba(10,10,10,0.08)",
+          borderRadius: 15,
+          backgroundColor: "#E4E0DA",
           shadowColor: colors.ink,
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 4,
+          shadowOpacity: 0.04,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 1 },
+          elevation: 2,
         },
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
         tabBarIcon: ({ focused, color }) => (
           <TabIcon routeName={route.name} focused={focused} color={color} />
         ),
-        tabBarIconStyle: { marginTop: 2 },
-        tabBarItemStyle: { paddingBottom: 1 },
+        tabBarIconStyle: { marginTop: 0 },
+        tabBarItemStyle: { paddingBottom: 0 },
         tabBarLabel: ({ focused, color }) => (
           <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />
         ),
@@ -102,12 +103,19 @@ function MainTabs() {
 }
 
 function TabIcon({ routeName, focused, color }: { routeName: keyof MainTabParamList; focused: boolean; color: string }) {
+  const tint = focused ? colors.ink : color;
+
   return (
     <View style={styles.tabIconWrap}>
-      <Text style={[styles.tabGlyph, { color }, focused && styles.tabGlyphActive]}>
-        {tabGlyphs[routeName]}
-      </Text>
-      {routeName === "People" ? <View style={styles.tabAlertDot} /> : null}
+      {routeName === "Today" ? <TodayCalendarIcon color={tint} /> : null}
+      {routeName === "Compose" ? <SendPlaneIcon color={tint} /> : null}
+      {routeName === "People" ? (
+        <>
+          <FriendsGroupIcon color={tint} />
+          <View style={styles.tabUnreadDot} />
+        </>
+      ) : null}
+      {routeName === "My" ? <MyUserIcon color={tint} /> : null}
     </View>
   );
 }
@@ -120,7 +128,8 @@ function TabLabel({ label, focused, color }: { label: string; focused: boolean; 
 
 export function RootNavigator() {
   const { session, profile } = useAuthStore();
-  const needsOnboarding = !session || !profile || !profile.nickname?.trim();
+  const needsOnboarding =
+    !session || !profile || !profile.nickname?.trim() || !profile.avatar_url?.trim();
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -137,7 +146,6 @@ export function RootNavigator() {
           <Stack.Screen
             name="ReplyRoom"
             component={SlipReplyRoomScreen}
-            options={{ presentation: "modal" }}
           />
           <Stack.Screen
             name="WidgetStates"
@@ -182,27 +190,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  tabGlyph: {
-    fontFamily: font.sansBold,
-    fontSize: 17,
-    lineHeight: 20,
-  },
-  tabGlyphActive: {
-    color: colors.ink,
-  },
-  tabAlertDot: {
+  tabUnreadDot: {
     position: "absolute",
+    top: -1,
     right: 1,
-    top: 1,
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: colors.red,
   },
   tabLabel: {
-    fontFamily: type.tinyMono.fontFamily,
-    fontSize: 8,
-    lineHeight: 10,
+    fontFamily: font.sansBold,
+    fontSize: 9,
+    lineHeight: 11,
     letterSpacing: 0,
     fontWeight: "700",
   },

@@ -28,6 +28,7 @@ export type UserProfile = {
   nickname: string;
   status_icon: string;
   active_skin_id: string | null;
+  avatar_url?: string | null;
 };
 
 export function generateBeepId(): string {
@@ -152,6 +153,25 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   return profile;
 }
 
+export async function updateProfileAvatar(avatarUrl: string): Promise<UserProfile> {
+  const { data: authData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  const userId = authData.user?.id;
+  if (!userId) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId)
+    .select("id, beep_id, nickname, status_icon, active_skin_id, avatar_url")
+    .single();
+  if (error) throw error;
+
+  const profile = readProfile(data);
+  if (!profile) throw new Error("Profile not found");
+  return profile;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -162,6 +182,9 @@ function readProfile(data: unknown): UserProfile | null {
     const row = data as Partial<UserProfile>;
     if (typeof row.beep_id === "string") {
       return {
+        ...(typeof row.avatar_url === "string" || row.avatar_url === null
+          ? { avatar_url: row.avatar_url }
+          : {}),
         id: typeof row.id === "string" ? row.id : "",
         beep_id: row.beep_id,
         nickname: typeof row.nickname === "string" ? row.nickname : "",

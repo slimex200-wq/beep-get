@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -7,12 +7,16 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { CameraLensPanel } from "@/components/CameraLensPanel";
 import { FriendPickerStrip, type PickableFriend } from "@/components/FriendPickerStrip";
-import { HeaderBar } from "@/components/HeaderBar";
-import { MiniFrameStrip, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
+import { KotlinHeader, MockupCard, StatusPill } from "@/components/KotlinMockupUI";
+import {
+  CameraLineIcon,
+  GearLineIcon,
+  SendPlaneIcon,
+} from "@/components/MockupLineIcons";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
+import { getMockupFriendPhotoUri, mockupPhotoUris } from "@/design/mockupPhotos";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
@@ -27,6 +31,7 @@ import { SendBeepScreen } from "@/screens/SendBeepScreen";
 import { SendBlinkScreen } from "@/screens/SendBlinkScreen";
 
 type SendMode = "beep" | "blink";
+type CameraCaptureMode = "picture" | "video";
 type SendRouteParams = Partial<RootStackParamList["Send"]>;
 
 const DEFAULT_SLOT_DECK = ["8282", "486", "1004", "7942", "0404"];
@@ -42,14 +47,19 @@ export function SendSignalScreen() {
   const { send } = useMessageStore();
   const cameraRef = useRef<CameraView | null>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [mode, setMode] = useState<SendMode>(params.mode ?? "blink");
+  const [mode, setMode] = useState<SendMode>(params.mode ?? "beep");
   const [selectedRecipientId, setSelectedRecipientId] = useState<string | null>(params.friendId ?? null);
   const [code, setCode] = useState(params.initialCode ?? "");
   const [memo, setMemo] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
   const [blinkDraft, setBlinkDraft] = useState<BlinkDraft | null>(null);
+  const [captureStatus, setCaptureStatus] = useState("Ready to capture Blink");
+  const [cameraMode, setCameraMode] = useState<CameraCaptureMode>("picture");
+  const [sendSettingsVisible, setSendSettingsVisible] = useState(false);
+  const [sentFeedback, setSentFeedback] = useState(false);
   const previewMode = Boolean(profile && isUiPreviewUser(profile.id));
+  const headerAvatarUri = profile?.avatar_url ?? mockupPhotoUris.profile;
 
   useEffect(() => {
     if (!profile) return;
@@ -73,15 +83,17 @@ export function SendSignalScreen() {
             name: params.friendName ?? "Friend",
             no: params.friendNo ?? friendNo(params.friendName),
             relation: "SELECTED",
+            avatarUri: getMockupFriendPhotoUri(params.friendName ?? "Friend", 0),
           },
         ]
       : [];
 
-    const storeFriends = friends.map((friend) => ({
+    const storeFriends = friends.map((friend, index) => ({
       id: friend.friend_id,
       name: friend.nickname || friend.friend.nickname,
       no: friend.friend.beep_id.slice(-2),
       relation: friend.vibration_pattern || friend.friend.status_icon || "CLOSE",
+      avatarUri: getMockupFriendPhotoUri(friend.nickname || friend.friend.nickname, index),
     }));
 
     const byId = new Map<string, PickableFriend>();
@@ -104,11 +116,12 @@ export function SendSignalScreen() {
 
   useEffect(() => {
     setBlinkDraft(null);
+    setCaptureStatus("Ready to capture Blink");
   }, [recipient?.id]);
 
   const slotDeck = useMemo(() => {
     const userSlots = entries.map((entry) => entry.code).filter(Boolean);
-    return Array.from(new Set([...userSlots, ...DEFAULT_SLOT_DECK])).slice(0, 8);
+    return Array.from(new Set([DEFAULT_SLOT_DECK[0], ...userSlots, ...DEFAULT_SLOT_DECK])).slice(0, 5);
   }, [entries]);
 
   useEffect(() => {
@@ -122,66 +135,107 @@ export function SendSignalScreen() {
     </View>
   );
 
+  const openPeople = () => {
+    navigation.navigate("Main", { screen: "People" });
+  };
+
+  const selectRecipient = (friend: PickableFriend) => {
+    setSelectedRecipientId(friend.id);
+  };
+
+  const selectSlot = (slot: string) => {
+    setCode(slot);
+  };
+
+  const openSendSettings = () => {
+    setSendSettingsVisible(true);
+  };
+
+  const closeSendSettings = () => {
+    setSendSettingsVisible(false);
+  };
+
+  const clearBlinkDraft = () => {
+    setBlinkDraft(null);
+    setCaptureStatus("Ready to capture Blink");
+    setSentFeedback(false);
+  };
+
+  const flashSentFeedback = () => {
+    setSentFeedback(true);
+    setTimeout(() => setSentFeedback(false), 1400);
+  };
+
+  const visibleFrameUris = useMemo(() => {
+    if (blinkDraft?.previewFrameUris?.length) return blinkDraft.previewFrameUris.slice(0, 3);
+    return [];
+  }, [blinkDraft?.previewFrameUris]);
+
+  const prepareCameraMode = async (nextMode: CameraCaptureMode) => {
+    setCameraMode(nextMode);
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  };
+
   const deckHeader = recipient ? (
     <View style={styles.deck}>
-      <MockupCard soft style={styles.capturePreview}>
+      <View style={styles.deckSection}>
+        <Text style={styles.deckLabel}>SEND TYPE</Text>
+        {modeSwitch}
+      </View>
+      <MockupCard soft style={mode === "beep" ? styles.beepCapturePreview : styles.capturePreview}>
         <View style={styles.captureTopRow}>
-          <StatusPill label={mode.toUpperCase()} tone={mode === "blink" ? "red" : "muted"} />
+          <StatusPill label={mode === "blink" ? "BLINK" : "BEEP"} tone={mode === "blink" ? "red" : "muted"} />
           <StatusPill label={mode === "blink" ? "2.0s" : "ready"} />
         </View>
         {mode === "blink" ? (
-          cameraPermission?.granted ? (
+          cameraPermission?.granted && !previewMode ? (
             <View style={styles.captureCameraFrame}>
               <CameraView
                 ref={cameraRef}
                 active
                 facing="front"
                 mirror
-                mode="video"
                 mute
                 style={styles.captureCamera}
+                mode={cameraMode}
                 videoBitrate={2500000}
                 videoQuality="480p"
               />
             </View>
           ) : (
-            <View style={styles.captureFallback}>
-              <CameraLensPanel compact />
-              {!previewMode ? (
-                <ActionButton
-                  label="Allow Camera"
-                  variant="dark"
-                  style={styles.permissionButton}
-                  onPress={() => {
-                    void requestCameraPermission();
-                  }}
-                />
-              ) : null}
-            </View>
+            <CaptureReticlePanel />
           )
         ) : (
-          <View style={styles.captureGrid}>
-            <View style={styles.crosshairHorizontal} />
-            <View style={styles.crosshairVertical} />
-            <View style={styles.crosshairCircle} />
+          <View style={styles.captureFramesBlock}>
+            <Text style={styles.captureFramesLabel}>SM WIDGET PREVIEW</Text>
+            <SmBeepWidgetPreview code={code} recipientName={recipient.name} />
           </View>
         )}
-        <Text style={styles.captureHint}>
-          {mode === "blink" ? "Ready to capture 2 second Blink" : "Ready to transmit"}
-        </Text>
+        {mode === "blink" ? (
+          <>
+            <Text style={styles.captureHint}>
+              {recording ? "Recording 2 second Blink" : captureStatus}
+            </Text>
+            <View style={styles.captureFramesBlock}>
+              <Text style={styles.captureFramesLabel}>MD WIDGET PREVIEW</Text>
+              <BlinkMdWidgetPreview code={code} recipientName={recipient.name} frameUris={visibleFrameUris} />
+            </View>
+          </>
+        ) : null}
       </MockupCard>
-      <MockupSection label="Captured Frames" />
-      <MiniFrameStrip compact frameUris={blinkDraft?.previewFrameUris ?? DEMO_BLINK_FRAME_DATA_URIS} />
-      <Text style={type.tinyMono}>TO:</Text>
-      <FriendPickerStrip
-        friends={friendOptions}
-        selectedId={recipient.id}
-        onSelect={(friend) => setSelectedRecipientId(friend.id)}
-      />
-      <Text style={type.tinyMono}>SIGNAL TYPE</Text>
-      <View style={styles.inlineSwitch}>{modeSwitch}</View>
-      <Text style={type.tinyMono}>SIGNAL DECK</Text>
-      <SignalSlotRail slots={slotDeck} selected={code} onSelect={setCode} />
+      <View style={styles.deckSection}>
+        <Text style={styles.deckLabel}>TO:</Text>
+        <FriendPickerStrip
+          friends={friendOptions}
+          selectedId={recipient.id}
+          onSelect={selectRecipient}
+          onAddPress={openPeople}
+        />
+      </View>
+      <View style={styles.deckSection}>
+        <Text style={styles.deckLabel}>SIGNAL DECK</Text>
+        <SignalSlotRail compact slots={slotDeck} selected={code} onSelect={selectSlot} />
+      </View>
     </View>
   ) : null;
 
@@ -191,10 +245,6 @@ export function SendSignalScreen() {
       return;
     }
     navigation.navigate("Main", { screen: "People" });
-  };
-
-  const openLogs = () => {
-    navigation.navigate("Logs");
   };
 
   const sendBeep = async () => {
@@ -210,6 +260,7 @@ export function SendSignalScreen() {
     setSending(true);
     try {
       await send(profile.id, recipient.id, code, memo || undefined);
+      flashSentFeedback();
       Alert.alert("Beep sent", `${code} to ${recipient.name}`);
       setMemo("");
     } catch (err: any) {
@@ -232,15 +283,18 @@ export function SendSignalScreen() {
 
     if (!blinkDraft && previewMode) {
       setBlinkDraft(createPreviewBlinkDraft());
+      setCaptureStatus("3 frames extracted from preview Blink");
       Alert.alert("Blink preview", `3 frame Blink preview is ready for ${recipient.name}`);
       return;
     }
 
     if (blinkDraft) {
       if (previewMode) {
-        Alert.alert("Blink preview", `2 sec Blink previewed to ${recipient.name}`);
+        flashSentFeedback();
+        setCaptureStatus(`Sent to ${recipient.name}`);
         setBlinkDraft(null);
         setMemo("");
+        setTimeout(() => setCaptureStatus("Ready to capture Blink"), 1400);
         return;
       }
 
@@ -254,9 +308,11 @@ export function SendSignalScreen() {
           video: blinkDraft.video,
           createTeaser: async () => blinkDraft.teaser,
         });
-        Alert.alert("Blink sent", `2 sec Blink to ${recipient.name}`);
+        flashSentFeedback();
+        setCaptureStatus(`Sent to ${recipient.name}`);
         setBlinkDraft(null);
         setMemo("");
+        setTimeout(() => setCaptureStatus("Ready to capture Blink"), 1400);
       } catch (err: any) {
         Alert.alert("Blink failed", err?.message ?? "Try again.");
       } finally {
@@ -280,6 +336,7 @@ export function SendSignalScreen() {
     setRecording(true);
     setSending(true);
     try {
+      await prepareCameraMode("video");
       const captured = await cameraRef.current.recordAsync({
         maxDuration: BLINK_DURATION_SECONDS,
         maxFileSize: BLINK_MAX_BYTES,
@@ -292,24 +349,32 @@ export function SendSignalScreen() {
         videoUri: captured.uri,
       });
       setBlinkDraft(draft);
+      setCaptureStatus("3 frames extracted from 2s Blink");
       Alert.alert("Blink preview ready", "Check the 3 frames, then send or retake.");
     } catch (err: any) {
       Alert.alert("Blink failed", err?.message ?? "Try again.");
     } finally {
       setRecording(false);
       setSending(false);
+      setCameraMode("picture");
     }
   };
 
   if (!recipient) {
     return (
-      <AppSurface>
-        <HeaderBar
+      <AppSurface backgroundColor="#F8F6F1">
+        <KotlinHeader
           title="Send"
-          left="BACK"
-          right="FRIENDS"
-          onLeftPress={goBackToFlow}
-          onRightPress={() => navigation.navigate("Main", { screen: "People" })}
+          centered
+          avatarSource={{ uri: headerAvatarUri }}
+          actions={[
+            {
+              label: "Settings",
+              icon: <GearLineIcon />,
+              accessibilityLabel: "Send settings",
+              onPress: openSendSettings,
+            },
+          ]}
         />
         <ScrollView contentContainerStyle={styles.emptyContent} showsVerticalScrollIndicator={false}>
           <View style={styles.emptyDeck}>
@@ -324,11 +389,11 @@ export function SendSignalScreen() {
             </View>
 
             <Text style={type.bodyMuted}>
-              Add a friend to unlock the To strip, Blink capture, reply chips, and outgoing summary.
+              Add a friend to unlock the To strip, Beep codes, optional Blink capture, and outgoing summary.
             </Text>
 
             <Text style={type.tinyMono}>TO:</Text>
-            <Text style={type.tinyMono}>SIGNAL TYPE</Text>
+            <Text style={type.tinyMono}>SEND TYPE</Text>
             {modeSwitch}
 
             <Text style={type.tinyMono}>SIGNAL DECK</Text>
@@ -347,11 +412,17 @@ export function SendSignalScreen() {
             />
           </View>
         </ScrollView>
+        <SendSettingsSheet
+          visible={sendSettingsVisible}
+          blinkFrameCount={visibleFrameUris.length}
+          onClose={closeSendSettings}
+          onClearDraft={clearBlinkDraft}
+        />
       </AppSurface>
     );
   }
 
-  return mode === "beep" ? (
+  const activeScreen = mode === "beep" ? (
     <SendBeepScreen
       deckHeader={deckHeader}
       recipientName={recipient.name}
@@ -359,12 +430,14 @@ export function SendSignalScreen() {
       code={code}
       memo={memo}
       sending={sending}
+      sentFeedback={sentFeedback}
       onCodeChange={setCode}
       onMemoChange={setMemo}
       onPreset={setCode}
       onSend={sendBeep}
       onBack={goBackToFlow}
-      onOpenLogs={openLogs}
+      onOpenSettings={openSendSettings}
+      headerAvatarUri={headerAvatarUri}
       showBackAction={isModalFlow}
     />
   ) : (
@@ -377,6 +450,7 @@ export function SendSignalScreen() {
       sending={sending}
       recording={recording}
       hasCapturedBlink={Boolean(blinkDraft)}
+      sentFeedback={sentFeedback}
       previewFrameUris={blinkDraft?.previewFrameUris}
       cameraPermissionGranted={Boolean(cameraPermission?.granted)}
       cameraRef={cameraRef}
@@ -385,16 +459,170 @@ export function SendSignalScreen() {
       onPreset={setCode}
       onRequestPermission={() => requestCameraPermission()}
       onSend={sendBlink}
-      onRetake={() => setBlinkDraft(null)}
+      onRetake={clearBlinkDraft}
       onBack={goBackToFlow}
-      onOpenLogs={openLogs}
+      onOpenSettings={openSendSettings}
+      headerAvatarUri={headerAvatarUri}
       previewMode={previewMode}
       showBackAction={isModalFlow}
     />
   );
+
+  return (
+    <>
+      {activeScreen}
+      <SendSettingsSheet
+        visible={sendSettingsVisible}
+        blinkFrameCount={visibleFrameUris.length}
+        onClose={closeSendSettings}
+        onClearDraft={clearBlinkDraft}
+      />
+    </>
+  );
 }
 
-function createPreviewBlinkDraft(): BlinkDraft {
+function SmBeepWidgetPreview({
+  code,
+  recipientName,
+}: {
+  code: string;
+  recipientName: string;
+}) {
+  return (
+    <View style={styles.smBeepWidgetPreview}>
+      <View style={styles.smBeepWidgetHead}>
+        <Text style={styles.smBeepWidgetBrand}>BEEP-GET</Text>
+        <View style={styles.smBeepWidgetDot} />
+      </View>
+      <View style={styles.smBeepWidgetBody}>
+        <Text style={styles.smBeepWidgetCode}>{code || "____"}</Text>
+        <Text numberOfLines={1} style={styles.smBeepWidgetMeta}>
+          BEEP / {recipientName}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function BlinkMdWidgetPreview({
+  code,
+  recipientName,
+  frameUris,
+}: {
+  code: string;
+  recipientName: string;
+  frameUris: readonly string[];
+}) {
+  const hasFrames = frameUris.length > 0;
+
+  return (
+    <View style={styles.mdWidgetPreview}>
+      <View style={styles.mdWidgetHead}>
+        <View style={styles.mdWidgetTitleRow}>
+          <Text style={styles.mdWidgetIncoming}>Incoming</Text>
+          <Text style={styles.mdWidgetKind}>Blink</Text>
+        </View>
+        <Text style={styles.mdWidgetMeta}>NO.97 - 2.0s</Text>
+      </View>
+      <View style={styles.mdWidgetRule} />
+      <View style={styles.mdWidgetBody}>
+        <View style={styles.mdWidgetNumberBlock}>
+          <Text style={styles.mdWidgetCode}>{code || "____"}</Text>
+          <View style={styles.mdWidgetFromRow}>
+            <Text style={styles.mdWidgetLabel}>FROM</Text>
+            <Text numberOfLines={1} style={styles.mdWidgetFrom}>{recipientName}</Text>
+          </View>
+          <Text style={styles.mdWidgetSub}>2.0s - MUTE</Text>
+        </View>
+        <View style={styles.mdWidgetVerticalRule} />
+        <View style={styles.mdWidgetSignalPane}>
+          <View style={styles.mdWidgetSignalHead}>
+            <Text style={styles.mdWidgetLabel}>SIGNAL SLOTS</Text>
+            <Text style={styles.mdWidgetStatus}>{hasFrames ? "NEW" : "READY"}</Text>
+          </View>
+          <CaptureFrameStrip frameUris={frameUris} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function CaptureFrameStrip({
+  frameUris,
+}: {
+  frameUris: readonly string[];
+}) {
+  const labels = ["0.0s", "0.7s", "1.3s"];
+
+  return (
+    <View style={styles.captureFrameStrip}>
+      {labels.map((label, index) => (
+        <View key={`${frameUris[index] ?? label}-${index}`} style={styles.captureFrameThumb}>
+          {frameUris[index] ? (
+            <Image source={{ uri: frameUris[index] }} style={styles.captureFrameImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.captureFramePlaceholder}>{label}</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function SendSettingsSheet({
+  visible,
+  blinkFrameCount,
+  onClose,
+  onClearDraft,
+}: {
+  visible: boolean;
+  blinkFrameCount: number;
+  onClose: () => void;
+  onClearDraft: () => void;
+}) {
+  if (!visible) return null;
+
+  return (
+    <View style={styles.sheetOverlay}>
+      <Pressable accessibilityLabel="Close Send settings" onPress={onClose} style={styles.sheetBackdrop} />
+      <View style={styles.sheet}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Send Settings</Text>
+            <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetClose}>
+              <Text style={styles.sheetCloseText}>Close</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.sheetRow}>
+            <View style={styles.sheetIconCircle}>
+              <SendPlaneIcon color={colors.ink} />
+            </View>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.sheetRowTitle}>Default Send</Text>
+              <Text style={styles.sheetRowSub}>Beep sends code. Blink sends the code with a 2s video.</Text>
+            </View>
+          </View>
+
+          <View style={styles.sheetRow}>
+            <View style={styles.sheetIconCircle}>
+              <CameraLineIcon color={colors.ink} />
+            </View>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.sheetRowTitle}>Blink Draft Frames</Text>
+              <Text style={styles.sheetRowSub}>{blinkFrameCount} extracted from this 2s Blink</Text>
+            </View>
+            <Pressable accessibilityRole="button" onPress={onClearDraft} style={styles.smallPill}>
+              <Text style={styles.smallPillText}>Clear</Text>
+            </Pressable>
+          </View>
+
+      </View>
+    </View>
+  );
+}
+
+function createPreviewBlinkDraft(frameUris: readonly string[] = DEMO_BLINK_FRAME_DATA_URIS): BlinkDraft {
+  const previewFrameUris = [...frameUris].slice(0, 3);
   return {
     video: {
       uri: "preview-private-playback",
@@ -404,14 +632,14 @@ function createPreviewBlinkDraft(): BlinkDraft {
     teaser: {
       thumbnailKey: null,
       stripKeys: [],
-      assets: DEMO_BLINK_FRAME_DATA_URIS.map((uri, index) => ({
+      assets: previewFrameUris.map((uri, index) => ({
         uri,
         objectKey: `preview-strip-${index + 1}`,
         mimeType: "image/jpeg" as const,
         timeMs: Math.floor(BLINK_MAX_DURATION_MS * (index / 3)),
       })),
     },
-    previewFrameUris: [...DEMO_BLINK_FRAME_DATA_URIS],
+    previewFrameUris,
   };
 }
 
@@ -429,6 +657,16 @@ function ModeButton({
   );
 }
 
+function CaptureReticlePanel() {
+  return (
+    <View style={styles.captureGrid}>
+      <View style={styles.crosshairHorizontal} />
+      <View style={styles.crosshairVertical} />
+      <View style={styles.crosshairCircle} />
+    </View>
+  );
+}
+
 function friendNo(label?: string) {
   const digits = label?.replace(/\D/g, "");
   return digits?.slice(-2) || "01";
@@ -441,12 +679,23 @@ function reportError(err: unknown) {
 
 const styles = StyleSheet.create({
   deck: {
-    gap: spacing[3],
+    gap: spacing[4],
     marginBottom: spacing[3],
-    marginHorizontal: spacing[5],
+    marginHorizontal: spacing[0],
     paddingTop: spacing[1],
   },
+  deckSection: {
+    gap: spacing[1],
+  },
+  deckLabel: {
+    ...type.tinyMono,
+  },
   capturePreview: {
+    minHeight: 248,
+    padding: spacing[4],
+    gap: spacing[3],
+  },
+  beepCapturePreview: {
     minHeight: 188,
     padding: spacing[4],
     gap: spacing[3],
@@ -493,18 +742,186 @@ const styles = StyleSheet.create({
   captureCamera: {
     flex: 1,
   },
-  captureFallback: {
-    gap: spacing[3],
-  },
   captureHint: {
     ...type.tinyMono,
     textAlign: "center",
   },
-  permissionButton: {
-    alignSelf: "stretch",
+  captureFramesBlock: {
+    gap: spacing[2],
   },
-  inlineSwitch: {
-    maxWidth: 260,
+  captureFramesLabel: {
+    ...type.tinyMono,
+  },
+  smBeepWidgetPreview: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 216,
+    minHeight: 156,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 12,
+    backgroundColor: "#F8F6F1",
+  },
+  smBeepWidgetHead: {
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing[3],
+  },
+  smBeepWidgetBrand: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  smBeepWidgetDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.red,
+  },
+  smBeepWidgetBody: {
+    flex: 1,
+    minHeight: 118,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[2],
+    padding: spacing[4],
+  },
+  smBeepWidgetCode: {
+    ...type.codeMedium,
+    color: colors.ink,
+    fontSize: 42,
+    lineHeight: 46,
+    textAlign: "center",
+  },
+  smBeepWidgetMeta: {
+    ...type.tinyMono,
+    maxWidth: "100%",
+    color: colors.muted,
+    textAlign: "center",
+  },
+  mdWidgetPreview: {
+    minHeight: 176,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.ruleStrong,
+    borderRadius: 10,
+    backgroundColor: "#F8F6F1",
+  },
+  mdWidgetHead: {
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[2],
+    paddingHorizontal: spacing[3],
+  },
+  mdWidgetTitleRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing[1],
+  },
+  mdWidgetIncoming: {
+    ...type.metaValue,
+    fontSize: 13,
+    lineHeight: 16,
+  },
+  mdWidgetKind: {
+    ...type.metaValue,
+    fontSize: 13,
+    fontStyle: "italic",
+    lineHeight: 16,
+  },
+  mdWidgetMeta: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  mdWidgetRule: {
+    height: 1,
+    backgroundColor: colors.ink,
+  },
+  mdWidgetBody: {
+    flex: 1,
+    minHeight: 140,
+    flexDirection: "row",
+  },
+  mdWidgetNumberBlock: {
+    width: 104,
+    justifyContent: "center",
+    gap: spacing[1],
+    paddingHorizontal: spacing[3],
+  },
+  mdWidgetCode: {
+    ...type.codeSmall,
+    color: colors.ink,
+    fontSize: 30,
+    lineHeight: 34,
+  },
+  mdWidgetFromRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing[1],
+  },
+  mdWidgetFrom: {
+    ...type.tinyMono,
+    flex: 1,
+    color: colors.ink,
+  },
+  mdWidgetSub: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  mdWidgetVerticalRule: {
+    width: 1,
+    backgroundColor: colors.ink,
+  },
+  mdWidgetSignalPane: {
+    flex: 1,
+    gap: spacing[2],
+    padding: spacing[3],
+  },
+  mdWidgetSignalHead: {
+    minHeight: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[2],
+  },
+  mdWidgetLabel: {
+    ...type.tinyMono,
+    color: colors.muted,
+  },
+  mdWidgetStatus: {
+    ...type.tinyMono,
+    color: colors.red,
+  },
+  captureFrameStrip: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing[2],
+    minHeight: 86,
+  },
+  captureFrameThumb: {
+    flex: 1,
+    minHeight: 86,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: colors.rule,
+    backgroundColor: "#EAE4DA",
+  },
+  captureFrameImage: {
+    width: "100%",
+    height: "100%",
+    transform: [{ scale: 1.08 }],
+  },
+  captureFramePlaceholder: {
+    ...type.tinyMono,
+    color: colors.muted,
   },
   switcher: {
     alignSelf: "stretch",
@@ -569,5 +986,92 @@ const styles = StyleSheet.create({
   slotPreviewText: {
     ...type.buttonMono,
     color: colors.ink,
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
+  },
+  sheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.48)",
+    zIndex: 10000,
+    elevation: 10000,
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheet: {
+    gap: spacing[3],
+    padding: spacing[5],
+    paddingBottom: 88,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: "#F8F6F1",
+    zIndex: 10001,
+    elevation: 10001,
+  },
+  sheetHeader: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[4],
+  },
+  sheetTitle: {
+    ...type.slipTitle,
+    fontSize: 18,
+  },
+  sheetClose: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing[4],
+    borderRadius: 10,
+    backgroundColor: "#ECE8E1",
+  },
+  sheetCloseText: {
+    ...type.tinyMono,
+    color: colors.ink,
+  },
+  sheetRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[4],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: "rgba(10,10,10,0.10)",
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  sheetIconCircle: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: "#F0EEE9",
+  },
+  sheetCopy: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  sheetRowTitle: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  sheetRowSub: {
+    ...type.bodyMuted,
+  },
+  smallPill: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing[4],
+    borderRadius: 10,
+    backgroundColor: colors.ink,
+  },
+  smallPillText: {
+    ...type.tinyMono,
+    color: "#FFFFFF",
   },
 });

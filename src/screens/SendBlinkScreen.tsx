@@ -8,6 +8,7 @@ import { AppSurface } from "@/components/AppSurface";
 import { BlinkStrip } from "@/components/BlinkStrip";
 import { CameraLensPanel } from "@/components/CameraLensPanel";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
+import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 
 type Props = {
   modeSwitch?: React.ReactNode;
@@ -19,6 +20,7 @@ type Props = {
   sending: boolean;
   recording: boolean;
   hasCapturedBlink?: boolean;
+  sentFeedback?: boolean;
   previewFrameUris?: string[] | null;
   cameraPermissionGranted: boolean;
   cameraRef: React.RefObject<CameraView | null>;
@@ -29,7 +31,9 @@ type Props = {
   onRetake: () => void;
   onSend: () => void;
   onBack: () => void;
-  onOpenLogs: () => void;
+  onOpenSettings: () => void;
+  onAvatarPress?: () => void;
+  headerAvatarUri?: string;
   previewMode?: boolean;
   showBackAction?: boolean;
 };
@@ -44,6 +48,7 @@ export function SendBlinkScreen({
   sending,
   recording,
   hasCapturedBlink = false,
+  sentFeedback = false,
   previewFrameUris,
   cameraPermissionGranted,
   cameraRef,
@@ -53,11 +58,15 @@ export function SendBlinkScreen({
   onRetake,
   onSend,
   onBack,
-  onOpenLogs,
+  onOpenSettings,
+  onAvatarPress,
+  headerAvatarUri,
   previewMode = false,
   showBackAction = true,
 }: Props) {
-  const primaryLabel = recording
+  const primaryLabel = sentFeedback
+    ? "Sent"
+    : recording
     ? "Recording 2.0s"
     : sending
       ? "Sending"
@@ -66,6 +75,8 @@ export function SendBlinkScreen({
         : "Capture Blink";
   const shouldRenderCameraCard = !deckHeader;
   const shouldRenderCaptureFrames = !deckHeader;
+  const shouldRenderInputs = !deckHeader;
+  const hasRetakeState = hasCapturedBlink;
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -73,9 +84,17 @@ export function SendBlinkScreen({
         <KotlinHeader
           title="Send"
           centered
+          avatarLabel={recipientName}
+          avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
+          onAvatarPress={onAvatarPress}
           actions={[
-            ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
-            { label: "⚙", onPress: onOpenLogs },
+            ...(showBackAction ? [{ label: "Back", onPress: onBack }] : []),
+            {
+              label: "Settings",
+              accessibilityLabel: "Send settings",
+              icon: <GearLineIcon />,
+              onPress: onOpenSettings,
+            },
           ]}
         />
         {deckHeader ?? modeSwitch}
@@ -120,38 +139,47 @@ export function SendBlinkScreen({
 
         <MockupCard soft style={styles.summary}>
           <Text style={styles.summaryText}>
-            Will send code <Text style={styles.summaryCode}>{code || "____"}</Text> to {recipientName}
+            Will send signal <Text style={styles.summaryCode}>{code || "____"}</Text> to {recipientName}
           </Text>
         </MockupCard>
 
-        <TextInput
-          value={code}
-          onChangeText={(value) => onCodeChange(value.slice(0, 20))}
-          keyboardType="default"
-          maxLength={20}
-          placeholder="Numeric Beep Code (e.g. 7942)"
-          placeholderTextColor={colors.muted2}
-          style={styles.input}
-        />
-        <TextInput
-          value={memo}
-          onChangeText={onMemoChange}
-          placeholder={`Tiny note for NO ${recipientNo}`}
-          placeholderTextColor={colors.muted2}
-          maxLength={30}
-          style={styles.input}
-        />
+        {shouldRenderInputs ? (
+          <>
+            <TextInput
+              value={code}
+              onChangeText={(value) => onCodeChange(value.slice(0, 20))}
+              keyboardType="default"
+              maxLength={20}
+              placeholder="Signal token (e.g. 8282 / 집중중 🔕)"
+              placeholderTextColor={colors.muted2}
+              style={styles.input}
+            />
+            <TextInput
+              value={memo}
+              onChangeText={onMemoChange}
+              placeholder={`Tiny note for NO ${recipientNo}`}
+              placeholderTextColor={colors.muted2}
+              maxLength={30}
+              style={styles.input}
+            />
+          </>
+        ) : null}
 
         <View style={styles.actions}>
-          <ActionButton
-            label="Retake"
-            flex
-            onPress={onRetake}
-            disabled={!hasCapturedBlink || sending || recording}
-          />
+          {(shouldRenderInputs || hasRetakeState) ? (
+            <ActionButton
+              label="Retake"
+              flex
+              onPress={onRetake}
+              disabled={!hasRetakeState || sending || recording}
+            />
+          ) : null}
           <ActionButton
             label={primaryLabel}
-            variant="dark"
+            variant={sentFeedback ? "success" : "dark"}
+            icon={(iconColor) => <SendPlaneIcon color={iconColor} />}
+            iconPosition="right"
+            animateIconOnPress
             flex
             style={styles.primaryAction}
             onPress={onSend}
@@ -176,7 +204,7 @@ const styles = StyleSheet.create({
   },
   cameraFrame: {
     minHeight: 154,
-    borderRadius: 13,
+    borderRadius: 10,
     overflow: "hidden",
     backgroundColor: colors.ink,
   },
@@ -204,7 +232,7 @@ const styles = StyleSheet.create({
     borderColor: colors.rule,
     borderRadius: radius.control,
     paddingHorizontal: spacing[4],
-    backgroundColor: "#EFE9F4",
+    backgroundColor: "#FFFFFF",
     ...type.body,
     color: colors.ink,
   },
@@ -213,6 +241,7 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   primaryAction: {
-    minHeight: 62,
+    minHeight: 46,
+    borderRadius: 12,
   },
 });

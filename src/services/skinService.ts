@@ -31,10 +31,8 @@ export async function purchaseSkin(userId: string, skinId: string) {
 }
 
 export async function setActiveSkin(userId: string, skinId: string) {
-  const { error } = await supabase
-    .from("profiles")
-    .update({ active_skin_id: skinId })
-    .eq("id", userId);
+  void userId;
+  const { error } = await supabase.rpc("set_active_skin", { p_skin_id: skinId });
   if (error) throw error;
 }
 
