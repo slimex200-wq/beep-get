@@ -9,7 +9,8 @@ describe("SendBlinkScreen draft preview contract", () => {
     expect(source()).toContain("frameUris={previewFrameUris}");
   });
 
-  it("does not expose retake as an active control until a Blink draft exists", () => {
-    expect(source()).toContain("!hasCapturedBlink");
+  it("shows retake only after a Blink draft exists", () => {
+    expect(source()).toContain("const hasRetakeState = hasCapturedBlink");
+    expect(source()).toContain("disabled={!hasRetakeState || sending || recording}");
   });
 });

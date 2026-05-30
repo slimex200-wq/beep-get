@@ -9,8 +9,14 @@ import {
 beforeEach(() => jest.clearAllMocks());
 
 describe("STATUS_PRESETS", () => {
-  it("contains 8 presets", () => {
-    expect(STATUS_PRESETS).toHaveLength(8);
+  it("contains the default owned icon presets", () => {
+    expect(STATUS_PRESETS.map((preset) => preset.icon)).toEqual([
+      "online",
+      "busy",
+      "focus",
+      "away",
+      "sleeping",
+    ]);
   });
 
   it("each preset has icon and label", () => {
@@ -29,21 +35,17 @@ describe("STATUS_PRESETS", () => {
 
 describe("setMyStatus", () => {
   it("updates profile status", async () => {
-    const chain = createMockChain({ data: null, error: null });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
 
-    await setMyStatus("u1", "study", "studying");
+    await setMyStatus("u1", "focus", "studying");
 
-    expect(supabase.from).toHaveBeenCalledWith("profiles");
-    expect(chain.update).toHaveBeenCalledWith({ status_icon: "study" });
-    expect(chain.eq).toHaveBeenCalledWith("id", "u1");
+    expect(supabase.rpc).toHaveBeenCalledWith("equip_status_icon", { p_slug: "focus" });
   });
 
   it("throws when update fails", async () => {
-    const chain = createMockChain({ data: null, error: { message: "update fail" } });
-    supabase.from.mockReturnValue(chain);
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "update fail" } });
 
-    await expect(setMyStatus("u1", "study")).rejects.toEqual({
+    await expect(setMyStatus("u1", "focus")).rejects.toEqual({
       message: "update fail",
     });
   });

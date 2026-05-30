@@ -5,6 +5,7 @@ import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
+import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 import { SignalCode } from "@/components/SignalCode";
 
 type Props = {
@@ -15,12 +16,15 @@ type Props = {
   code: string;
   memo: string;
   sending: boolean;
+  sentFeedback?: boolean;
   onCodeChange: (code: string) => void;
   onMemoChange: (memo: string) => void;
   onPreset: (code: string) => void;
   onSend: () => void;
   onBack: () => void;
-  onOpenLogs: () => void;
+  onOpenSettings: () => void;
+  onAvatarPress?: () => void;
+  headerAvatarUri?: string;
   showBackAction?: boolean;
 };
 
@@ -32,14 +36,20 @@ export function SendBeepScreen({
   code,
   memo,
   sending,
+  sentFeedback = false,
   onCodeChange,
   onMemoChange,
   onSend,
   onBack,
-  onOpenLogs,
+  onOpenSettings,
+  onAvatarPress,
+  headerAvatarUri,
   showBackAction = true,
 }: Props) {
   const cleanCode = code || "____";
+  const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : "Send Beep";
+  const shouldRenderStandalonePreview = !deckHeader;
+  const shouldRenderInputs = !deckHeader;
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -47,45 +57,62 @@ export function SendBeepScreen({
         <KotlinHeader
           title="Send"
           centered
+          avatarLabel={recipientName}
+          avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
+          onAvatarPress={onAvatarPress}
           actions={[
-            ...(showBackAction ? [{ label: "‹", onPress: onBack }] : []),
-            { label: "⚙", onPress: onOpenLogs },
+            ...(showBackAction ? [{ label: "Back", onPress: onBack }] : []),
+            {
+              label: "Settings",
+              accessibilityLabel: "Send settings",
+              icon: <GearLineIcon />,
+              onPress: onOpenSettings,
+            },
           ]}
         />
         {deckHeader ?? modeSwitch}
-        <MockupCard style={styles.beepPreview}>
-          <Text style={type.tinyMono}>READY TO TRANSMIT</Text>
-          <SignalCode code={cleanCode} style={styles.previewCode} />
-          <Text style={styles.previewMeaning}>{memo || `NO ${recipientNo} / ${recipientName}`}</Text>
-        </MockupCard>
+        {shouldRenderStandalonePreview ? (
+          <MockupCard style={styles.beepPreview}>
+            <Text style={type.tinyMono}>READY TO TRANSMIT</Text>
+            <SignalCode code={cleanCode} style={styles.previewCode} />
+            <Text style={styles.previewMeaning}>{memo || `NO ${recipientNo} / ${recipientName}`}</Text>
+          </MockupCard>
+        ) : null}
 
         <MockupCard soft style={styles.summary}>
           <Text style={styles.summaryText}>
-            Will send code <Text style={styles.summaryCode}>{cleanCode}</Text> to {recipientName}
+            Will send signal <Text style={styles.summaryCode}>{cleanCode}</Text> to {recipientName}
           </Text>
         </MockupCard>
 
-        <TextInput
-          value={code}
-          onChangeText={(value) => onCodeChange(value.slice(0, 20))}
-          keyboardType="default"
-          maxLength={20}
-          placeholder="Numeric Beep Code (e.g. 7942)"
-          placeholderTextColor={colors.muted2}
-          style={styles.input}
-        />
-        <TextInput
-          value={memo}
-          onChangeText={onMemoChange}
-          placeholder="Interpretation / Message Meaning"
-          placeholderTextColor={colors.muted2}
-          maxLength={30}
-          style={styles.input}
-        />
+        {shouldRenderInputs ? (
+          <>
+            <TextInput
+              value={code}
+              onChangeText={(value) => onCodeChange(value.slice(0, 20))}
+              keyboardType="default"
+              maxLength={20}
+              placeholder="Signal token (e.g. 8282 / 집중중 🔕)"
+              placeholderTextColor={colors.muted2}
+              style={styles.input}
+            />
+            <TextInput
+              value={memo}
+              onChangeText={onMemoChange}
+              placeholder="Interpretation / Message Meaning"
+              placeholderTextColor={colors.muted2}
+              maxLength={30}
+              style={styles.input}
+            />
+          </>
+        ) : null}
 
         <ActionButton
-          label={sending ? "Sending" : "Send Beep"}
-          variant="dark"
+          label={primaryLabel}
+          variant={sentFeedback ? "success" : "dark"}
+          icon={(iconColor) => <SendPlaneIcon color={iconColor} />}
+          iconPosition="right"
+          animateIconOnPress
           disabled={!code || sending}
           style={styles.primaryAction}
           onPress={onSend}
@@ -131,7 +158,8 @@ const styles = StyleSheet.create({
     ...type.buttonMono,
   },
   primaryAction: {
-    minHeight: 58,
+    minHeight: 46,
+    borderRadius: 12,
   },
   input: {
     minHeight: 48,
@@ -139,7 +167,7 @@ const styles = StyleSheet.create({
     borderColor: colors.rule,
     borderRadius: radius.control,
     paddingHorizontal: spacing[4],
-    backgroundColor: "#EFE9F4",
+    backgroundColor: "#FFFFFF",
     ...type.body,
     color: colors.ink,
   },

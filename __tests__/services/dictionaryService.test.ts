@@ -13,12 +13,15 @@ describe("validateDictionaryEntry", () => {
   it("accepts valid entry", () => {
     expect(validateDictionaryEntry("012486", "love")).toEqual({ valid: true });
     expect(validateDictionaryEntry("배고픔", "hungry")).toEqual({ valid: true });
+    expect(validateDictionaryEntry("집중중 🔕", "focus")).toEqual({ valid: true });
+    expect(validateDictionaryEntry("🟢", "online")).toEqual({ valid: true });
   });
 
   it("rejects invalid entries", () => {
     expect(validateDictionaryEntry("", "meaning").valid).toBe(false);
     expect(validateDictionaryEntry("123456789012345678901", "meaning").valid).toBe(false);
     expect(validateDictionaryEntry("https://example.com", "meaning").valid).toBe(false);
+    expect(validateDictionaryEntry("집중중\n🔕", "meaning").valid).toBe(false);
     expect(validateDictionaryEntry("012486", "").valid).toBe(false);
     expect(validateDictionaryEntry("012486", "a".repeat(51)).valid).toBe(false);
   });
@@ -56,6 +59,8 @@ describe("getDictionary", () => {
         code: "1234",
         meaning: "test",
         created_at: "2026-05-03T00:00:00.000Z",
+        sort_order: 0,
+        is_widget_slot: false,
       },
     ]);
   });
@@ -87,17 +92,46 @@ describe("addEntry", () => {
     const chain = createMockChain({ data: preset, error: null });
     supabase.from.mockReturnValue(chain);
 
-    const result = await addEntry("u1", "1234", "test");
+    const result = await addEntry("u1", " 집중중 🔕 ", "test");
 
     expect(supabase.from).toHaveBeenCalledWith("code_presets");
     expect(chain.insert).toHaveBeenCalledWith({
       owner_id: "u1",
-      code: "1234",
+      code: "집중중 🔕",
       label: "test",
       is_widget_slot: false,
     });
     expect(chain.single).toHaveBeenCalled();
     expect(result.meaning).toBe("test");
+  });
+
+  it("adds widget slots with slot metadata", async () => {
+    const preset = {
+      id: "e1",
+      owner_id: "u1",
+      code: "Done",
+      label: "Quick reply slot 1",
+      sort_order: 1,
+      is_widget_slot: true,
+      created_at: "2026-05-03T00:00:00.000Z",
+    };
+    const chain = createMockChain({ data: preset, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    const result = await addEntry("u1", "Done", "Quick reply slot 1", {
+      isWidgetSlot: true,
+      sortOrder: 1,
+    });
+
+    expect(chain.insert).toHaveBeenCalledWith({
+      owner_id: "u1",
+      code: "Done",
+      label: "Quick reply slot 1",
+      is_widget_slot: true,
+      sort_order: 1,
+    });
+    expect(result.is_widget_slot).toBe(true);
+    expect(result.sort_order).toBe(1);
   });
 
   it("throws on validation failure", async () => {
@@ -120,11 +154,28 @@ describe("updateEntry", () => {
     const chain = createMockChain({ data: null, error: null });
     supabase.from.mockReturnValue(chain);
 
-    await updateEntry("e1", "5678", "new meaning");
+    await updateEntry("e1", "Focus 🔕", "new meaning");
 
     expect(supabase.from).toHaveBeenCalledWith("code_presets");
-    expect(chain.update).toHaveBeenCalledWith({ code: "5678", label: "new meaning" });
+    expect(chain.update).toHaveBeenCalledWith({ code: "Focus 🔕", label: "new meaning" });
     expect(chain.eq).toHaveBeenCalledWith("id", "e1");
+  });
+
+  it("updates widget slot metadata when requested", async () => {
+    const chain = createMockChain({ data: null, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    await updateEntry("e1", "집중중 🔕", "Quick reply slot 3", {
+      isWidgetSlot: true,
+      sortOrder: 3,
+    });
+
+    expect(chain.update).toHaveBeenCalledWith({
+      code: "집중중 🔕",
+      label: "Quick reply slot 3",
+      is_widget_slot: true,
+      sort_order: 3,
+    });
   });
 
   it("throws on validation failure", async () => {

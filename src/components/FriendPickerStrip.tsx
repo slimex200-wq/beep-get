@@ -1,42 +1,57 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
-import { NameDot } from "@/components/KotlinMockupUI";
 
 export type PickableFriend = {
   id: string;
   name: string;
   no: string;
   relation?: string;
+  avatarUri?: string;
 };
 
 type Props = {
   friends: PickableFriend[];
   selectedId?: string | null;
   onSelect: (friend: PickableFriend) => void;
+  onAddPress?: () => void;
 };
 
-export function FriendPickerStrip({ friends, selectedId, onSelect }: Props) {
+export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }: Props) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
-      <Pressable style={styles.addCard}>
-        <Text style={styles.addText}>+</Text>
-        <Text style={styles.label}>New</Text>
+      <Pressable
+        accessibilityLabel="Add friend"
+        accessibilityRole="button"
+        disabled={!onAddPress}
+        onPress={onAddPress}
+        style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+      >
+        <View style={styles.addCircle}>
+          <Text style={styles.addGlyph}>+</Text>
+        </View>
+        <Text style={styles.name} numberOfLines={1}>
+          New
+        </Text>
       </Pressable>
       {friends.map((friend) => {
         const selected = friend.id === selectedId;
         return (
           <Pressable
             key={friend.id}
+            accessibilityLabel={`Select ${friend.name}`}
             accessibilityRole="button"
             accessibilityState={{ selected }}
             onPress={() => onSelect(friend)}
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
             <View style={[styles.avatar, selected && styles.avatarSelected]}>
-              <Text style={[styles.avatarText, selected && styles.selectedText]}>{friend.name.slice(0, 1)}</Text>
-              <NameDot color={selected ? colors.greenDot : colors.muted2} />
+              {friend.avatarUri ? (
+                <Image source={{ uri: friend.avatarUri }} style={styles.avatarImage} resizeMode="cover" />
+              ) : (
+                <Text style={[styles.avatarText, selected && styles.selectedText]}>{friend.name.slice(0, 1)}</Text>
+              )}
             </View>
             <Text style={[styles.name, selected && styles.activeName]} numberOfLines={1}>
               {friend.name}
@@ -50,64 +65,70 @@ export function FriendPickerStrip({ friends, selectedId, onSelect }: Props) {
 
 const styles = StyleSheet.create({
   strip: {
+    alignItems: "flex-start",
     gap: spacing[4],
-    paddingVertical: spacing[1],
-  },
-  addCard: {
-    width: 48,
     minHeight: 58,
+    paddingTop: spacing[1],
+    paddingBottom: spacing[2],
+  },
+  item: {
+    width: 48,
+    height: 54,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: spacing[2],
+  },
+  addCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing[1],
-  },
-  addText: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    textAlign: "center",
-    textAlignVertical: "center",
-    overflow: "hidden",
     backgroundColor: "#F0EEE9",
-    ...type.codeSmall,
-    fontSize: 20,
-    lineHeight: 30,
   },
-  card: {
-    width: 48,
-    minHeight: 58,
-    alignItems: "center",
-    gap: spacing[1],
+  addGlyph: {
+    ...type.buttonMono,
+    fontSize: 20,
+    lineHeight: 22,
+    color: colors.ink,
   },
   pressed: {
     transform: [{ translateY: 1 }],
     opacity: 0.88,
   },
   avatar: {
-    width: 34,
-    height: 34,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.pill,
     backgroundColor: colors.paperDeep,
+    overflow: "hidden",
   },
   avatarSelected: {
     borderWidth: 2,
-    borderColor: colors.ink,
+    borderColor: colors.red,
+    backgroundColor: colors.redSoft,
   },
   avatarText: {
     ...type.metaValue,
     fontSize: 11,
   },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
   name: {
     ...type.tinyMono,
     maxWidth: 48,
     textAlign: "center",
+    color: colors.ink,
   },
   selectedText: {
     color: colors.ink,
   },
   activeName: {
-    color: colors.ink,
+    color: colors.redDeep,
   },
   label: {
     ...type.tinyMono,

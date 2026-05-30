@@ -10,10 +10,16 @@ import swissPaperSkin from "./skins/swiss-paper.json";
 
 const skinMap: Record<string, any> = {
   "swiss-paper": swissPaperSkin,
+  "classic-paper": swissPaperSkin,
+  "pixel-pager": swissPaperSkin,
   neumorphism: neumorphismSkin,
+  "school-desk": neumorphismSkin,
   "cyber-neon": cyberNeonSkin,
+  "night-signal": cyberNeonSkin,
   "retro-future": retroFutureSkin,
+  "photo-booth-blink": retroFutureSkin,
   glassmorphism: glassmorphismSkin,
+  "cherry-dot": glassmorphismSkin,
 };
 
 function parseSkinJson(raw: any): SkinTheme {

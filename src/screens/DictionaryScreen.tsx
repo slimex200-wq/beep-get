@@ -1,35 +1,49 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, FlatList, StyleSheet, TextInput, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
 import { ActionButton } from "@/components/ActionButton";
-import { HeaderBar } from "@/components/HeaderBar";
-import { useTheme } from "@/theme/ThemeProvider";
+import { KotlinHeader, MockupCard, MockupSection } from "@/components/KotlinMockupUI";
+import { colors, radius, spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
+import { MAX_CODE_LENGTH } from "@/lib/constants";
 
 export function DictionaryScreen() {
-  const theme = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { entries, loading, fetch, add, remove } = useDictionaryStore();
+  const palette = useAppPalette();
   const [code, setCode] = useState("");
   const [meaning, setMeaning] = useState("");
 
   useEffect(() => {
-    if (profile) fetch(profile.id);
-  }, [profile?.id]);
+    if (profile) fetch(profile.id).catch(reportError);
+  }, [fetch, profile?.id]);
 
   const handleAdd = async () => {
-    if (!profile || !code || !meaning) return;
+    const trimmedCode = code.trim();
+    const trimmedMeaning = meaning.trim();
+    if (!profile || !trimmedCode || !trimmedMeaning) return;
+
     try {
-      await add(profile.id, code, meaning);
+      await add(profile.id, trimmedCode, trimmedMeaning);
       setCode("");
       setMeaning("");
     } catch (err: any) {
-      Alert.alert("오류", err.message);
+      Alert.alert("Code failed", err?.message ?? "Try again.");
+    }
+  };
+
+  const handleRemove = async (id: string) => {
+    try {
+      await remove(id);
+    } catch (err: any) {
+      Alert.alert("Delete failed", err?.message ?? "Try again.");
     }
   };
 
@@ -41,102 +55,155 @@ export function DictionaryScreen() {
     navigation.navigate("Main", { screen: "My" });
   };
 
-  const styles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      padding: theme.spacing.md,
-    },
-    header: {
-      fontFamily: theme.fonts.pixel,
-      fontSize: 14,
-      color: theme.colors.textSecondary,
-      letterSpacing: 2,
-      textAlign: "center",
-      marginBottom: theme.spacing.md,
-      marginTop: theme.spacing.xl,
-    },
-    form: {
-      gap: theme.spacing.sm,
-      marginBottom: theme.spacing.lg,
-    },
-    codeInput: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.sm,
-      padding: theme.spacing.sm,
-      fontFamily: theme.fonts.lcd,
-      fontSize: 20,
-      color: theme.colors.lcdText,
-      textAlign: "center",
-      letterSpacing: 3,
-    },
-    meaningInput: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.sm,
-      padding: theme.spacing.sm,
-      fontFamily: theme.fonts.lcd,
-      fontSize: 16,
-      color: theme.colors.textPrimary,
-      textAlign: "center",
-    },
-    entry: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-      gap: theme.spacing.md,
-    },
-    entryCode: {
-      fontFamily: theme.fonts.lcd,
-      fontSize: 20,
-      color: theme.colors.lcdText,
-      minWidth: 80,
-    },
-    entryMeaning: {
-      fontFamily: theme.fonts.lcd,
-      fontSize: 16,
-      color: theme.colors.textPrimary,
-      flex: 1,
-    },
-  }), [theme]);
-
   return (
-    <AppSurface>
-      <HeaderBar title="CODES" left="CLOSE" onLeftPress={close} />
-      <View style={styles.container}>
-        <Text style={styles.header}>내 코드 사전</Text>
-        <View style={styles.form}>
+    <AppSurface backgroundColor="#F8F6F1">
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <KotlinHeader
+          title="Signal Tokens"
+          centered
+          showAvatar={false}
+          actions={[{ label: "Close", onPress: close }]}
+        />
+
+        <MockupSection label="Add Signal Token" hint="Numbers, short words, and emoji work here" />
+        <MockupCard style={styles.formCard}>
           <TextInput
-            style={styles.codeInput}
+            style={[styles.codeInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
             value={code}
-            onChangeText={(t) => setCode(t.replace(/[^0-9]/g, ""))}
-            placeholder="숫자 코드"
-            placeholderTextColor={theme.colors.textSecondary}
-            keyboardType="number-pad"
-            maxLength={20}
+            onChangeText={setCode}
+            placeholder="집중중 🔕"
+            placeholderTextColor={palette.muted2}
+            autoCapitalize="none"
+            maxLength={MAX_CODE_LENGTH}
           />
           <TextInput
-            style={styles.meaningInput}
+            style={[styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
             value={meaning}
             onChangeText={setMeaning}
-            placeholder="의미"
-            placeholderTextColor={theme.colors.textSecondary}
+            placeholder="Meaning, e.g. Focus mode"
+            placeholderTextColor={palette.muted2}
             maxLength={50}
           />
-          <ActionButton label="등록" variant="dark" onPress={handleAdd} />
-        </View>
-        <FlatList
-          data={entries}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.entry}>
-              <Text style={styles.entryCode}>{item.code}</Text>
-              <Text style={styles.entryMeaning}>{item.meaning}</Text>
+          <ActionButton
+            label={loading ? "Saving" : "Register Signal"}
+            variant="dark"
+            onPress={handleAdd}
+            disabled={!code.trim() || !meaning.trim() || loading}
+          />
+        </MockupCard>
+
+        <MockupSection label="My Signal Dictionary" hint={`${entries.length} saved`} />
+        <MockupCard style={styles.codeList}>
+          {entries.length ? (
+            entries.map((item) => (
+              <View key={item.id} style={[styles.codeRow, { borderBottomColor: palette.rule }]}>
+                <View style={[styles.codeBadge, { backgroundColor: palette.input }]}>
+                  <Text numberOfLines={1} style={[styles.codeBadgeText, { color: palette.text }]}>{item.code}</Text>
+                </View>
+                <Text numberOfLines={1} style={[styles.codeMeaning, { color: palette.text }]}>{item.meaning}</Text>
+                <Pressable
+                  accessibilityLabel={`Delete ${item.code}`}
+                  accessibilityRole="button"
+                  onPress={() => handleRemove(item.id)}
+                  style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
+                >
+                  <Text style={styles.deletePillText}>Delete</Text>
+                </Pressable>
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={[type.bodyMuted, { color: palette.muted }]}>
+                Save a few codes so Beep can stay fast.
+              </Text>
             </View>
           )}
-        />
-      </View>
+        </MockupCard>
+      </ScrollView>
     </AppSurface>
   );
 }
+
+function reportError(err: unknown) {
+  const message = err instanceof Error ? err.message : "Unexpected error";
+  Alert.alert("BEEP-GET", message);
+}
+
+const styles = StyleSheet.create({
+  content: {
+    paddingBottom: 96,
+    gap: spacing[4],
+  },
+  formCard: {
+    gap: spacing[3],
+    marginHorizontal: spacing[5],
+    padding: spacing[4],
+  },
+  codeInput: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderRadius: radius.control,
+    paddingHorizontal: spacing[4],
+    textAlign: "center",
+    ...type.codeSmall,
+    fontSize: 24,
+    lineHeight: 30,
+  },
+  meaningInput: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: radius.control,
+    paddingHorizontal: spacing[4],
+    ...type.body,
+  },
+  codeList: {
+    marginHorizontal: spacing[5],
+    paddingVertical: spacing[2],
+  },
+  codeRow: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  codeBadge: {
+    minWidth: 44,
+    maxWidth: 116,
+    minHeight: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.control,
+    paddingHorizontal: spacing[3],
+  },
+  codeBadgeText: {
+    ...type.buttonMono,
+    fontSize: 10,
+  },
+  codeMeaning: {
+    flex: 1,
+    ...type.body,
+  },
+  deletePill: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing[3],
+    borderRadius: 10,
+    backgroundColor: colors.ink,
+  },
+  deletePillText: {
+    ...type.tinyMono,
+    color: "#FFFFFF",
+  },
+  emptyState: {
+    minHeight: 92,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing[5],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
+  },
+});

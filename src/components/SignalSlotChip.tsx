@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -8,12 +8,15 @@ type Props = {
   label: string;
   selected?: boolean;
   disabled?: boolean;
+  confirmed?: boolean;
   onPress: () => void;
+  compact?: boolean;
   style?: ViewStyle;
 };
 
-export function SignalSlotChip({ label, selected = false, disabled = false, onPress, style }: Props) {
+export function SignalSlotChip({ label, selected = false, disabled = false, confirmed = false, onPress, compact = false, style }: Props) {
   const palette = useAppPalette();
+  const active = selected || confirmed;
 
   return (
     <Pressable
@@ -23,18 +26,44 @@ export function SignalSlotChip({ label, selected = false, disabled = false, onPr
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
+        compact && styles.compactBase,
         {
-          backgroundColor: selected ? palette.primary : palette.chip,
-          borderColor: selected ? palette.primary : palette.rule,
+          backgroundColor: active ? palette.primary : palette.chip,
+          borderColor: active ? palette.primary : palette.rule,
         },
+        confirmed && styles.confirmed,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}
     >
-      <Text numberOfLines={1} style={[styles.label, { color: selected ? palette.primaryText : palette.text }]}>
-        {label}
-      </Text>
+      {compact ? (
+        <View style={styles.compactContent}>
+          <View
+            style={[
+              styles.compactDot,
+              { backgroundColor: active ? palette.primaryText : palette.text },
+            ]}
+          />
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.label,
+              styles.compactLabel,
+              { color: active ? palette.primaryText : palette.text },
+            ]}
+          >
+            {confirmed ? "Done" : label}
+          </Text>
+        </View>
+      ) : (
+        <Text
+          numberOfLines={1}
+          style={[styles.label, { color: active ? palette.primaryText : palette.text }]}
+        >
+          {confirmed ? "Done" : label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -46,8 +75,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing[5],
-    borderRadius: radius.pill,
+    borderRadius: 10,
     borderWidth: 1,
+  },
+  compactBase: {
+    height: 31,
+    minWidth: 64,
+    paddingHorizontal: spacing[6],
+    borderRadius: 10,
+  },
+  compactContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[3],
+  },
+  compactDot: {
+    width: 3.5,
+    height: 3.5,
+    borderRadius: 2,
   },
   pressed: {
     transform: [{ translateY: 1 }],
@@ -60,5 +106,12 @@ const styles = StyleSheet.create({
     ...type.buttonMono,
     fontSize: 10,
     lineHeight: 13,
+  },
+  compactLabel: {
+    fontSize: 9,
+    lineHeight: 11,
+  },
+  confirmed: {
+    transform: [{ translateY: -1 }],
   },
 });

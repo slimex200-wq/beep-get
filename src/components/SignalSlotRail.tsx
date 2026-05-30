@@ -8,10 +8,12 @@ export type SignalSlotRailProps = {
   selected?: string;
   onSelect: (slot: string) => void;
   disabled?: boolean;
+  confirmedSlot?: string | null;
+  compact?: boolean;
   style?: ViewStyle;
 };
 
-export function SignalSlotRail({ slots, selected, onSelect, disabled = false, style }: SignalSlotRailProps) {
+export function SignalSlotRail({ slots, selected, onSelect, disabled = false, confirmedSlot = null, compact = false, style }: SignalSlotRailProps) {
   const uniqueSlots = useMemo(
     () => Array.from(new Set(slots.map((slot) => slot.trim()).filter(Boolean))).slice(0, 8),
     [slots]
@@ -21,7 +23,7 @@ export function SignalSlotRail({ slots, selected, onSelect, disabled = false, st
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.rail, style]}
+      contentContainerStyle={[styles.rail, compact && styles.compactRail, style]}
       keyboardShouldPersistTaps="handled"
     >
       {uniqueSlots.map((slot) => (
@@ -29,7 +31,9 @@ export function SignalSlotRail({ slots, selected, onSelect, disabled = false, st
           key={slot}
           label={slot}
           selected={selected === slot}
+          confirmed={confirmedSlot === slot}
           disabled={disabled}
+          compact={compact}
           onPress={() => onSelect(slot)}
         />
       ))}
@@ -42,5 +46,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing[3],
     paddingVertical: spacing[1],
+  },
+  compactRail: {
+    gap: spacing[5],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[2],
   },
 });

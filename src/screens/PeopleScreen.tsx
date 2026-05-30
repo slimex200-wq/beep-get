@@ -1,5 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, ImageBackground, Modal, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,14 +22,28 @@ import { type } from "@/design/typography";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
-  Avatar,
+  KotlinHeader,
   MockupCard,
   MockupSection,
   NameDot,
 } from "@/components/KotlinMockupUI";
+import {
+  AddPersonLineIcon,
+  ChevronRightLineIcon,
+  CheckCircleLineIcon,
+  CopyLineIcon,
+  GearLineIcon,
+  SearchLineIcon,
+} from "@/components/MockupLineIcons";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
-import { relationshipToSlipFriend, type SlipFriend } from "@/lib/slipUiModels";
+import { getMockupFriendPhotoUri, mockupPhotoUris } from "@/design/mockupPhotos";
+import {
+  formatSlipTime,
+  relationshipToSlipFriend,
+  type SlipFriend,
+} from "@/lib/slipUiModels";
 import { generateShareText } from "@/services/contactService";
+import { isValidBeepId } from "@/services/authService";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
@@ -35,6 +63,7 @@ export function PeopleScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogVisible, setAddDialogVisible] = useState(false);
   const [selectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -57,6 +86,28 @@ export function PeopleScreen() {
       `${friend.name} ${friend.no} ${friend.relation}`.toLowerCase().includes(query),
     );
   }, [searchQuery, slipFriends]);
+  const canAddFriend = isValidBeepId(beepId.trim());
+  const featuredBlink = useMemo(() => {
+    const visibleFriendIds = new Set(visibleFriends.map((friend) => friend.id));
+    const message = received.find(
+      (item) =>
+        visibleFriendIds.has(item.from_user) &&
+        (item.kind === "blink" || Boolean(item.media?.thumbnailUri) || Boolean(item.media?.stripFrameUris?.length)),
+    );
+    if (!message) return null;
+
+    const friend = visibleFriends.find((item) => item.id === message.from_user);
+    const imageUri = message.media?.stripFrameUris?.[0] ?? message.media?.thumbnailUri ?? null;
+    if (!friend || !imageUri) return null;
+
+    return {
+      friend,
+      code: message.number_code,
+      imageUri,
+      time: formatSlipTime(message.created_at),
+    };
+  }, [received, visibleFriends]);
+  const featuredFriend = visibleFriends[1] ?? visibleFriends[0] ?? null;
 
   const lastSignalByFriend = useMemo(() => {
     const map = new Map<string, string>();
@@ -67,14 +118,13 @@ export function PeopleScreen() {
     });
     return map;
   }, [received]);
-  const featuredFriend = visibleFriends[1] ?? visibleFriends[0] ?? null;
 
   const pulse = () => {
     Haptics.selectionAsync().catch(() => undefined);
   };
 
   const addByBeepId = async () => {
-    if (!profile || !beepId.trim()) return;
+    if (!profile || !canAddFriend) return;
     try {
       await add(profile.id, beepId.trim(), displayName.trim() || undefined, selectedPreset);
       setBeepId("");
@@ -95,6 +145,8 @@ export function PeopleScreen() {
     pulse();
     if (!profile) return;
     await Share.share({ message: generateShareText(profile.beep_id, profile.nickname) });
+    setCopyFeedback(true);
+    setTimeout(() => setCopyFeedback(false), 1500);
   };
 
   const openAddDialog = () => {
@@ -116,9 +168,21 @@ export function PeopleScreen() {
   return (
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <FriendsHeader onSettingsPress={openSettings} />
+        <KotlinHeader
+          title="Friends"
+          centered
+          avatarSource={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }}
+          actions={[
+            {
+              label: "Settings",
+              icon: <GearLineIcon />,
+              accessibilityLabel: "Friends settings",
+              onPress: openSettings,
+            },
+          ]}
+        />
         <View style={styles.searchPanel}>
-          <Text style={styles.searchGlyph}>⌕</Text>
+          <SearchLineIcon color={colors.muted2} style={styles.searchIcon} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -130,12 +194,20 @@ export function PeopleScreen() {
 
         <MockupSection label="MY ID" hint="SHARE" />
         <MockupCard style={styles.myIdCard}>
-          <Avatar label="Me" size={42} />
+          <Image source={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }} style={styles.myIdAvatar} resizeMode="cover" />
           <View style={styles.myIdCopy}>
-            <Text style={styles.friendName}>{profile?.nickname ?? "Alex"} · BEEP-{formatOwnNo(profile?.beep_id)}</Text>
+            <Text style={styles.friendName}>{profile?.nickname ?? "Alex"} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
             <Text style={styles.handle}>@{profile?.beep_id ?? "alexb"}</Text>
           </View>
-          <RoundTextButton label="⧉" accessibilityLabel="Share my Beep ID" onPress={profile ? shareMyBeepId : undefined} />
+          <Pressable
+            accessibilityLabel={copyFeedback ? "Beep ID shared" : "Copy Beep ID"}
+            accessibilityRole="button"
+            disabled={!profile}
+            onPress={profile ? shareMyBeepId : undefined}
+            style={({ pressed }) => [styles.copyButton, copyFeedback && styles.copyButtonDone, pressed && styles.pressed]}
+          >
+            {copyFeedback ? <CheckCircleLineIcon /> : <CopyLineIcon />}
+          </Pressable>
         </MockupCard>
 
         <Pressable
@@ -144,13 +216,13 @@ export function PeopleScreen() {
           style={({ pressed }) => [styles.addFriendCard, pressed && styles.pressed]}
         >
           <View style={styles.addIcon}>
-            <Text style={styles.addIconText}>+</Text>
+            <AddPersonLineIcon />
           </View>
           <View style={styles.addCopy}>
-            <Text style={styles.friendName}>친구 추가</Text>
-            <Text style={type.bodyMuted}>ID나 초대 링크로 연결</Text>
+            <Text style={styles.friendName}>Add Friend</Text>
+            <Text style={type.bodyMuted}>Connect with an 8-digit Beep ID</Text>
           </View>
-          <Text style={styles.addActionText}>ADD</Text>
+          <ChevronRightLineIcon />
         </Pressable>
 
         <MockupSection label="Close Friends" hint={`${visibleFriends.length} ONLINE`} />
@@ -162,11 +234,12 @@ export function PeopleScreen() {
                 friend={friend}
                 status={
                   lastSignalByFriend.get(friend.id) ??
-                  (index === 0 ? "Widget seen · 18:05" : index === 1 ? "자주 쓰는 코드 486" : "quiet receiving")
+                  (index === 0 ? "Widget seen - 18:05" : index === 1 ? "frequent code 486" : "quiet receiving")
                 }
                 accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
+                avatarUri={getMockupFriendPhotoUri(friend.name, index)}
                 online={index === 0}
-                rightText={index === 1 ? favoriteSignalCode : undefined}
+                rightText={index === 1 ? favoriteSignalCode : friend.no}
                 onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
               />
             ))
@@ -178,23 +251,36 @@ export function PeopleScreen() {
           )}
         </View>
 
-        {featuredFriend ? (
+        {featuredBlink ? (
+          <FavoriteSignalCard
+            friend={featuredBlink.friend}
+            code={featuredBlink.code}
+            imageUri={featuredBlink.imageUri}
+            subtitle={`${featuredBlink.time} received Blink - code ${featuredBlink.code}`}
+            onSend={() => navigateSend(featuredBlink.friend, "blink", featuredBlink.code)}
+          />
+        ) : featuredFriend ? (
           <FavoriteSignalCard
             friend={featuredFriend}
             code={favoriteSignalCode}
+            subtitle={`2 sec Blink - code ${favoriteSignalCode}`}
             onSend={() => navigateSend(featuredFriend, "blink", favoriteSignalCode)}
           />
         ) : null}
       </ScrollView>
 
       <Modal transparent visible={addDialogVisible} animationType="fade" onRequestClose={() => setAddDialogVisible(false)}>
-        <View style={styles.dialogOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.dialogOverlay}
+        >
           <View style={styles.dialog}>
             <Text style={styles.dialogTitle}>Configure Friend Info</Text>
+            <Text style={type.bodyMuted}>Enter an 8-digit Beep ID. Nickname is optional.</Text>
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder="Display Name"
+              placeholder="Optional nickname"
               placeholderTextColor={colors.muted2}
               style={styles.dialogInput}
             />
@@ -203,86 +289,60 @@ export function PeopleScreen() {
               onChangeText={(value) => setBeepId(value.replace(/[^0-9]/g, ""))}
               keyboardType="number-pad"
               maxLength={8}
-              placeholder="ID Handle / Beep ID"
+              placeholder="8-digit Beep ID"
               placeholderTextColor={colors.muted2}
               style={styles.dialogInput}
             />
             <View style={styles.dialogActions}>
               <ActionButton label="Cancel" variant="ghost" onPress={() => setAddDialogVisible(false)} />
-              <ActionButton label="Add" variant="dark" onPress={addByBeepId} disabled={!beepId} />
+              <ActionButton label="Add" variant="dark" onPress={addByBeepId} disabled={!canAddFriend} />
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </AppSurface>
-  );
-}
-
-function FriendsHeader({ onSettingsPress }: { onSettingsPress: () => void }) {
-  return (
-    <View style={styles.headerRow}>
-      <View style={styles.headerCopy}>
-        <Text style={styles.headerKicker}>FRIENDS</Text>
-        <Text style={styles.headerTitle}>Friends</Text>
-      </View>
-      <RoundTextButton label="⚙" accessibilityLabel="Open settings" onPress={onSettingsPress} />
-    </View>
-  );
-}
-
-function RoundTextButton({
-  label,
-  accessibilityLabel,
-  onPress,
-}: {
-  label: string;
-  accessibilityLabel: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole={onPress ? "button" : undefined}
-      accessibilityLabel={accessibilityLabel}
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => [styles.roundButton, pressed && styles.pressed]}
-    >
-      <Text style={styles.roundButtonText}>{label}</Text>
-    </Pressable>
   );
 }
 
 function FavoriteSignalCard({
   friend,
   code,
+  imageUri,
+  subtitle,
   onSend,
 }: {
   friend: SlipFriend;
   code: string;
+  imageUri?: string;
+  subtitle: string;
   onSend: () => void;
 }) {
+  const imageSource = imageUri ? { uri: imageUri } : blinkHeroImage;
+
   return (
-    <ImageBackground source={blinkHeroImage} resizeMode="cover" style={styles.favoriteCard} imageStyle={styles.favoriteImage}>
-      <View style={styles.favoriteOverlay} />
-      <View style={styles.favoriteTopRow}>
-        <NewBadge />
-        <View style={styles.codeBubble}>
-          <Text style={styles.codeBubbleText}>{code}</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Send Blink to ${friend.name}`}
+      onPress={onSend}
+      style={({ pressed }) => [styles.favoritePressable, pressed && styles.pressed]}
+    >
+      <ImageBackground source={imageSource} resizeMode="cover" style={styles.favoriteCard} imageStyle={styles.favoriteImage}>
+        <View style={styles.favoriteOverlay} />
+        <View style={styles.favoriteTopRow}>
+          <NewBadge />
+          <View style={styles.codeBubble}>
+            <Text style={styles.codeBubbleText}>{code}</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.favoriteCopy}>
-        <Text style={styles.favoriteTitle}>{friend.name}에게 자주 보내는 신호</Text>
-        <Text style={styles.favoriteSubtitle}>2초 전에 받은 Blink · 코드 {code}</Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Send Blink to ${friend.name}`}
-        onPress={onSend}
-        style={({ pressed }) => [styles.sendBlinkButton, pressed && styles.sendBlinkButtonPressed]}
-      >
-        <Text style={styles.sendBlinkText}>✈ Send Blink</Text>
-      </Pressable>
-    </ImageBackground>
+        <View style={styles.favoriteCopy}>
+          <Text style={styles.favoriteTitle}>Frequent signal for {friend.name}</Text>
+          <Text style={styles.favoriteSubtitle}>{subtitle}</Text>
+        </View>
+        <View style={styles.sendBlinkButton}>
+          <Text style={styles.sendBlinkText}>Send Blink</Text>
+        </View>
+      </ImageBackground>
+    </Pressable>
   );
 }
 
@@ -301,18 +361,24 @@ function FriendRow({
   online,
   rightText,
   onPress,
+  avatarUri,
 }: {
   friend: SlipFriend;
   status: string;
   accent: string;
   online?: boolean;
   rightText?: string;
+  avatarUri?: string;
   onPress: () => void;
 }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, pressed && styles.pressed]}>
       <View style={styles.friendAvatar}>
-        <Text style={styles.friendInitial}>{friend.name.slice(0, 1)}</Text>
+        {avatarUri ? (
+          <Image source={{ uri: avatarUri }} style={styles.friendAvatarImage} resizeMode="cover" />
+        ) : (
+          <Text style={styles.friendInitial}>{friend.name.slice(0, 1)}</Text>
+        )}
         <NameDot color={accent} />
       </View>
       <View style={styles.friendCopy}>
@@ -340,83 +406,40 @@ const styles = StyleSheet.create({
     paddingBottom: 96,
     gap: spacing[4],
   },
-  headerRow: {
-    minHeight: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[4],
-  },
-  headerCopy: {
-    flex: 1,
-  },
-  headerKicker: {
-    ...type.tinyMono,
-    color: colors.muted,
-  },
-  headerTitle: {
-    ...type.screenTitle,
-    fontSize: 22,
-    lineHeight: 26,
-  },
-  roundButton: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.14)",
-    borderRadius: 19,
-    backgroundColor: "#FFFFFF",
-    shadowColor: colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  roundButtonText: {
-    ...type.metaValue,
-    fontSize: 17,
-    lineHeight: 20,
-  },
   searchPanel: {
     minHeight: 50,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[3],
-    paddingHorizontal: spacing[5],
-    borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.08)",
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    shadowColor: colors.ink,
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    borderRadius: 12,
+    backgroundColor: "#F0EFEB",
   },
-  searchGlyph: {
-    ...type.metaValue,
-    fontSize: 15,
+  searchIcon: {
+    width: 22,
+    height: 22,
   },
   searchInput: {
     flex: 1,
     minHeight: 38,
     ...type.body,
+    fontSize: 12,
     color: colors.ink,
   },
   myIdCard: {
-    minHeight: 84,
+    minHeight: 74,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[4],
-    padding: spacing[5],
-    borderRadius: 20,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 1,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    borderColor: "rgba(10,10,10,0.10)",
+    borderRadius: 12,
+  },
+  myIdAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   myIdCopy: {
     flex: 1,
@@ -426,54 +449,52 @@ const styles = StyleSheet.create({
     ...type.bodyMuted,
     color: colors.muted,
   },
-  addFriendCard: {
-    minHeight: 76,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[5],
-    borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.08)",
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    shadowColor: colors.ink,
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 1,
-  },
-  addIcon: {
-    width: 50,
-    height: 50,
+  copyButton: {
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 25,
-    backgroundColor: "#F4EDF1",
+    borderRadius: 12,
+    backgroundColor: "#F2F0EC",
   },
-  addIconText: {
-    ...type.metaValue,
-    fontSize: 18,
+  copyButtonDone: {
+    backgroundColor: colors.lcd,
   },
-  addCopy: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  addActionText: {
-    ...type.tinyMono,
-    color: colors.ink,
-  },
-  friendList: {
-    gap: spacing[3],
-  },
-  friendRow: {
-    minHeight: 62,
+  addFriendCard: {
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[4],
     padding: spacing[4],
     borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.08)",
-    borderRadius: 14,
+    borderColor: "rgba(10,10,10,0.10)",
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  addIcon: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 23,
+    backgroundColor: "#F2F0EC",
+  },
+  addCopy: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  friendList: {
+    gap: spacing[3],
+  },
+  friendRow: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[4],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 12,
     backgroundColor: "#FFFFFF",
   },
   friendAvatar: {
@@ -483,6 +504,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 21,
     backgroundColor: colors.paperDeep,
+    overflow: "hidden",
+  },
+  friendAvatarImage: {
+    width: "100%",
+    height: "100%",
   },
   friendInitial: {
     ...type.metaValue,
@@ -509,28 +535,25 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#16C784",
   },
-  empty: {
-    minHeight: 112,
-    justifyContent: "center",
-    gap: spacing[2],
-    padding: spacing[5],
+  favoritePressable: {
+    borderRadius: 12,
   },
   favoriteCard: {
-    minHeight: 172,
+    minHeight: 168,
     justifyContent: "space-between",
     overflow: "hidden",
-    padding: spacing[5],
+    padding: spacing[4],
     borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 20,
-    backgroundColor: colors.paperDeep,
+    borderColor: "rgba(10,10,10,0.10)",
+    borderRadius: 12,
+    backgroundColor: colors.ink,
   },
   favoriteImage: {
-    borderRadius: 20,
+    borderRadius: 12,
   },
   favoriteOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(4,20,25,0.18)",
+    backgroundColor: "rgba(0,0,0,0.28)",
   },
   favoriteTopRow: {
     position: "relative",
@@ -546,24 +569,24 @@ const styles = StyleSheet.create({
   },
   favoriteTitle: {
     ...type.metaValue,
+    color: "#FFFFFF",
     fontSize: 13,
-    color: colors.ink,
   },
   favoriteSubtitle: {
     ...type.bodyMuted,
-    color: "rgba(10,10,10,0.76)",
+    color: "rgba(255,255,255,0.78)",
   },
   codeBubble: {
     minWidth: 44,
     minHeight: 34,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.pill,
-    backgroundColor: colors.ink,
+    borderRadius: 10,
+    backgroundColor: "rgba(10,10,10,0.88)",
   },
   codeBubbleText: {
-    ...type.monoValue,
-    color: colors.paperWarm,
+    ...type.buttonMono,
+    color: "#FFFFFF",
   },
   newBadge: {
     minHeight: 26,
@@ -580,26 +603,24 @@ const styles = StyleSheet.create({
   sendBlinkButton: {
     position: "relative",
     zIndex: 1,
-    minHeight: 42,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.paperWarm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.ink,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  sendBlinkButtonPressed: {
-    opacity: 0.88,
-    transform: [{ translateY: 1 }],
+    borderColor: "rgba(255,255,255,0.72)",
+    borderRadius: 10,
+    backgroundColor: "rgba(10,10,10,0.88)",
   },
   sendBlinkText: {
     ...type.button,
-    color: colors.paperWarm,
+    color: "#FFFFFF",
+    fontSize: 13,
+  },
+  empty: {
+    minHeight: 112,
+    justifyContent: "center",
+    gap: spacing[2],
+    padding: spacing[5],
   },
   pressed: {
     opacity: 0.82,
@@ -614,8 +635,8 @@ const styles = StyleSheet.create({
   dialog: {
     gap: spacing[5],
     padding: spacing[6],
-    borderRadius: 18,
-    backgroundColor: "#EFE9F4",
+    borderRadius: 14,
+    backgroundColor: "#F8F6F1",
   },
   dialogTitle: {
     ...type.screenTitle,
@@ -625,10 +646,10 @@ const styles = StyleSheet.create({
   dialogInput: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: "rgba(170,150,176,0.28)",
+    borderColor: "rgba(10,10,10,0.12)",
     borderRadius: radius.control,
     paddingHorizontal: spacing[4],
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "#FFFFFF",
     ...type.body,
     color: colors.ink,
   },

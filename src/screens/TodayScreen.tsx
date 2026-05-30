@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
+import { getMockupFriendPhotoUri, mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import { BlinkHeroPreview } from "@/components/BlinkHeroPreview";
 import {
   KotlinHeader,
   MockupCard,
@@ -17,14 +17,23 @@ import {
 import { SignalCode } from "@/components/SignalCode";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import { StatusDot } from "@/components/StatusDot";
+import {
+  FriendsGroupIcon,
+  GearLineIcon,
+  RefreshLineIcon,
+} from "@/components/MockupLineIcons";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
+import {
+  DEFAULT_QUICK_REPLY_SLOTS,
+  buildQuickReplySlots,
+  isQuickReplySlotEntry,
+} from "@/lib/quickReplySlots";
 
-const FALLBACK_REPLY_SLOTS = ["Done", "8282", "View"];
 const FALLBACK_MEANINGS: Record<string, string> = {
   "8282": "빨리 와줘",
   "486": "보고 싶어",
@@ -45,10 +54,11 @@ export function TodayScreen() {
     fetchReceived,
     quickReply,
     read,
-    save,
     subscribeRealtime,
     unsubscribeRealtime,
   } = useMessageStore();
+  const [doneFeedback, setDoneFeedback] = useState(false);
+  const [quickReplyFeedback, setQuickReplyFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -75,17 +85,16 @@ export function TodayScreen() {
   const signalQueue = useMemo(
     () =>
       received
-        .slice(1, 5)
-        .map((message, index) => messageToSlipSignal(message, { index: index + 1 })),
+        .slice(0, 3)
+        .map((message, index) => messageToSlipSignal(message, { index })),
     [received]
   );
 
   const quickReplySlots = useMemo(() => {
-    const savedSlots = entries.map((entry) => entry.code).filter(Boolean);
-    return Array.from(new Set([...savedSlots, ...FALLBACK_REPLY_SLOTS])).slice(0, 6);
+    return buildQuickReplySlots(entries, DEFAULT_QUICK_REPLY_SLOTS);
   }, [entries]);
   const latestMeaning = latestSignal
-    ? entries.find((entry) => entry.code === latestSignal.code)?.meaning ??
+    ? entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === latestSignal.code)?.meaning ??
       latestSignal.note ??
       FALLBACK_MEANINGS[latestSignal.code] ??
       "빨리 와줘"
@@ -96,8 +105,21 @@ export function TodayScreen() {
     fetchReceived(profile.id, friends).catch(reportError);
   };
 
+  const flashQuickReply = (slot: string) => {
+    setQuickReplyFeedback(slot);
+    setTimeout(() => setQuickReplyFeedback(null), 1200);
+  };
+
+  const handleDone = async () => {
+    if (!latestMessage) return;
+    setDoneFeedback(true);
+    setTimeout(() => setDoneFeedback(false), 1200);
+    await read(latestMessage.id).catch(reportError);
+  };
+
   const handleQuickReply = async (slot: string) => {
     if (!latestMessage) return;
+    flashQuickReply(slot);
 
     if (slot === "Done") {
       await read(latestMessage.id).catch(reportError);
@@ -124,9 +146,24 @@ export function TodayScreen() {
           title="Today"
           showAvatar={false}
           actions={[
-            { label: loading ? "…" : "◐", onPress: refresh },
-            { label: "◎" },
-            { label: "⚙" },
+            {
+              label: loading ? "Syncing" : "Refresh",
+              icon: <RefreshLineIcon />,
+              accessibilityLabel: "Refresh Today",
+              onPress: refresh,
+            },
+            {
+              label: "Friends",
+              icon: <FriendsGroupIcon />,
+              accessibilityLabel: "Open Friends",
+              onPress: () => navigation.navigate("Main", { screen: "People" }),
+            },
+            {
+              label: "Settings",
+              icon: <GearLineIcon />,
+              accessibilityLabel: "Account settings",
+              onPress: () => navigation.navigate("Account"),
+            },
           ]}
         />
         {latestSignal ? (
@@ -135,7 +172,11 @@ export function TodayScreen() {
               <View style={styles.latestTopRow}>
                 <View style={styles.senderRow}>
                   <View style={styles.senderAvatar}>
-                    <Text style={styles.senderInitial}>{latestSignal.sender.slice(0, 1)}</Text>
+                    <Image
+                      source={{ uri: getMockupFriendPhotoUri(latestSignal.sender, 0) }}
+                      style={styles.senderAvatarImage}
+                      resizeMode="cover"
+                    />
                   </View>
                   <View>
                     <Text style={[styles.senderName, { color: palette.text }]}>{latestSignal.sender}</Text>
@@ -149,11 +190,7 @@ export function TodayScreen() {
                 <Text style={[styles.meaningText, { color: palette.text }]}>{latestMeaning}</Text>
               </View>
               {latestSignal.hasBlink ? (
-                <BlinkHeroPreview
-                  playbackUri={latestMessage.media?.playbackUri}
-                  frameUris={latestMessage.media?.stripFrameUris}
-                  sender={latestSignal.sender}
-                />
+                <TodayFrameStrip frameUris={latestMessage.media?.stripFrameUris} />
               ) : null}
               <View style={styles.latestActions}>
                 <ActionButton
@@ -164,8 +201,9 @@ export function TodayScreen() {
                 />
                 <ActionButton
                   label="Done"
+                  variant={doneFeedback ? "success" : "light"}
                   flex
-                  onPress={() => read(latestMessage.id).catch(reportError)}
+                  onPress={handleDone}
                 />
               </View>
             </MockupCard>
@@ -185,35 +223,69 @@ export function TodayScreen() {
         )}
 
         <MockupSection label="Quick Reply" />
-        <SignalSlotRail slots={quickReplySlots} disabled={!latestMessage} onSelect={handleQuickReply} />
+        <SignalSlotRail
+          slots={quickReplySlots}
+          disabled={!latestMessage}
+          confirmedSlot={quickReplyFeedback}
+          onSelect={handleQuickReply}
+        />
 
-        <MockupSection label="Queue" />
+        <Text style={[styles.queueTitle, { color: palette.muted }]}>Queue</Text>
         <View style={styles.queue}>
           {signalQueue.length > 0 ? (
-            signalQueue.map((item, index) => (
-              <View key={item.id} style={[styles.queueRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
-                <StatusDot size={7} color={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot} />
-                <View style={styles.queueCopy}>
-                  <Text style={[styles.queueCode, { color: palette.text }]}>
-                    {item.code}
-                    <Text style={[styles.queueMeaning, { color: palette.muted }]}>
-                      {"  "}
-                      {entries.find((entry) => entry.code === item.code)?.meaning ?? item.note ?? FALLBACK_MEANINGS[item.code] ?? "signal"}
-                    </Text>
-                  </Text>
-                </View>
-                <Text style={[type.monoValue, { color: palette.text }]}>{item.time}</Text>
+            <View style={[styles.queueCard, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+              {signalQueue.map((item, index) => {
+                const meaning =
+                  entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === item.code)?.meaning ??
+                  item.note ??
+                  FALLBACK_MEANINGS[item.code] ??
+                  "signal";
+
+                return (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.queueRow,
+                      index > 0 && styles.queueRowDivider,
+                      { borderTopColor: palette.rule },
+                    ]}
+                  >
+                    <StatusDot
+                      size={9}
+                      color={index === 0 ? colors.red : index === 1 ? "#FF850B" : colors.greenDot}
+                    />
+                    <View style={styles.queueCopy}>
+                      <Text numberOfLines={1} style={[styles.queueCode, { color: palette.text }]}>
+                        {item.code}
+                        <Text style={[styles.queueMeaning, { color: palette.muted }]}> ({meaning})</Text>
+                      </Text>
+                    </View>
+                    <Text style={[styles.queueTime, { color: palette.muted }]}>{item.time}</Text>
+                  </View>
+                );
+              })}
               </View>
-            ))
           ) : (
             <MockupCard soft style={styles.softPanel}>
               <Text style={type.bodyMuted}>No more signals queued.</Text>
             </MockupCard>
           )}
         </View>
-        <ActionButton label="Save Log" variant="ghost" disabled={!latestMessage} onPress={() => latestMessage && save(latestMessage.id).catch(reportError)} />
       </ScrollView>
     </AppSurface>
+  );
+}
+
+function TodayFrameStrip({ frameUris }: { frameUris?: string[] | null }) {
+  const frames = (frameUris?.length ? frameUris : mockupBlinkFrameUris).slice(0, 3);
+  return (
+    <View style={styles.todayFrameStrip}>
+      {frames.map((uri, index) => (
+        <View key={`${uri}-${index}`} style={styles.todayFrame}>
+          <Image source={{ uri }} style={styles.todayFrameImage} resizeMode="cover" />
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -235,7 +307,19 @@ const styles = StyleSheet.create({
     gap: spacing[4],
   },
   queue: {
-    gap: spacing[2],
+    gap: 0,
+  },
+  queueTitle: {
+    ...type.metaValue,
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.muted,
+  },
+  queueCard: {
+    overflow: "hidden",
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
   },
   latestStack: {
     gap: spacing[3],
@@ -267,9 +351,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.redSoft,
     overflow: "hidden",
   },
-  senderInitial: {
-    ...type.metaValue,
-    fontSize: 12,
+  senderAvatarImage: {
+    width: "100%",
+    height: "100%",
   },
   senderName: {
     ...type.metaValue,
@@ -299,16 +383,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing[3],
   },
+  todayFrameStrip: {
+    flexDirection: "row",
+    gap: spacing[3],
+  },
+  todayFrame: {
+    flex: 1,
+    aspectRatio: 0.94,
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: colors.paperDeep,
+  },
+  todayFrameImage: {
+    width: "100%",
+    height: "100%",
+  },
   queueRow: {
-    minHeight: 54,
+    minHeight: 49,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 9,
+    paddingHorizontal: spacing[5],
+  },
+  queueRowDivider: {
+    borderTopWidth: 1,
   },
   queueCopy: {
     flex: 1,
@@ -321,7 +419,13 @@ const styles = StyleSheet.create({
   },
   queueMeaning: {
     ...type.bodyMuted,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  queueTime: {
+    ...type.tinyMono,
+    fontSize: 10,
+    lineHeight: 13,
   },
   empty: {
     minHeight: 180,

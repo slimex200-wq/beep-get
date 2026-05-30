@@ -18,6 +18,7 @@ import { useFriendStore } from "@/stores/friendStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useCollectionStore } from "@/stores/collectionStore";
 import { useSkinStore } from "@/stores/skinStore";
+import { mockupPhotoUris } from "@/design/mockupPhotos";
 
 function resetUserStores() {
   useMessageStore.getState().reset();
@@ -108,7 +109,7 @@ export function SettingsScreen() {
 
         <MockupSection label="My Beep ID" />
         <MockupCard style={styles.identityCard}>
-          <Avatar label={profile?.nickname ?? "Me"} size={46} />
+          <Avatar label={profile?.nickname ?? "Me"} source={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }} size={46} />
           <View style={styles.identityCopy}>
             <Text style={[styles.name, { color: palette.text }]}>{profile?.nickname ?? "Unknown"}</Text>
             <Text selectable style={[styles.handle, { color: palette.muted }]}>

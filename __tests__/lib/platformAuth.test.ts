@@ -23,14 +23,14 @@ describe("platform auth", () => {
     expect(getPlatformAuthVariant(provider)).toBe("light");
   });
 
-  it("lists Google, Apple, and Kakao in the requested button order", () => {
+  it("lists Apple first, then Google and Kakao in the launch login order", () => {
     const providers = getPlatformAuthProviders("ios");
 
-    expect(providers).toEqual(["google", "apple", "kakao"]);
+    expect(providers).toEqual(["apple", "google", "kakao"]);
     expect(providers.map(getPlatformAuthLabel)).toEqual([
-      "Continue with Google",
-      "Continue with Apple",
-      "Continue with Kakao",
+      "Sign in with Apple",
+      "Sign in with Google",
+      "Log in with Kakao",
     ]);
     expect(getPlatformAuthVariant("kakao")).toBe("kakao");
   });
