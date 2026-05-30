@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 
 export type RecentSignalCombo = {
   id: string;
@@ -18,10 +19,11 @@ type Props = {
 };
 
 export function RecentSignalCombos({ combos, onSelect }: Props) {
+  const palette = useAppPalette();
   if (combos.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={type.bodyMuted}>Send a few signals and your fastest combos appear here.</Text>
+      <View style={[styles.empty, { backgroundColor: palette.cardSoft, borderColor: palette.rule }]}>
+        <Text style={[type.bodyMuted, { color: palette.muted }]}>Send a few signals and your fastest combos appear here.</Text>
       </View>
     );
   }
@@ -33,10 +35,10 @@ export function RecentSignalCombos({ combos, onSelect }: Props) {
           key={combo.id}
           accessibilityRole="button"
           onPress={() => onSelect(combo)}
-          style={({ pressed }) => [styles.combo, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.combo, { backgroundColor: palette.input, borderColor: palette.ruleStrong }, pressed && styles.pressed]}
         >
-          <Text style={styles.comboText}>{combo.label}</Text>
-          <Text style={type.tinyMono}>NO {combo.friendNo}</Text>
+          <Text style={[styles.comboText, { color: palette.text }]}>{combo.label}</Text>
+          <Text style={[type.tinyMono, { color: palette.muted }]}>NO {combo.friendNo}</Text>
         </Pressable>
       ))}
     </ScrollView>

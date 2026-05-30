@@ -3,7 +3,7 @@
 ## Source of truth
 
 - Status: Active
-- Last refreshed: 2026-05-30
+- Last refreshed: 2026-05-31
 - Primary product surfaces: Authenticated mobile tabs (`Today`, `Send`, `Friends`, `My`), Blink preview, Send Beep/Blink modal flows, widget configuration surfaces, skin pack previews.
 - Evidence reviewed:
   - `.lazyweb/quick-references/beep-get-ui-refresh-2026-05-26/references/stitch-kotlin-screens/00-contact-sheet.png`
@@ -80,22 +80,41 @@
 
 ## Design principles
 
-- Principle 1: Match the Kotlin final mockup before inventing new slip-system variants.
+- Principle 1: Classic Paper (the warm-ivory Kotlin mockup) is the base skin. Every other skin is a coordinated pack layered on the **same** IA, grid, and component grammar — skins vary palette / texture / shape only, never the screen structure or data slots.
 - Principle 2: One primary object per screen: latest signal on Today, Beep transmission on Send, close friends on Friends, personalization/settings groups on My.
 - Principle 3: Blink previews must use real video or real frame thumbnails inside the actual Send/widget layout, never decorative placeholder blocks.
 - Principle 4: Beep first, but Blink must remain a visible sibling send type instead of being hidden as settings or copy.
-- Principle 5: Skin packs are bundled identities that affect app chrome, Send cards, widgets, avatar frame, and status tint.
+- Principle 5: Skin packs are bundled identities that affect app chrome, Send cards, widgets, avatar frame, and status tint. Every primary surface (Today, Send, Friends, My) and shared component must read its colors from `useAppPalette` so an applied skin recolors the whole app — no surface may hardcode skin-owned colors.
 - Principle 6: Widget grammar is size-bound: Beep is SM-widget only, and Blink is MD-list-widget only. Do not render Beep inside MD previews or Blink inside SM previews.
 - Tradeoffs: The old black pager/slip style can survive in secondary surfaces, but the primary mobile tabs use the warm ivory Kotlin mockup language. Purchasing entry points can be visible in My/Widget previews, but checkout must not live inside the urgent Send flow.
 
 ## Visual language
 
-- Color: warm ivory app background, white cards, soft gray controls, black primary actions, red/green status dots. Premium packs may shift the whole palette as a set.
+- Color: the base skin (Classic Paper) is warm ivory background, white cards, soft gray controls, black primary actions, red/green status dots. Skins own the full palette as a set and may be light (Classic Paper, Soft Pager, Glass Mode) or dark (Cyber Neon, Retro Future); surfaces must stay legible under every skin, so always pull background/card/text/rule/primary from the active palette rather than literal hex.
 - Typography: compact sans for labels/body, monospaced numerals for signal codes and time, no oversized marketing type inside tool surfaces.
 - Spacing/layout rhythm: compact mobile stacks, consistent section labels, bottom nav pill fixed above the home indicator, no nested decorative cards.
 - Shape/radius/elevation: restrained rounded cards, pill controls for status/nav/chips, thin rule borders, minimal shadow.
 - Motion: short mechanical press states and send-plane flight only; avoid large animated transitions unless tied to Blink capture/playback.
-- Imagery/iconography: use actual Blink frames/video for media surfaces; simple symbolic icons for header/nav controls; no emoji controls.
+- Imagery/iconography: use actual Blink frames/video for media surfaces. All header and bottom-nav controls use one icon family — lucide line icons via `src/components/MockupLineIcons.tsx` — so headers and the tab bar read as the same set; never mix unicode glyphs (`◐ ◎ ⚙ ×`) or text labels (`Back`, `Close`) into icon slots. Emoji are allowed only as user-authored signal-token content (e.g. `집중중 🔕`), never as chrome/control affordances.
+
+## Skin system
+
+The app ships a skin store. Skins are real, supported product — not experiments to be removed. One skin is active at a time; it recolors every surface through `useAppPalette` (`src/design/appTheme.ts`) and is previewed per widget size in My / Widget Layouts.
+
+- Naming is single-source-of-truth. Use the user-facing name everywhere a user can see it (store cards, widget previews, settings) and the slug everywhere in code/data. Do not introduce a third alias.
+
+| User-facing name | slug (code) | Tier | Mode | Direction |
+| --- | --- | --- | --- | --- |
+| Classic Paper | `swiss-paper` | Free (base) | Light | Warm ivory paper, white cards, 1px rules, red accent — the Kotlin mockup baseline |
+| Soft Pager | `neumorphism` | Free | Light | Warm sand, gently raised controls, muted clay accent |
+| Glass Mode | `glassmorphism` | Free | Light | Cool mint, translucent layered cards, green accent |
+| Cyber Neon | `cyber-neon` | Premium | Dark | Near-black shell, neon-green accent and glow |
+| Retro Future | `retro-future` | Premium | Dark | Warm espresso panels, chunky cards, red accent |
+
+- Each skin keeps the same screens, grid, component grammar, and data slots (Principle 1). Only palette, texture, shape/radius, and shadow change.
+- Premium skins must apply to **every** surface they touch, not just Today/My — a paid skin that leaves Send or Friends on the base palette is a defect, not a partial feature.
+- Dark skins (Cyber Neon, Retro Future) set `statusBar: "light"`; every surface must remain legible (text/rule contrast) when a dark skin is active.
+- Adding a skin: define its `AppPalette` in `appTheme.ts`, register it in `skinPacks.ts` with name + slug + tier, and verify SM/MD widget previews — never fork a screen per skin.
 
 ## Components
 
@@ -146,7 +165,7 @@
   - Prefer action labels like `View`, `Done`, `Send Beep`, `Blink`, `Capture Blink`, `Configure Slots`.
   - Send summaries should say what will be sent and to whom.
   - Avoid explaining the whole product inside the app surface.
-  - Avoid `theme toggle` and `header avatar`; prefer `Skin Pack`, `Apply Pack`, `Unlock Pack`, and `Profile`.
+  - Avoid a standalone light/dark `theme toggle` and `header avatar`; light vs dark is a property of the chosen skin, so personalization is expressed as `Skin Pack`, `Apply Pack`, `Unlock Pack`, and `Profile`, not an appearance switch.
 
 ## Default Signal Tokens
 
@@ -161,6 +180,7 @@
 
 ## Design review notes
 
+- 2026-05-31 direction: the skin store is now first-class (see Skin system). Five skins are kept and supported (Classic Paper base + Soft Pager / Glass Mode free, Cyber Neon / Retro Future premium). Primary surfaces and shared components were migrated to `useAppPalette` so applied skins (incl. the two dark skins) recolor the whole app, not just Today/My. Open follow-ups: (a) unify skin names to the Skin system table (`skinPacks.ts`/`uiPreview.ts` still say `Swiss Paper`; DB seed + `theme/skins/*.json` carry the old label — needs a new migration, do not edit applied migrations); (b) header/nav icons unified to lucide line icons (no `◐ ◎ ⚙ × Back Close` in icon slots).
 - Fixed: Today uses the left-aligned title layout without a forced avatar, matching the Today mockup.
 - Fixed: the primary Send tab suppresses the back action; modal Send flows can still show back.
 - Fixed: Send Blink no longer duplicates camera or captured-frame sections when the shared mockup deck owns them.

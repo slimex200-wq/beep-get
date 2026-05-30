@@ -2,6 +2,7 @@ import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 
 export type PickableFriend = {
   id: string;
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }: Props) {
+  const palette = useAppPalette();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
       <Pressable
@@ -28,10 +30,10 @@ export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }:
         onPress={onAddPress}
         style={({ pressed }) => [styles.item, pressed && styles.pressed]}
       >
-        <View style={styles.addCircle}>
-          <Text style={styles.addGlyph}>+</Text>
+        <View style={[styles.addCircle, { backgroundColor: palette.chip }]}>
+          <Text style={[styles.addGlyph, { color: palette.text }]}>+</Text>
         </View>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={[styles.name, { color: palette.text }]} numberOfLines={1}>
           New
         </Text>
       </Pressable>
@@ -46,14 +48,14 @@ export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }:
             onPress={() => onSelect(friend)}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
-            <View style={[styles.avatar, selected && styles.avatarSelected]}>
+            <View style={[styles.avatar, { backgroundColor: palette.input }, selected && styles.avatarSelected]}>
               {friend.avatarUri ? (
                 <Image source={{ uri: friend.avatarUri }} style={styles.avatarImage} resizeMode="cover" />
               ) : (
-                <Text style={[styles.avatarText, selected && styles.selectedText]}>{friend.name.slice(0, 1)}</Text>
+                <Text style={[styles.avatarText, { color: palette.text }, selected && styles.selectedText]}>{friend.name.slice(0, 1)}</Text>
               )}
             </View>
-            <Text style={[styles.name, selected && styles.activeName]} numberOfLines={1}>
+            <Text style={[styles.name, { color: palette.text }, selected && styles.activeName]} numberOfLines={1}>
               {friend.name}
             </Text>
           </Pressable>

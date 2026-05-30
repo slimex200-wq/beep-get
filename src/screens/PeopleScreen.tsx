@@ -19,6 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
@@ -54,6 +55,7 @@ const blinkHeroImage = require("../../assets/brand/blink/blink-person-model-stri
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
 export function PeopleScreen() {
+  const palette = useAppPalette();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { friends, fetch, add } = useFriendStore();
@@ -181,14 +183,14 @@ export function PeopleScreen() {
             },
           ]}
         />
-        <View style={styles.searchPanel}>
-          <SearchLineIcon color={colors.muted2} style={styles.searchIcon} />
+        <View style={[styles.searchPanel, { backgroundColor: palette.input }]}>
+          <SearchLineIcon color={palette.muted2} style={styles.searchIcon} />
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search ID or name"
-            placeholderTextColor={colors.muted2}
-            style={styles.searchInput}
+            placeholderTextColor={palette.muted2}
+            style={[styles.searchInput, { color: palette.text }]}
           />
         </View>
 
@@ -196,15 +198,15 @@ export function PeopleScreen() {
         <MockupCard style={styles.myIdCard}>
           <Image source={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }} style={styles.myIdAvatar} resizeMode="cover" />
           <View style={styles.myIdCopy}>
-            <Text style={styles.friendName}>{profile?.nickname ?? "Alex"} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
-            <Text style={styles.handle}>@{profile?.beep_id ?? "alexb"}</Text>
+            <Text style={[styles.friendName, { color: palette.text }]}>{profile?.nickname ?? "Alex"} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
+            <Text style={[styles.handle, { color: palette.muted }]}>@{profile?.beep_id ?? "alexb"}</Text>
           </View>
           <Pressable
             accessibilityLabel={copyFeedback ? "Beep ID shared" : "Copy Beep ID"}
             accessibilityRole="button"
             disabled={!profile}
             onPress={profile ? shareMyBeepId : undefined}
-            style={({ pressed }) => [styles.copyButton, copyFeedback && styles.copyButtonDone, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.copyButton, { backgroundColor: palette.chip }, copyFeedback && styles.copyButtonDone, pressed && styles.pressed]}
           >
             {copyFeedback ? <CheckCircleLineIcon /> : <CopyLineIcon />}
           </Pressable>
@@ -213,14 +215,14 @@ export function PeopleScreen() {
         <Pressable
           accessibilityRole="button"
           onPress={openAddDialog}
-          style={({ pressed }) => [styles.addFriendCard, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.addFriendCard, { backgroundColor: palette.card, borderColor: palette.rule }, pressed && styles.pressed]}
         >
-          <View style={styles.addIcon}>
+          <View style={[styles.addIcon, { backgroundColor: palette.chip }]}>
             <AddPersonLineIcon />
           </View>
           <View style={styles.addCopy}>
-            <Text style={styles.friendName}>Add Friend</Text>
-            <Text style={type.bodyMuted}>Connect with an 8-digit Beep ID</Text>
+            <Text style={[styles.friendName, { color: palette.text }]}>Add Friend</Text>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>Connect with an 8-digit Beep ID</Text>
           </View>
           <ChevronRightLineIcon />
         </Pressable>
@@ -245,8 +247,8 @@ export function PeopleScreen() {
             ))
           ) : (
             <MockupCard soft style={styles.empty}>
-              <Text style={type.metaValue}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
-              <Text style={type.bodyMuted}>Add a friend by Beep ID to start sending slips.</Text>
+              <Text style={[type.metaValue, { color: palette.text }]}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
+              <Text style={[type.bodyMuted, { color: palette.muted }]}>Add a friend by Beep ID to start sending slips.</Text>
             </MockupCard>
           )}
         </View>
@@ -274,15 +276,15 @@ export function PeopleScreen() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.dialogOverlay}
         >
-          <View style={styles.dialog}>
-            <Text style={styles.dialogTitle}>Configure Friend Info</Text>
-            <Text style={type.bodyMuted}>Enter an 8-digit Beep ID. Nickname is optional.</Text>
+          <View style={[styles.dialog, { backgroundColor: palette.card }]}>
+            <Text style={[styles.dialogTitle, { color: palette.text }]}>Configure Friend Info</Text>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>Enter an 8-digit Beep ID. Nickname is optional.</Text>
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}
               placeholder="Optional nickname"
-              placeholderTextColor={colors.muted2}
-              style={styles.dialogInput}
+              placeholderTextColor={palette.muted2}
+              style={[styles.dialogInput, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
             <TextInput
               value={beepId}
@@ -290,8 +292,8 @@ export function PeopleScreen() {
               keyboardType="number-pad"
               maxLength={8}
               placeholder="8-digit Beep ID"
-              placeholderTextColor={colors.muted2}
-              style={styles.dialogInput}
+              placeholderTextColor={palette.muted2}
+              style={[styles.dialogInput, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
             <View style={styles.dialogActions}>
               <ActionButton label="Cancel" variant="ghost" onPress={() => setAddDialogVisible(false)} />
@@ -371,21 +373,23 @@ function FriendRow({
   avatarUri?: string;
   onPress: () => void;
 }) {
+  const palette = useAppPalette();
+
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, pressed && styles.pressed]}>
-      <View style={styles.friendAvatar}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }, pressed && styles.pressed]}>
+      <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
         {avatarUri ? (
           <Image source={{ uri: avatarUri }} style={styles.friendAvatarImage} resizeMode="cover" />
         ) : (
-          <Text style={styles.friendInitial}>{friend.name.slice(0, 1)}</Text>
+          <Text style={[styles.friendInitial, { color: palette.text }]}>{friend.name.slice(0, 1)}</Text>
         )}
         <NameDot color={accent} />
       </View>
       <View style={styles.friendCopy}>
-        <Text style={styles.friendName}>{friend.name}</Text>
-        <Text style={styles.friendStatus}>{status}</Text>
+        <Text style={[styles.friendName, { color: palette.text }]}>{friend.name}</Text>
+        <Text style={[styles.friendStatus, { color: palette.muted }]}>{status}</Text>
       </View>
-      {online ? <View style={styles.onlineDot} /> : <Text style={styles.timeText}>{rightText ?? friend.no}</Text>}
+      {online ? <View style={styles.onlineDot} /> : <Text style={[styles.timeText, { color: palette.text }]}>{rightText ?? friend.no}</Text>}
     </Pressable>
   );
 }
@@ -433,7 +437,6 @@ const styles = StyleSheet.create({
     gap: spacing[4],
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[4],
-    borderColor: "rgba(10,10,10,0.10)",
     borderRadius: 12,
   },
   myIdAvatar: {

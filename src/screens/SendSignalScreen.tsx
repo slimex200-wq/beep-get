@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendPickerStrip, type PickableFriend } from "@/components/FriendPickerStrip";
@@ -37,6 +38,7 @@ type SendRouteParams = Partial<RootStackParamList["Send"]>;
 const DEFAULT_SLOT_DECK = ["8282", "486", "1004", "7942", "0404"];
 
 export function SendSignalScreen() {
+  const palette = useAppPalette();
   const route = useRoute();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const params = (route.params ?? {}) as SendRouteParams;
@@ -129,7 +131,7 @@ export function SendSignalScreen() {
   }, [code, slotDeck]);
 
   const modeSwitch = (
-    <View style={styles.switcher}>
+    <View style={[styles.switcher, { backgroundColor: palette.chip, borderColor: palette.ruleStrong }]}>
       <ModeButton label="BEEP" active={mode === "beep"} onPress={() => setMode("beep")} />
       <ModeButton label="BLINK" active={mode === "blink"} onPress={() => setMode("blink")} />
     </View>
@@ -179,7 +181,7 @@ export function SendSignalScreen() {
   const deckHeader = recipient ? (
     <View style={styles.deck}>
       <View style={styles.deckSection}>
-        <Text style={styles.deckLabel}>SEND TYPE</Text>
+        <Text style={[styles.deckLabel, { color: palette.muted }]}>SEND TYPE</Text>
         {modeSwitch}
       </View>
       <MockupCard soft style={mode === "beep" ? styles.beepCapturePreview : styles.capturePreview}>
@@ -207,24 +209,24 @@ export function SendSignalScreen() {
           )
         ) : (
           <View style={styles.captureFramesBlock}>
-            <Text style={styles.captureFramesLabel}>SM WIDGET PREVIEW</Text>
+            <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>SM WIDGET PREVIEW</Text>
             <SmBeepWidgetPreview code={code} recipientName={recipient.name} />
           </View>
         )}
         {mode === "blink" ? (
           <>
-            <Text style={styles.captureHint}>
+            <Text style={[styles.captureHint, { color: palette.muted }]}>
               {recording ? "Recording 2 second Blink" : captureStatus}
             </Text>
             <View style={styles.captureFramesBlock}>
-              <Text style={styles.captureFramesLabel}>MD WIDGET PREVIEW</Text>
+              <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>MD WIDGET PREVIEW</Text>
               <BlinkMdWidgetPreview code={code} recipientName={recipient.name} frameUris={visibleFrameUris} />
             </View>
           </>
         ) : null}
       </MockupCard>
       <View style={styles.deckSection}>
-        <Text style={styles.deckLabel}>TO:</Text>
+        <Text style={[styles.deckLabel, { color: palette.muted }]}>TO:</Text>
         <FriendPickerStrip
           friends={friendOptions}
           selectedId={recipient.id}
@@ -233,7 +235,7 @@ export function SendSignalScreen() {
         />
       </View>
       <View style={styles.deckSection}>
-        <Text style={styles.deckLabel}>SIGNAL DECK</Text>
+        <Text style={[styles.deckLabel, { color: palette.muted }]}>SIGNAL DECK</Text>
         <SignalSlotRail compact slots={slotDeck} selected={code} onSelect={selectSlot} />
       </View>
     </View>
@@ -377,30 +379,30 @@ export function SendSignalScreen() {
           ]}
         />
         <ScrollView contentContainerStyle={styles.emptyContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.emptyDeck}>
-            <View style={styles.emptyDeckTop}>
+          <View style={[styles.emptyDeck, { backgroundColor: palette.card, borderColor: palette.ruleStrong }]}>
+            <View style={[styles.emptyDeckTop, { borderBottomColor: palette.rule }]}>
               <View>
-                <Text style={type.tinyMono}>SIGNAL DECK</Text>
-                <Text style={styles.emptyDeckTitle}>Pick a close friend first</Text>
+                <Text style={[type.tinyMono, { color: palette.muted }]}>SIGNAL DECK</Text>
+                <Text style={[styles.emptyDeckTitle, { color: palette.text }]}>Pick a close friend first</Text>
               </View>
-              <View style={styles.emptyBadge}>
-                <Text style={type.tinyMono}>NO FRIEND</Text>
+              <View style={[styles.emptyBadge, { backgroundColor: palette.chip, borderColor: palette.ruleStrong }]}>
+                <Text style={[type.tinyMono, { color: palette.muted }]}>NO FRIEND</Text>
               </View>
             </View>
 
-            <Text style={type.bodyMuted}>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>
               Add a friend to unlock the To strip, Beep codes, optional Blink capture, and outgoing summary.
             </Text>
 
-            <Text style={type.tinyMono}>TO:</Text>
-            <Text style={type.tinyMono}>SEND TYPE</Text>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>TO:</Text>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>SEND TYPE</Text>
             {modeSwitch}
 
-            <Text style={type.tinyMono}>SIGNAL DECK</Text>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>SIGNAL DECK</Text>
             <View style={styles.slotPreviewRow}>
               {DEFAULT_SLOT_DECK.slice(0, 5).map((slot) => (
-                <View key={slot} style={styles.slotPreviewChip}>
-                  <Text style={styles.slotPreviewText}>{slot}</Text>
+                <View key={slot} style={[styles.slotPreviewChip, { backgroundColor: palette.chip, borderColor: palette.ruleStrong }]}>
+                  <Text style={[styles.slotPreviewText, { color: palette.text }]}>{slot}</Text>
                 </View>
               ))}
             </View>
@@ -580,39 +582,40 @@ function SendSettingsSheet({
   onClose: () => void;
   onClearDraft: () => void;
 }) {
+  const palette = useAppPalette();
   if (!visible) return null;
 
   return (
     <View style={styles.sheetOverlay}>
       <Pressable accessibilityLabel="Close Send settings" onPress={onClose} style={styles.sheetBackdrop} />
-      <View style={styles.sheet}>
+      <View style={[styles.sheet, { backgroundColor: palette.background }]}>
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Send Settings</Text>
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetClose}>
-              <Text style={styles.sheetCloseText}>Close</Text>
+            <Text style={[styles.sheetTitle, { color: palette.text }]}>Send Settings</Text>
+            <Pressable accessibilityRole="button" onPress={onClose} style={[styles.sheetClose, { backgroundColor: palette.chip }]}>
+              <Text style={[styles.sheetCloseText, { color: palette.text }]}>Close</Text>
             </Pressable>
           </View>
 
-          <View style={styles.sheetRow}>
-            <View style={styles.sheetIconCircle}>
-              <SendPlaneIcon color={colors.ink} />
+          <View style={[styles.sheetRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+            <View style={[styles.sheetIconCircle, { backgroundColor: palette.chip }]}>
+              <SendPlaneIcon color={palette.text} />
             </View>
             <View style={styles.sheetCopy}>
-              <Text style={styles.sheetRowTitle}>Default Send</Text>
-              <Text style={styles.sheetRowSub}>Beep sends code. Blink sends the code with a 2s video.</Text>
+              <Text style={[styles.sheetRowTitle, { color: palette.text }]}>Default Send</Text>
+              <Text style={[styles.sheetRowSub, { color: palette.muted }]}>Beep sends code. Blink sends the code with a 2s video.</Text>
             </View>
           </View>
 
-          <View style={styles.sheetRow}>
-            <View style={styles.sheetIconCircle}>
-              <CameraLineIcon color={colors.ink} />
+          <View style={[styles.sheetRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+            <View style={[styles.sheetIconCircle, { backgroundColor: palette.chip }]}>
+              <CameraLineIcon color={palette.text} />
             </View>
             <View style={styles.sheetCopy}>
-              <Text style={styles.sheetRowTitle}>Blink Draft Frames</Text>
-              <Text style={styles.sheetRowSub}>{blinkFrameCount} extracted from this 2s Blink</Text>
+              <Text style={[styles.sheetRowTitle, { color: palette.text }]}>Blink Draft Frames</Text>
+              <Text style={[styles.sheetRowSub, { color: palette.muted }]}>{blinkFrameCount} extracted from this 2s Blink</Text>
             </View>
-            <Pressable accessibilityRole="button" onPress={onClearDraft} style={styles.smallPill}>
-              <Text style={styles.smallPillText}>Clear</Text>
+            <Pressable accessibilityRole="button" onPress={onClearDraft} style={[styles.smallPill, { backgroundColor: palette.primary }]}>
+              <Text style={[styles.smallPillText, { color: palette.primaryText }]}>Clear</Text>
             </Pressable>
           </View>
 
@@ -658,11 +661,12 @@ function ModeButton({
 }
 
 function CaptureReticlePanel() {
+  const palette = useAppPalette();
   return (
-    <View style={styles.captureGrid}>
-      <View style={styles.crosshairHorizontal} />
-      <View style={styles.crosshairVertical} />
-      <View style={styles.crosshairCircle} />
+    <View style={[styles.captureGrid, { backgroundColor: palette.input }]}>
+      <View style={[styles.crosshairHorizontal, { backgroundColor: palette.rule }]} />
+      <View style={[styles.crosshairVertical, { backgroundColor: palette.rule }]} />
+      <View style={[styles.crosshairCircle, { borderColor: palette.rule }]} />
     </View>
   );
 }

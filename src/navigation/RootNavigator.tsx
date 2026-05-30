@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { colors } from "@/design/tokens";
 import { font } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import {
   FriendsGroupIcon,
   MyUserIcon,
@@ -58,6 +59,7 @@ const tabLabels: Record<keyof MainTabParamList, string> = {
 };
 
 function MainTabs() {
+  const palette = useAppPalette();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -72,17 +74,17 @@ function MainTabs() {
           paddingBottom: 4,
           borderTopWidth: 0,
           borderWidth: 1,
-          borderColor: "rgba(10,10,10,0.08)",
+          borderColor: palette.rule,
           borderRadius: 15,
-          backgroundColor: "#E4E0DA",
+          backgroundColor: palette.cardSoft,
           shadowColor: colors.ink,
           shadowOpacity: 0.04,
           shadowRadius: 6,
           shadowOffset: { width: 0, height: 1 },
           elevation: 2,
         },
-        tabBarActiveTintColor: colors.ink,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: palette.text,
+        tabBarInactiveTintColor: palette.muted,
         tabBarIcon: ({ focused, color }) => (
           <TabIcon routeName={route.name} focused={focused} color={color} />
         ),
@@ -103,7 +105,7 @@ function MainTabs() {
 }
 
 function TabIcon({ routeName, focused, color }: { routeName: keyof MainTabParamList; focused: boolean; color: string }) {
-  const tint = focused ? colors.ink : color;
+  const tint = color;
 
   return (
     <View style={styles.tabIconWrap}>

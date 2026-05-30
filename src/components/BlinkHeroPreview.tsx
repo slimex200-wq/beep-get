@@ -4,6 +4,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { BlinkStrip } from "@/components/BlinkStrip";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 
 type Props = {
   playbackUri?: string | number | null;
@@ -19,12 +20,13 @@ export function BlinkHeroPreview({ playbackUri, frameUris, sender }: Props) {
   });
 
   const hasPlayback = Boolean(playbackUri);
+  const palette = useAppPalette();
 
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.title}>Incoming Blink</Text>
-        <Text style={styles.meta}>2.0s private video</Text>
+        <Text style={[styles.title, { color: palette.text }]}>Incoming Blink</Text>
+        <Text style={[styles.meta, { color: palette.muted }]}>2.0s private video</Text>
       </View>
       {hasPlayback ? (
         <View style={styles.videoShell}>

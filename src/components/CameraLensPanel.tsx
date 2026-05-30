@@ -2,12 +2,14 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 
 export function CameraLensPanel({ compact = false }: { compact?: boolean } = {}) {
+  const palette = useAppPalette();
   return (
-    <View style={[styles.wrap, compact && styles.wrapCompact]}>
-      <View style={styles.tape}>
-        <Text style={[type.tinyMono, styles.tapeText]}>SELECT</Text>
+    <View style={[styles.wrap, { backgroundColor: palette.card, borderColor: palette.ruleStrong }, compact && styles.wrapCompact]}>
+      <View style={[styles.tape, { backgroundColor: palette.chip, borderRightColor: palette.rule }]}>
+        <Text style={[type.tinyMono, styles.tapeText, { color: palette.text }]}>SELECT</Text>
       </View>
       <View style={styles.lensWrap}>
         <View style={styles.lensOuter}>

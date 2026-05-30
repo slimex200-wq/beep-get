@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 import { Signal } from '../data/mockSignals';
 import { StatusDot } from './StatusDot';
 
@@ -10,17 +11,18 @@ type Props = {
 };
 
 export function TicketLogRow({ item }: Props) {
+  const palette = useAppPalette();
   const isExpired = item.status === 'expired';
   return (
-    <View style={[styles.row, isExpired && styles.expired]}>
+    <View style={[styles.row, { backgroundColor: palette.card, borderColor: palette.ruleStrong }, isExpired && styles.expired]}>
       <View style={styles.codeColumn}>
-        <Text style={type.tinyMono}>NO.</Text>
-        <Text style={type.codeMedium}>{item.code}</Text>
+        <Text style={[type.tinyMono, { color: palette.muted }]}>NO.</Text>
+        <Text style={[type.codeMedium, { color: palette.text }]}>{item.code}</Text>
       </View>
       <View style={styles.infoColumn}>
-        <Text style={type.metaValue}>{item.sender}</Text>
-        <Text style={type.bodyMuted}>{item.note}</Text>
-        <Text style={type.monoValue}>{item.time}</Text>
+        <Text style={[type.metaValue, { color: palette.text }]}>{item.sender}</Text>
+        <Text style={[type.bodyMuted, { color: palette.muted }]}>{item.note}</Text>
+        <Text style={[type.monoValue, { color: palette.text }]}>{item.time}</Text>
       </View>
       <StatusDot size={7} color={isExpired ? colors.faint : colors.red} />
     </View>

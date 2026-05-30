@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { HeaderBar } from "@/components/HeaderBar";
@@ -15,6 +16,7 @@ import { useMessageStore } from "@/stores/messageStore";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 
 export function LogsScreen() {
+  const palette = useAppPalette();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { saved, fetchSaved } = useMessageStore();
@@ -53,22 +55,22 @@ export function LogsScreen() {
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
-          <Text style={type.metaValue}>SLIP LEDGER</Text>
+          <Text style={[type.metaValue, { color: palette.text }]}>SLIP LEDGER</Text>
           <StatusDot size={7} />
         </View>
         <View style={styles.list}>
           {logs.length > 0 ? (
             logs.map((item) => <TicketLogRow key={item.id} item={item} />)
           ) : (
-            <View style={styles.empty}>
-              <Text style={type.metaValue}>NO SAVED SLIPS</Text>
-              <Text style={type.bodyMuted}>Use SAVE LOG in Today or Reply Room.</Text>
+            <View style={[styles.empty, { borderColor: palette.ruleStrong, backgroundColor: palette.cardSoft }]}>
+              <Text style={[type.metaValue, { color: palette.text }]}>NO SAVED SLIPS</Text>
+              <Text style={[type.bodyMuted, { color: palette.muted }]}>Use SAVE LOG in Today or Reply Room.</Text>
             </View>
           )}
         </View>
-        <View style={styles.note}>
-          <Text style={type.tinyMono}>NOTE.</Text>
-          <Text style={type.bodyMuted}>
+        <View style={[styles.note, { borderColor: palette.ruleStrong }]}>
+          <Text style={[type.tinyMono, { color: palette.muted }]}>NOTE.</Text>
+          <Text style={[type.bodyMuted, { color: palette.muted }]}>
             Expired unsaved Blinks keep only metadata. Saved slips remain in this private ledger.
           </Text>
         </View>

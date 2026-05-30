@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 
 interface Props {
   visible: boolean;
@@ -20,6 +21,7 @@ interface Props {
 const PERFORATION_DOT_COUNT = 18;
 
 export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) {
+  const palette = useAppPalette();
   const translateY = useRef(new Animated.Value(-160)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -52,29 +54,33 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
         accessibilityRole="button"
         accessibilityLabel="새 버전 적용"
         onPress={onReload}
-        style={({ pressed }) => [styles.slip, pressed && styles.slipPressed]}
+        style={({ pressed }) => [
+          styles.slip,
+          { backgroundColor: palette.card, borderColor: palette.ruleStrong },
+          pressed && [styles.slipPressed, { backgroundColor: palette.cardSoft }],
+        ]}
       >
         <View style={styles.kickerRow}>
           <View style={styles.dot} />
-          <Text style={styles.kicker}>SYSTEM PAGE</Text>
-          <View style={styles.kickerRule} />
-          <Text style={styles.kicker}>OTA</Text>
+          <Text style={[styles.kicker, { color: palette.text }]}>SYSTEM PAGE</Text>
+          <View style={[styles.kickerRule, { backgroundColor: palette.rule }]} />
+          <Text style={[styles.kicker, { color: palette.text }]}>OTA</Text>
         </View>
 
         <View style={styles.titleRow}>
           <View style={styles.titleBlock}>
-            <Text style={styles.titleTop}>NEW VERSION</Text>
-            <Text style={styles.titleBottom}>READY TO APPLY</Text>
+            <Text style={[styles.titleTop, { color: palette.text }]}>NEW VERSION</Text>
+            <Text style={[styles.titleBottom, { color: palette.muted }]}>READY TO APPLY</Text>
           </View>
           <View style={styles.glyphCol}>
             <Text style={styles.glyph}>{busy ? "···" : "↻"}</Text>
           </View>
         </View>
 
-        <View style={styles.rule} />
+        <View style={[styles.rule, { borderBottomColor: palette.ruleStrong }]} />
 
         <View style={styles.footerRow}>
-          <Text style={styles.footerMono}>{busy ? "RELOADING" : "TAP TO REFRESH"}</Text>
+          <Text style={[styles.footerMono, { color: palette.text }]}>{busy ? "RELOADING" : "TAP TO REFRESH"}</Text>
           {onDismiss && !busy ? <View style={styles.dismissPlaceholder} /> : null}
         </View>
 
@@ -92,7 +98,7 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
           hitSlop={8}
           style={styles.dismissOverlay}
         >
-          <Text style={styles.dismissMono}>LATER</Text>
+          <Text style={[styles.dismissMono, { color: palette.muted }]}>LATER</Text>
         </Pressable>
       ) : null}
     </Animated.View>

@@ -3,12 +3,13 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { CameraView } from "expo-camera";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { BlinkStrip } from "@/components/BlinkStrip";
 import { CameraLensPanel } from "@/components/CameraLensPanel";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
-import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
+import { BackLineIcon, GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 
 type Props = {
   modeSwitch?: React.ReactNode;
@@ -64,6 +65,7 @@ export function SendBlinkScreen({
   previewMode = false,
   showBackAction = true,
 }: Props) {
+  const palette = useAppPalette();
   const primaryLabel = sentFeedback
     ? "Sent"
     : recording
@@ -88,7 +90,7 @@ export function SendBlinkScreen({
           avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
           onAvatarPress={onAvatarPress}
           actions={[
-            ...(showBackAction ? [{ label: "Back", onPress: onBack }] : []),
+            ...(showBackAction ? [{ label: "Back", icon: <BackLineIcon />, accessibilityLabel: "Back", onPress: onBack }] : []),
             {
               label: "Settings",
               accessibilityLabel: "Send settings",
@@ -132,14 +134,14 @@ export function SendBlinkScreen({
 
         {shouldRenderCaptureFrames ? (
           <>
-            <Text style={type.tinyMono}>{hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}</Text>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>{hasCapturedBlink ? "CAPTURED FRAMES READY" : "CAPTURED FRAMES"}</Text>
             <BlinkStrip compact frameUris={previewFrameUris} />
           </>
         ) : null}
 
         <MockupCard soft style={styles.summary}>
-          <Text style={styles.summaryText}>
-            Will send signal <Text style={styles.summaryCode}>{code || "____"}</Text> to {recipientName}
+          <Text style={[styles.summaryText, { color: palette.text }]}>
+            Will send signal <Text style={[styles.summaryCode, { color: palette.text }]}>{code || "____"}</Text> to {recipientName}
           </Text>
         </MockupCard>
 
@@ -151,16 +153,16 @@ export function SendBlinkScreen({
               keyboardType="default"
               maxLength={20}
               placeholder="Signal token (e.g. 8282 / 집중중 🔕)"
-              placeholderTextColor={colors.muted2}
-              style={styles.input}
+              placeholderTextColor={palette.muted2}
+              style={[styles.input, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
             <TextInput
               value={memo}
               onChangeText={onMemoChange}
               placeholder={`Tiny note for NO ${recipientNo}`}
-              placeholderTextColor={colors.muted2}
+              placeholderTextColor={palette.muted2}
               maxLength={30}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
           </>
         ) : null}

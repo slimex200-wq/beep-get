@@ -10,6 +10,7 @@ import {
   MockupSection,
   StatusPill,
 } from "@/components/KotlinMockupUI";
+import { XLineIcon } from "@/components/MockupLineIcons";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -239,7 +240,7 @@ export function WidgetStatesScreen() {
           title="Widget Layouts"
           centered
           showAvatar={false}
-          actions={[{ label: "×", accessibilityLabel: "Close widget layouts", onPress: close }]}
+          actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close widget layouts", onPress: close }]}
         />
 
         <MockupSection label="Preview Size" hint={profile?.beep_id ?? "NO ID"} />

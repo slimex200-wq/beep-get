@@ -2,10 +2,11 @@ import React from "react";
 import { ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
-import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
+import { BackLineIcon, GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 import { SignalCode } from "@/components/SignalCode";
 
 type Props = {
@@ -46,6 +47,7 @@ export function SendBeepScreen({
   headerAvatarUri,
   showBackAction = true,
 }: Props) {
+  const palette = useAppPalette();
   const cleanCode = code || "____";
   const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : "Send Beep";
   const shouldRenderStandalonePreview = !deckHeader;
@@ -61,7 +63,7 @@ export function SendBeepScreen({
           avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
           onAvatarPress={onAvatarPress}
           actions={[
-            ...(showBackAction ? [{ label: "Back", onPress: onBack }] : []),
+            ...(showBackAction ? [{ label: "Back", icon: <BackLineIcon />, accessibilityLabel: "Back", onPress: onBack }] : []),
             {
               label: "Settings",
               accessibilityLabel: "Send settings",
@@ -73,15 +75,15 @@ export function SendBeepScreen({
         {deckHeader ?? modeSwitch}
         {shouldRenderStandalonePreview ? (
           <MockupCard style={styles.beepPreview}>
-            <Text style={type.tinyMono}>READY TO TRANSMIT</Text>
+            <Text style={[type.tinyMono, { color: palette.muted }]}>READY TO TRANSMIT</Text>
             <SignalCode code={cleanCode} style={styles.previewCode} />
-            <Text style={styles.previewMeaning}>{memo || `NO ${recipientNo} / ${recipientName}`}</Text>
+            <Text style={[styles.previewMeaning, { color: palette.text }]}>{memo || `NO ${recipientNo} / ${recipientName}`}</Text>
           </MockupCard>
         ) : null}
 
         <MockupCard soft style={styles.summary}>
-          <Text style={styles.summaryText}>
-            Will send signal <Text style={styles.summaryCode}>{cleanCode}</Text> to {recipientName}
+          <Text style={[styles.summaryText, { color: palette.text }]}>
+            Will send signal <Text style={[styles.summaryCode, { color: palette.text }]}>{cleanCode}</Text> to {recipientName}
           </Text>
         </MockupCard>
 
@@ -93,16 +95,16 @@ export function SendBeepScreen({
               keyboardType="default"
               maxLength={20}
               placeholder="Signal token (e.g. 8282 / 집중중 🔕)"
-              placeholderTextColor={colors.muted2}
-              style={styles.input}
+              placeholderTextColor={palette.muted2}
+              style={[styles.input, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
             <TextInput
               value={memo}
               onChangeText={onMemoChange}
               placeholder="Interpretation / Message Meaning"
-              placeholderTextColor={colors.muted2}
+              placeholderTextColor={palette.muted2}
               maxLength={30}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
             />
           </>
         ) : null}
