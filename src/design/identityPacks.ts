@@ -37,6 +37,41 @@ export type IdentityPack = {
   isFree?: boolean;
 };
 
+// SSoT for the identity-pack <-> palette-skin mapping. Identity packs are the
+// user-facing skin "main" (MY picker + WidgetStates), but the visual palette is
+// still derived from the legacy palette skins until M3 collapses palettes into
+// light/dark. WidgetStates, MY, and skinStore all import from here.
+export const IDENTITY_TO_SKIN_SLUG: Record<string, string> = {
+  "classic-paper": "swiss-paper",
+  "school-desk": "neumorphism",
+  "cherry-dot": "glassmorphism",
+  "photo-booth-blink": "retro-future",
+  "night-signal": "cyber-neon",
+};
+
+export const SKIN_TO_IDENTITY_SLUG: Record<string, string> = {
+  "swiss-paper": "classic-paper",
+  "pixel-pager": "classic-paper",
+  neumorphism: "school-desk",
+  glassmorphism: "cherry-dot",
+  "retro-future": "photo-booth-blink",
+  "cyber-neon": "night-signal",
+};
+
+export const DEFAULT_IDENTITY_PACK_SLUG = "classic-paper";
+
+export function getSkinSlugForIdentity(identitySlug: string): string {
+  return IDENTITY_TO_SKIN_SLUG[identitySlug] ?? identitySlug;
+}
+
+export function getIdentitySlugForSkin(skinSlug: string): string {
+  return SKIN_TO_IDENTITY_SLUG[skinSlug] ?? skinSlug;
+}
+
+export function getIdentityPack(slug: string): IdentityPack {
+  return identityPacks.find((pack) => pack.slug === slug) ?? identityPacks[0];
+}
+
 const expression = (
   id: string,
   label: string,

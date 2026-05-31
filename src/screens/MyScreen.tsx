@@ -26,7 +26,17 @@ import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { AVATAR_PRESETS } from "@/design/avatarPresets";
 import { mockupPhotoUris } from "@/design/mockupPhotos";
-import { getSkinPackCatalog, getSkinPackMeta, type SkinPackItem } from "@/design/skinPacks";
+import {
+  identityPacks,
+  getIdentityPack,
+  type IdentityPack,
+} from "@/design/identityPacks";
+import {
+  WidgetSkinPackCard,
+  getPackVisual,
+} from "@/components/WidgetSkinPackCard";
+import { BlinkPersonStrip } from "@/components/BlinkPersonStrip";
+import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
 import {
   ChevronRightLineIcon,
   GearLineIcon,
@@ -59,15 +69,15 @@ export function MyScreen() {
   const { entries, fetch: fetchDictionary, add, update } = useDictionaryStore();
   const palette = useAppPalette();
   const {
-    activeSkinSlug,
-    allSkins,
-    ownedSkins,
-    fetchActiveSkin,
+    activeIdentityPackSlug,
+    fetchActiveIdentityPack,
     fetchAll: fetchSkins,
-    fetchOwned: fetchOwnedSkins,
-    apply: applySkinPack,
-    setLocalActiveSkin,
+    applyIdentityPack,
+    setLocalActiveIdentityPack,
   } = useSkinStore();
+  const [ownedPackSlugs, setOwnedPackSlugs] = useState<ReadonlySet<string>>(
+    () => new Set(freePackSlugs()),
+  );
   const [quickReplyDialogVisible, setQuickReplyDialogVisible] = useState(false);
   const [skinSheetVisible, setSkinSheetVisible] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
@@ -87,9 +97,9 @@ export function MyScreen() {
 
   useEffect(() => {
     if (!profile) return;
-    fetchOwnedSkins(profile.id).catch(reportError);
-    fetchActiveSkin(profile.id).catch(reportError);
-  }, [fetchActiveSkin, fetchOwnedSkins, profile?.id]);
+    fetchActiveIdentityPack(profile.id).catch(reportError);
+    loadOwnedIdentityPacks(profile.id).then(setOwnedPackSlugs).catch(reportError);
+  }, [fetchActiveIdentityPack, profile?.id]);
 
   const quickReplyEntries = useMemo(
     () => getConfiguredQuickReplyEntries(entries),
@@ -109,33 +119,27 @@ export function MyScreen() {
     return Array.from(byCode.values()).slice(0, 6);
   }, [entries]);
 
-  const skinPacks = useMemo(() => getSkinPackCatalog(allSkins), [allSkins]);
-  const ownedSkinIds = useMemo(
-    () => new Set(ownedSkins.map((item) => item.skin_id)),
-    [ownedSkins],
-  );
-  const activePackMeta = getSkinPackMeta(activeSkinSlug);
+  const activePack = getIdentityPack(activeIdentityPackSlug);
   const avatarUri = profile?.avatar_url?.trim() ? profile.avatar_url : mockupPhotoUris.profile;
 
-  const chooseSkinPack = async (skin: SkinPackItem) => {
-    const isOwned = Boolean(skin.is_free || (skin.id && ownedSkinIds.has(skin.id)));
-    const meta = getSkinPackMeta(skin);
+  const chooseSkinPack = async (pack: IdentityPack) => {
+    const isOwned = ownedPackSlugs.has(pack.slug);
 
     try {
       if (!isOwned) {
         Alert.alert(
           "Skin Pack Store",
-          `${meta.name} unlocks as a full set for the app, Send cards, widgets, avatar frame, and status tint.`,
+          `${pack.name} unlocks as a full set for the app, Send cards, widgets, avatar frame, and emotes.`,
         );
         return;
       }
 
-      if (!profile || !skin.id) {
-        setLocalActiveSkin(skin.slug);
+      if (!profile) {
+        setLocalActiveIdentityPack(pack.slug);
         setSkinSheetVisible(false);
         return;
       }
-      await applySkinPack(profile.id, skin.id, skin.slug);
+      await applyIdentityPack(profile.id, pack.slug);
       setSkinSheetVisible(false);
     } catch (err: any) {
       Alert.alert("Skin pack failed", err?.message ?? "Try again.");
@@ -279,16 +283,23 @@ export function MyScreen() {
           <View
             style={[
               styles.currentPackPreview,
-              { backgroundColor: activePackMeta.previewBackground },
+              { backgroundColor: getPackVisual(activePack).surface },
             ]}
           >
-            <Text style={[styles.currentPackCode, { color: activePackMeta.previewText }]}>8282</Text>
-            <View style={[styles.currentPackAccent, { backgroundColor: activePackMeta.accent }]} />
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+              style={[styles.currentPackCode, { color: getPackVisual(activePack).text }]}
+            >
+              {activePack.code}
+            </Text>
+            <View style={[styles.currentPackAccent, { backgroundColor: getPackVisual(activePack).accent }]} />
           </View>
           <View style={styles.flexCopy}>
-            <Text style={[styles.rowTitle, { color: palette.text }]}>{activePackMeta.name}</Text>
+            <Text style={[styles.rowTitle, { color: palette.text }]}>{activePack.name}</Text>
             <Text style={[type.bodyMuted, { color: palette.muted }]}>
-              App, Send cards, widgets, avatar frame, and status tint.
+              Widget skin, avatar frame, and emote pack.
             </Text>
           </View>
           <View style={[styles.packBadge, { borderColor: palette.rule }]}>
@@ -445,9 +456,8 @@ export function MyScreen() {
 
       <SkinPackSheet
         visible={skinSheetVisible}
-        skinPacks={skinPacks}
-        activeSkinSlug={activeSkinSlug}
-        ownedSkinIds={ownedSkinIds}
+        activePackSlug={activeIdentityPackSlug}
+        ownedPackSlugs={ownedPackSlugs}
         onClose={() => setSkinSheetVisible(false)}
         onSelect={chooseSkinPack}
       />
@@ -464,21 +474,21 @@ export function MyScreen() {
 
 function SkinPackSheet({
   visible,
-  skinPacks,
-  activeSkinSlug,
-  ownedSkinIds,
+  activePackSlug,
+  ownedPackSlugs,
   onClose,
   onSelect,
 }: {
   visible: boolean;
-  skinPacks: SkinPackItem[];
-  activeSkinSlug: string;
-  ownedSkinIds: ReadonlySet<string>;
+  activePackSlug: string;
+  ownedPackSlugs: ReadonlySet<string>;
   onClose: () => void;
-  onSelect: (skin: SkinPackItem) => void;
+  onSelect: (pack: IdentityPack) => void;
 }) {
   const palette = useAppPalette();
   if (!visible) return null;
+
+  const activePack = getIdentityPack(activePackSlug);
 
   return (
     <Modal transparent visible animationType="fade" onRequestClose={onClose}>
@@ -489,7 +499,7 @@ function SkinPackSheet({
             <View>
               <Text style={[styles.sheetTitle, { color: palette.text }]}>Skin Packs</Text>
               <Text style={[type.bodyMuted, { color: palette.muted }]}>
-                Full sets for app, Send, widgets, avatar frame, and status tint.
+                Widget skin, avatar frame, and emote pack as one set.
               </Text>
             </View>
             <Pressable
@@ -500,20 +510,56 @@ function SkinPackSheet({
               <Text style={[styles.sheetCloseText, { color: palette.text }]}>Close</Text>
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.skinPackGrid} showsVerticalScrollIndicator={false}>
-            {skinPacks.map((skin) => (
-              <SkinPackCard
-                key={skin.slug}
-                skin={skin}
-                active={skin.slug === activeSkinSlug}
-                owned={Boolean(skin.is_free || (skin.id && ownedSkinIds.has(skin.id)))}
-                onPress={() => onSelect(skin)}
-              />
-            ))}
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.skinSheetScroll}>
+            <IdentityPackPreview pack={activePack} />
+            <View style={styles.skinPackGrid}>
+              {identityPacks.map((pack) => (
+                <WidgetSkinPackCard
+                  key={pack.slug}
+                  skin={pack}
+                  size="small"
+                  active={pack.slug === activePackSlug}
+                  owned={ownedPackSlugs.has(pack.slug)}
+                  onPress={() => onSelect(pack)}
+                />
+              ))}
+            </View>
           </ScrollView>
         </View>
       </View>
     </Modal>
+  );
+}
+
+function IdentityPackPreview({ pack }: { pack: IdentityPack }) {
+  const palette = useAppPalette();
+  const emotes = pack.expressions.filter((expression) => expression.asset).slice(0, 6);
+
+  return (
+    <View style={[styles.identityPreview, { borderColor: palette.rule }]}>
+      <View style={styles.identityPreviewHead}>
+        <Text style={[styles.rowTitle, { color: palette.text }]}>{pack.name}</Text>
+        <Text style={[type.tinyMono, { color: getPackVisual(pack).accent }]}>
+          {pack.isFree ? "FREE" : pack.priceLabel}
+        </Text>
+      </View>
+      <Text numberOfLines={2} style={[type.bodyMuted, { color: palette.muted }]}>
+        {pack.shortCopy}
+      </Text>
+      <View style={styles.identityEmoteRow}>
+        {emotes.map((expression) => (
+          <View
+            key={expression.id}
+            style={[styles.identityEmoteCell, { backgroundColor: palette.input, borderColor: palette.rule }]}
+          >
+            {expression.asset ? (
+              <Image source={expression.asset} style={styles.identityEmoteImage} resizeMode="contain" />
+            ) : null}
+          </View>
+        ))}
+      </View>
+      <BlinkPersonStrip compact />
+    </View>
   );
 }
 
@@ -615,58 +661,6 @@ function reportError(err: unknown) {
   Alert.alert("BEEP-GET", message);
 }
 
-function SkinPackCard({
-  skin,
-  active,
-  owned,
-  onPress,
-}: {
-  skin: SkinPackItem;
-  active: boolean;
-  owned: boolean;
-  onPress: () => void;
-}) {
-  const palette = useAppPalette();
-  const meta = getSkinPackMeta(skin);
-
-  return (
-    <Pressable
-      accessibilityLabel={`${active ? "Active" : owned ? "Apply" : "Unlock"} ${meta.name} Skin Pack`}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.skinPackCard,
-        {
-          backgroundColor: palette.card,
-          borderColor: active ? palette.primary : palette.rule,
-        },
-        active && styles.skinPackCardActive,
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={[styles.skinPackPreview, { backgroundColor: meta.previewBackground }]}>
-        <Text style={[styles.skinPackPreviewText, { color: meta.previewText }]}>8282</Text>
-        <View style={[styles.skinPackPreviewAccent, { backgroundColor: meta.accent }]} />
-      </View>
-      <View style={styles.skinPackCopy}>
-        <View style={styles.skinPackTitleRow}>
-          <Text style={[styles.skinPackName, { color: palette.text }]}>{meta.shortName}</Text>
-          <Text style={[styles.skinPackBadge, { color: active ? palette.text : meta.accent }]}>
-            {active ? "ACTIVE" : owned ? "OWNED" : meta.badge}
-          </Text>
-        </View>
-        <Text numberOfLines={2} style={[type.bodyMuted, { color: palette.muted }]}>
-          {meta.description}
-        </Text>
-        <Text style={[styles.skinPackAction, { color: palette.text }]}>
-          {active ? "Applied" : owned ? "Apply Pack" : "Unlock Pack"}
-        </Text>
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   content: {
     paddingBottom: 96,
@@ -746,65 +740,42 @@ const styles = StyleSheet.create({
     ...type.tinyMono,
     fontSize: 8,
   },
-  skinPackGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing[3],
+  skinSheetScroll: {
+    gap: spacing[4],
     paddingTop: spacing[1],
   },
-  skinPackCard: {
-    width: "48%",
-    minHeight: 168,
+  identityPreview: {
     gap: spacing[3],
-    padding: spacing[3],
+    padding: spacing[4],
     borderWidth: 1,
     borderRadius: 12,
   },
-  skinPackCardActive: {
-    borderWidth: 2,
-  },
-  skinPackPreview: {
-    minHeight: 66,
-    justifyContent: "center",
-    borderRadius: 12,
-    padding: spacing[3],
-    overflow: "hidden",
-  },
-  skinPackPreviewText: {
-    ...type.codeSmall,
-    fontSize: 22,
-    lineHeight: 28,
-    textAlign: "center",
-  },
-  skinPackPreviewAccent: {
-    position: "absolute",
-    right: 10,
-    top: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-  },
-  skinPackCopy: {
-    flex: 1,
-    gap: spacing[2],
-  },
-  skinPackTitleRow: {
-    minHeight: 20,
+  identityPreviewHead: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: spacing[3],
+  },
+  identityEmoteRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing[2],
   },
-  skinPackName: {
-    ...type.metaValue,
-    fontSize: 12,
+  identityEmoteCell: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: "hidden",
   },
-  skinPackBadge: {
-    ...type.tinyMono,
-    fontSize: 8,
+  identityEmoteImage: {
+    width: 36,
+    height: 36,
   },
-  skinPackAction: {
-    ...type.tinyMono,
+  skinPackGrid: {
+    gap: spacing[3],
   },
   widgetLayoutGrid: {
     flexDirection: "row",
