@@ -3,8 +3,6 @@ import {
   getAllSkins,
   getUserSkins,
   purchaseSkin,
-  setActiveSkin,
-  getActiveSkinSlug,
   setActiveIdentityPack,
   getActiveIdentityPackSlug,
 } from "@/services/skinService";
@@ -15,10 +13,7 @@ import {
   uiPreviewSkins,
 } from "@/lib/uiPreview";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import {
-  DEFAULT_IDENTITY_PACK_SLUG,
-  getSkinSlugForIdentity,
-} from "@/design/identityPacks";
+import { DEFAULT_IDENTITY_PACK_SLUG } from "@/design/identityPacks";
 
 interface Skin {
   id: string;
@@ -41,25 +36,20 @@ interface UserSkin {
 interface SkinState {
   allSkins: Skin[];
   ownedSkins: UserSkin[];
-  activeSkinSlug: string;
   activeIdentityPackSlug: string;
   loading: boolean;
   reset: () => void;
   fetchAll: () => Promise<void>;
   fetchOwned: (userId: string) => Promise<void>;
-  fetchActiveSkin: (userId: string) => Promise<void>;
   fetchActiveIdentityPack: (userId: string) => Promise<void>;
   purchase: (userId: string, skinId: string) => Promise<void>;
-  apply: (userId: string, skinId: string, slug: string) => Promise<void>;
   applyIdentityPack: (userId: string, packSlug: string) => Promise<void>;
-  setLocalActiveSkin: (slug: string) => void;
   setLocalActiveIdentityPack: (packSlug: string) => void;
 }
 
 export const useSkinStore = create<SkinState>((set, get) => ({
   allSkins: [],
   ownedSkins: [],
-  activeSkinSlug: "swiss-paper",
   activeIdentityPackSlug: DEFAULT_IDENTITY_PACK_SLUG,
   loading: false,
 
@@ -67,7 +57,6 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     set({
       allSkins: [],
       ownedSkins: [],
-      activeSkinSlug: "swiss-paper",
       activeIdentityPackSlug: DEFAULT_IDENTITY_PACK_SLUG,
       loading: false,
     }),
@@ -81,16 +70,8 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     set({ allSkins });
   },
 
-  setLocalActiveSkin: (slug) => {
-    set({ activeSkinSlug: slug });
-    triggerWidgetReload();
-  },
-
   setLocalActiveIdentityPack: (packSlug) => {
-    set({
-      activeIdentityPackSlug: packSlug,
-      activeSkinSlug: getSkinSlugForIdentity(packSlug),
-    });
+    set({ activeIdentityPackSlug: packSlug });
     triggerWidgetReload();
   },
 
@@ -101,15 +82,6 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     }
     const ownedSkins = await getUserSkins(userId);
     set({ ownedSkins });
-  },
-
-  fetchActiveSkin: async (userId) => {
-    if (isUiPreviewUser(userId)) {
-      set({ activeSkinSlug: "swiss-paper" });
-      return;
-    }
-    const slug = await getActiveSkinSlug(userId);
-    set({ activeSkinSlug: slug });
   },
 
   fetchActiveIdentityPack: async (userId) => {
@@ -144,28 +116,14 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     await get().fetchOwned(userId);
   },
 
-  apply: async (userId, skinId, slug) => {
-    if (isUiPreviewUser(userId)) {
-      set({ activeSkinSlug: slug });
-      triggerWidgetReload();
-      return;
-    }
-    await setActiveSkin(userId, skinId);
-    set({ activeSkinSlug: slug });
-    triggerWidgetReload();
-  },
-
   applyIdentityPack: async (userId, packSlug) => {
-    const skinSlug = getSkinSlugForIdentity(packSlug);
     if (isUiPreviewUser(userId)) {
-      set({ activeIdentityPackSlug: packSlug, activeSkinSlug: skinSlug });
+      set({ activeIdentityPackSlug: packSlug });
       triggerWidgetReload();
       return;
     }
     await setActiveIdentityPack(packSlug);
-    // The RPC also mirrors the matching palette skin into active_skin_id; mirror
-    // the same derive locally so useAppPalette() updates without a refetch.
-    set({ activeIdentityPackSlug: packSlug, activeSkinSlug: skinSlug });
+    set({ activeIdentityPackSlug: packSlug });
     triggerWidgetReload();
   },
 }));

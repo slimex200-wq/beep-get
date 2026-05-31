@@ -34,12 +34,14 @@ export async function purchaseSkin(userId: string, skinId: string) {
   }
 }
 
+// TODO(M4): dead after M3, remove with active_skin_id column drop
 export async function setActiveSkin(userId: string, skinId: string) {
   void userId;
   const { error } = await supabase.rpc("set_active_skin", { p_skin_id: skinId });
   if (error) throw error;
 }
 
+// TODO(M4): dead after M3, remove with active_skin_id column drop
 export async function getActiveSkinSlug(userId: string): Promise<string> {
   const { data, error } = await supabase
     .from("profiles")

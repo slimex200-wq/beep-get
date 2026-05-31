@@ -90,31 +90,30 @@
 
 ## Visual language
 
-- Color: the base skin (Classic Paper) is warm ivory background, white cards, soft gray controls, black primary actions, red/green status dots. Skins own the full palette as a set and may be light (Classic Paper, Soft Pager, Glass Mode) or dark (Cyber Neon, Retro Future); surfaces must stay legible under every skin, so always pull background/card/text/rule/primary from the active palette rather than literal hex.
+- Color: the app chrome is a system light/dark theme. Light is warm ivory background, white cards, soft gray controls, black primary actions, red/green status dots; dark is a calm neutral near-black with warm off-white text and a light high-contrast primary. The theme follows the OS (`useColorScheme`) plus an in-app System/Light/Dark toggle, never per-identity-pack palettes; surfaces must stay legible in both modes, so always pull background/card/text/rule/primary from `useAppPalette` rather than literal hex.
 - Typography: compact sans for labels/body, monospaced numerals for signal codes and time, no oversized marketing type inside tool surfaces.
 - Spacing/layout rhythm: compact mobile stacks, consistent section labels, bottom nav pill fixed above the home indicator, no nested decorative cards.
 - Shape/radius/elevation: restrained rounded cards, pill controls for status/nav/chips, thin rule borders, minimal shadow.
 - Motion: short mechanical press states and send-plane flight only; avoid large animated transitions unless tied to Blink capture/playback.
 - Imagery/iconography: use actual Blink frames/video for media surfaces. All header and bottom-nav controls use one icon family — lucide line icons via `src/components/MockupLineIcons.tsx` — so headers and the tab bar read as the same set; never mix unicode glyphs (`◐ ◎ ⚙ ×`) or text labels (`Back`, `Close`) into icon slots. Emoji are allowed only as user-authored signal-token content (e.g. `집중중 🔕`), never as chrome/control affordances.
 
-## Skin system
+## Theme and skin system
 
-The app ships a skin store. Skins are real, supported product — not experiments to be removed. One skin is active at a time; it recolors every surface through `useAppPalette` (`src/design/appTheme.ts`) and is previewed per widget size in My / Widget Layouts.
+Two separate concepts:
 
-- Naming is single-source-of-truth. Use the user-facing name everywhere a user can see it (store cards, widget previews, settings) and the slug everywhere in code/data. Do not introduce a third alias.
+1. **App theme = system light/dark.** The app chrome has exactly two palettes, `lightPalette` and `darkPalette` in `src/design/appTheme.ts`, exposed through `useAppPalette()`. The active mode is resolved by `useResolvedThemeMode()` from the OS color scheme (`useColorScheme`) plus a persisted user preference (`themePreference: system | light | dark` in `src/stores/themeStore.ts`, stored in expo-secure-store). The only chrome theme control is the Appearance toggle in Account settings — there are no per-skin app palettes.
+2. **Identity packs = widget skins, decoupled from app color.** Identity packs (Classic Paper / School Desk / Cherry Dot / Photo Booth Blink / Night Signal) are the user-facing personalization "main": coordinated paid/free sets of widget styling, Send-card layout, avatar frame, and emotes. They are picked in My and Widget Layouts and stored on `profiles.active_identity_pack` (set via the entitlement-checked `set_active_identity_pack` RPC). They do **not** change the app's light/dark chrome.
 
-| User-facing name | slug (code) | Tier | Mode | Direction |
-| --- | --- | --- | --- | --- |
-| Classic Paper | `swiss-paper` | Free (base) | Light | Warm ivory paper, white cards, 1px rules, red accent — the Kotlin mockup baseline |
-| Soft Pager | `neumorphism` | Free | Light | Warm sand, gently raised controls, muted clay accent |
-| Glass Mode | `glassmorphism` | Free | Light | Cool mint, translucent layered cards, green accent |
-| Cyber Neon | `cyber-neon` | Premium | Dark | Near-black shell, neon-green accent and glow |
-| Retro Future | `retro-future` | Premium | Dark | Warm espresso panels, chunky cards, red accent |
+| App theme mode | Direction |
+| --- | --- |
+| Light | Warm ivory background, white cards, 1px rules, black ink primary, red/green status dots — the Classic Paper baseline |
+| Dark | Calm neutral near-black background (`#0E0F0E`), soft raised cards, warm off-white text, light high-contrast primary; `statusBar: "light"` |
 
-- Each skin keeps the same screens, grid, component grammar, and data slots (Principle 1). Only palette, texture, shape/radius, and shadow change.
-- Premium skins must apply to **every** surface they touch, not just Today/My — a paid skin that leaves Send or Friends on the base palette is a defect, not a partial feature.
-- Dark skins (Cyber Neon, Retro Future) set `statusBar: "light"`; every surface must remain legible (text/rule contrast) when a dark skin is active.
-- Adding a skin: define its `AppPalette` in `appTheme.ts`, register it in `skinPacks.ts` with name + slug + tier, and verify SM/MD widget previews — never fork a screen per skin.
+- Naming is single-source-of-truth. Use the user-facing identity-pack name everywhere a user can see it (store cards, widget previews, settings) and the slug everywhere in code/data. Do not introduce a third alias.
+- Both light and dark keep the same screens, grid, component grammar, and data slots (Principle 1). Only palette and shadow change between modes; never fork a screen per mode.
+- Every surface must remain legible (text/rule contrast) in both light and dark — a screen that hardcodes a light-only color is a defect.
+- Premium identity packs must apply to **every** widget/Send surface they touch, not just Today/My; never grant or apply a paid pack without checkout verification.
+- Adding nothing to the theme: light/dark are fixed. To extend personalization, add an identity pack (widget skin), not a new app palette.
 
 ## Components
 
@@ -165,7 +164,7 @@ The app ships a skin store. Skins are real, supported product — not experiment
   - Prefer action labels like `View`, `Done`, `Send Beep`, `Blink`, `Capture Blink`, `Configure Slots`.
   - Send summaries should say what will be sent and to whom.
   - Avoid explaining the whole product inside the app surface.
-  - Avoid a standalone light/dark `theme toggle` and `header avatar`; light vs dark is a property of the chosen skin, so personalization is expressed as `Skin Pack`, `Apply Pack`, `Unlock Pack`, and `Profile`, not an appearance switch.
+  - The Appearance toggle (`System` / `Light` / `Dark`) in Account settings is the only chrome theme control; light vs dark is a system/OS-driven app property, not a skin. Identity packs are widget skins, not app color, so pack personalization is expressed as `Skin Pack`, `Apply Pack`, `Unlock Pack`, and `Profile` and never doubles as an appearance switch.
 
 ## Default Signal Tokens
 

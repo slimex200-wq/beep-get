@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ActionButton } from "@/components/ActionButton";
@@ -7,8 +7,9 @@ import { AppSurface } from "@/components/AppSurface";
 import { Avatar, KotlinHeader, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
 import { XLineIcon } from "@/components/MockupLineIcons";
 import { colors, radius, spacing } from "@/design/tokens";
-import { type } from "@/design/typography";
+import { font, type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
+import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
@@ -34,10 +35,18 @@ const PRIVACY_POLICY_URL =
 const ACCOUNT_DELETION_URL =
   process.env.EXPO_PUBLIC_ACCOUNT_DELETION_URL ?? "https://hypeboyo.com/beep-get/delete-account";
 
+const APPEARANCE_OPTIONS: ReadonlyArray<{ value: ThemePreference; label: string }> = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, setSession } = useAuthStore();
   const palette = useAppPalette();
+  const themePreference = useThemeStore((state) => state.themePreference);
+  const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const [busy, setBusy] = useState(false);
 
   const closeToMy = () => {
@@ -126,6 +135,43 @@ export function SettingsScreen() {
           <ActionButton label="Log Out" variant="ghost" onPress={logout} disabled={busy} />
         </MockupCard>
 
+        <MockupSection label="Appearance" hint="System / Light / Dark" />
+        <MockupCard style={styles.actionCard}>
+          <Text style={[type.bodyMuted, { color: palette.muted }]}>
+            Choose the app theme. System follows your device light or dark setting.
+          </Text>
+          <View
+            accessibilityRole="radiogroup"
+            style={[styles.appearanceRow, { backgroundColor: palette.input, borderColor: palette.rule }]}
+          >
+            {APPEARANCE_OPTIONS.map((option) => {
+              const selected = themePreference === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={`${option.label} theme`}
+                  onPress={() => void setThemePreference(option.value)}
+                  style={[
+                    styles.appearanceOption,
+                    selected && { backgroundColor: palette.card, borderColor: palette.ruleStrong },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.appearanceOptionText,
+                      { color: selected ? palette.text : palette.muted },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </MockupCard>
+
         <MockupSection label="Privacy & Data" />
         <MockupCard style={styles.actionCard}>
           <Text style={[type.bodyMuted, { color: palette.muted }]}>
@@ -184,5 +230,26 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing[5],
     padding: spacing[4],
     borderRadius: radius.slipSmall,
+  },
+  appearanceRow: {
+    flexDirection: "row",
+    gap: spacing[2],
+    padding: spacing[2],
+    borderWidth: 1,
+    borderRadius: radius.control,
+  },
+  appearanceOption: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing[4],
+    borderRadius: radius.button,
+    borderWidth: 1,
+    borderColor: colors.transparent,
+  },
+  appearanceOptionText: {
+    fontFamily: font.sansSemiBold,
+    fontSize: 12,
+    letterSpacing: 0.4,
   },
 });
