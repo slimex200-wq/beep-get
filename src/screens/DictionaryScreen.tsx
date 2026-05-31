@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
 import { ActionButton } from "@/components/ActionButton";
 import { KotlinHeader, MockupCard, MockupSection } from "@/components/KotlinMockupUI";
+import { XLineIcon } from "@/components/MockupLineIcons";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -62,7 +63,7 @@ export function DictionaryScreen() {
           title="Signal Tokens"
           centered
           showAvatar={false}
-          actions={[{ label: "Close", onPress: close }]}
+          actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close dictionary", onPress: close }]}
         />
 
         <MockupSection label="Add Signal Token" hint="Numbers, short words, and emoji work here" />

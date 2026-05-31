@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { Avatar, KotlinHeader, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
+import { XLineIcon } from "@/components/MockupLineIcons";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -105,7 +106,7 @@ export function SettingsScreen() {
   return (
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader title="Account" centered actions={[{ label: "×", onPress: closeToMy }]} />
+        <KotlinHeader title="Account" centered actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close account settings", onPress: closeToMy }]} />
 
         <MockupSection label="My Beep ID" />
         <MockupCard style={styles.identityCard}>

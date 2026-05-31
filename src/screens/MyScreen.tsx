@@ -341,9 +341,9 @@ export function MyScreen() {
             accessibilityLabel="Configure quick reply slots"
             accessibilityRole="button"
             onPress={openQuickReplyDialog}
-            style={styles.blackPill}
+            style={[styles.blackPill, { backgroundColor: palette.primary }]}
           >
-            <Text style={styles.blackPillText}>Configure Slots</Text>
+            <Text style={[styles.blackPillText, { color: palette.primaryText }]}>Configure Slots</Text>
           </Pressable>
         </View>
         <MockupCard style={styles.replyCard}>
@@ -360,9 +360,9 @@ export function MyScreen() {
             accessibilityLabel="Add new signal token"
             accessibilityRole="button"
             onPress={() => setAddCodeDialogVisible(true)}
-            style={styles.blackPill}
+            style={[styles.blackPill, { backgroundColor: palette.primary }]}
           >
-            <Text style={styles.blackPillText}>+ Add New</Text>
+            <Text style={[styles.blackPillText, { color: palette.primaryText }]}>+ Add New</Text>
           </Pressable>
         </View>
         <MockupCard style={styles.codeList}>
@@ -600,7 +600,7 @@ function ActionPill({
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionPill,
-        dark && { backgroundColor: palette.primary },
+        dark ? { backgroundColor: palette.primary } : { backgroundColor: palette.chip },
         disabled && styles.disabled,
         pressed && styles.pressed,
       ]}
@@ -878,11 +878,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing[4],
     borderRadius: 10,
-    backgroundColor: colors.ink,
   },
   blackPillText: {
     ...type.tinyMono,
-    color: "#FFFFFF",
   },
   replyCard: {
     minHeight: 72,

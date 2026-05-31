@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 
 type Props = {
   label: string;
@@ -10,10 +11,11 @@ type Props = {
 };
 
 export function MetaRow({ label, value, mono = false }: Props) {
+  const palette = useAppPalette();
   return (
-    <View style={styles.row}>
-      <Text style={type.metaLabel}>{label}</Text>
-      <Text style={mono ? type.monoValue : type.metaValue}>{value}</Text>
+    <View style={[styles.row, { borderTopColor: palette.rule }]}>
+      <Text style={[type.metaLabel, { color: palette.muted }]}>{label}</Text>
+      <Text style={[mono ? type.monoValue : type.metaValue, { color: palette.text }]}>{value}</Text>
     </View>
   );
 }

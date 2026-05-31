@@ -37,7 +37,7 @@ export function KotlinHeader({
   title,
   avatarLabel = "B",
   avatarSource = beepyAvatar,
-  actions = [{ label: "◐" }, { label: "◎" }, { label: "⚙" }],
+  actions = [],
   centered = false,
   showAvatar = true,
   onAvatarPress,
@@ -213,6 +213,7 @@ export function MiniFrameStrip({
   compact?: boolean;
   frameUris?: readonly string[] | null;
 }) {
+  const palette = useAppPalette();
   const frames = (frameUris?.length ? frameUris : DEMO_BLINK_FRAME_DATA_URIS).slice(0, 3);
 
   return (
@@ -223,8 +224,8 @@ export function MiniFrameStrip({
           <Text style={styles.frameIndex}>{index + 1}</Text>
         </View>
       ))}
-      <View style={[styles.cameraChip, compact && styles.cameraChipCompact]}>
-        <Text style={styles.cameraGlyph}>2s</Text>
+      <View style={[styles.cameraChip, { backgroundColor: palette.chip }, compact && styles.cameraChipCompact]}>
+        <Text style={[styles.cameraGlyph, { color: palette.text }]}>2s</Text>
       </View>
     </View>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette, type AppPalette } from '../design/appTheme';
 import { StatusDot } from './StatusDot';
 
 type Props = {
@@ -14,20 +15,21 @@ type Props = {
 };
 
 export function HeaderBar({ title, left = '', right = '', showDot = false, onLeftPress, onRightPress }: Props) {
+  const palette = useAppPalette();
   return (
     <View style={styles.header}>
-      <SideSlot label={left} onPress={onLeftPress} />
-      <Text style={[type.appTitle, styles.title]}>{title}</Text>
-      <SideSlot label={right} onPress={onRightPress} showDot={showDot} />
+      <SideSlot label={left} onPress={onLeftPress} palette={palette} />
+      <Text style={[type.appTitle, styles.title, { color: palette.text }]}>{title}</Text>
+      <SideSlot label={right} onPress={onRightPress} showDot={showDot} palette={palette} />
     </View>
   );
 }
 
-function SideSlot({ label, onPress, showDot = false }: { label?: string; onPress?: () => void; showDot?: boolean }) {
+function SideSlot({ label, onPress, showDot = false, palette }: { label?: string; onPress?: () => void; showDot?: boolean; palette: AppPalette }) {
   const hasLabel = Boolean(label);
   const content = (
     <>
-      {hasLabel ? <Text style={styles.sideText}>{label}</Text> : null}
+      {hasLabel ? <Text style={[styles.sideText, { color: palette.text }]}>{label}</Text> : null}
       {showDot ? <StatusDot size={6} style={styles.dot} /> : null}
     </>
   );
@@ -37,7 +39,12 @@ function SideSlot({ label, onPress, showDot = false }: { label?: string; onPress
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        style={({ pressed }) => [styles.sideSlot, styles.sideAction, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.sideSlot,
+          styles.sideAction,
+          { backgroundColor: palette.chip, borderColor: palette.ruleStrong },
+          pressed && styles.pressed,
+        ]}
       >
         {content}
       </Pressable>

@@ -14,6 +14,7 @@ import { HeaderBar } from "@/components/HeaderBar";
 import { IconCard } from "@/components/IconCard";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { getRarityLabel, type CollectionIcon } from "@/services/collectionService";
 import { useAuthStore } from "@/stores/authStore";
@@ -35,6 +36,7 @@ function formatDropCondition(icon: CollectionIcon): string {
 }
 
 export function CollectionScreen() {
+  const palette = useAppPalette();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, user } = useAuthStore();
   const {
@@ -99,11 +101,11 @@ export function CollectionScreen() {
     <AppSurface>
       <HeaderBar title="COLLECTION" left="CLOSE" onLeftPress={close} />
       <View style={styles.summary}>
-        <Text style={type.tinyMono}>도감</Text>
-        <Text style={styles.counter}>
+        <Text style={[type.tinyMono, { color: palette.muted }]}>도감</Text>
+        <Text style={[styles.counter, { color: palette.text }]}>
           {String(ownedCount).padStart(2, "0")} / {String(totalCount).padStart(2, "0")}
         </Text>
-        {loading ? <Text style={type.bodyMuted}>Loading…</Text> : null}
+        {loading ? <Text style={[type.bodyMuted, { color: palette.muted }]}>Loading…</Text> : null}
       </View>
       <FlatList
         contentContainerStyle={styles.list}
@@ -128,22 +130,22 @@ export function CollectionScreen() {
                 rarity={item.rarity}
                 isOwned={owned}
               />
-              <Text style={styles.dropText} numberOfLines={1}>
+              <Text style={[styles.dropText, { color: palette.muted }]} numberOfLines={1}>
                 {formatDropCondition(item)}
               </Text>
               {equipped ? (
                 <Text style={styles.equippedTag}>EQUIPPED</Text>
               ) : owned ? (
-                <Text style={styles.equipHint}>TAP TO EQUIP</Text>
+                <Text style={[styles.equipHint, { color: palette.text }]}>TAP TO EQUIP</Text>
               ) : (
-                <Text style={styles.claimHint}>TAP TO CLAIM</Text>
+                <Text style={[styles.claimHint, { color: palette.muted2 }]}>TAP TO CLAIM</Text>
               )}
             </Pressable>
           );
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={type.bodyMuted}>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>
               {loading ? "Loading collection..." : "Collection is empty."}
             </Text>
           </View>

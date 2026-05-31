@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 import { BlinkPersonStrip } from './BlinkPersonStrip';
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function BlinkStrip({ compact = false, frameUris }: Props) {
+  const palette = useAppPalette();
   const frames = (frameUris ?? []).filter(Boolean).slice(0, 3);
   const displayFrames = frames.length > 0 ? frames : ['01', '02', '03'];
   const hasDisplayableFrames = frames.some(isDisplayableUri);
@@ -17,8 +19,8 @@ export function BlinkStrip({ compact = false, frameUris }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={type.tinyMono}>Blink  2.0s</Text>
-        <Text style={type.tinyMono}>{displayFrames.length} / 3</Text>
+        <Text style={[type.tinyMono, { color: palette.muted }]}>Blink  2.0s</Text>
+        <Text style={[type.tinyMono, { color: palette.muted }]}>{displayFrames.length} / 3</Text>
       </View>
       <View style={[styles.frames, compact && styles.compactFrames, !hasDisplayableFrames && styles.generatedFrames]}>
         {hasDisplayableFrames ? (

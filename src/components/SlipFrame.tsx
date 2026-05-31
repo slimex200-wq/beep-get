@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { colors, radius, shadow, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 import { StatusDot } from './StatusDot';
 
 type Props = {
@@ -15,17 +16,29 @@ type Props = {
 };
 
 export function SlipFrame({ title, children, accent = true, variant = 'default', compact = false, footer, style }: Props) {
+  const palette = useAppPalette();
+  // Semantic variants (success/danger/lcd) keep their light status backgrounds, so their
+  // foreground text stays the dark default. Only the default slip follows the skin palette.
+  const isDefaultVariant = variant === 'default';
   return (
-    <View style={[styles.slip, compact && styles.compact, styles[variant], style]}>
-      <View style={styles.topNotch} />
+    <View
+      style={[
+        styles.slip,
+        isDefaultVariant && { backgroundColor: palette.card, borderColor: palette.ruleStrong },
+        compact && styles.compact,
+        styles[variant],
+        style,
+      ]}
+    >
+      <View style={[styles.topNotch, isDefaultVariant && { backgroundColor: palette.card, borderColor: palette.ruleStrong }]} />
       <View style={styles.titleRow}>
-        <Text style={compact ? type.slipTitleSmall : type.slipTitle}>{title}</Text>
+        <Text style={[compact ? type.slipTitleSmall : type.slipTitle, isDefaultVariant && { color: palette.text }]}>{title}</Text>
         {accent ? <StatusDot /> : null}
       </View>
-      <View style={styles.rule} />
+      <View style={[styles.rule, isDefaultVariant && { backgroundColor: palette.rule }]} />
       {children}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
-      <View style={styles.bottomPerforation} />
+      {footer ? <View style={[styles.footer, isDefaultVariant && { borderTopColor: palette.rule }]}>{footer}</View> : null}
+      <View style={[styles.bottomPerforation, isDefaultVariant && { borderBottomColor: palette.ruleStrong }]} />
     </View>
   );
 }

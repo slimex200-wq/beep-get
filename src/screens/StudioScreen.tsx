@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette, type AppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { HeaderBar } from "@/components/HeaderBar";
@@ -19,6 +20,7 @@ import { useMessageStore } from "@/stores/messageStore";
 import { syncWidgetData, triggerWidgetReload } from "@/services/widgetService";
 
 export function StudioScreen() {
+  const palette = useAppPalette();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
@@ -86,11 +88,12 @@ export function StudioScreen() {
         onRightPress={syncNow}
       />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.panel}>
-          <Text style={type.metaValue}>RUNTIME CHECKLIST</Text>
+        <View style={[styles.panel, { borderColor: palette.ruleStrong, backgroundColor: palette.cardSoft }]}>
+          <Text style={[type.metaValue, { color: palette.text }]}>RUNTIME CHECKLIST</Text>
           <StatusRow
             label="Supabase env"
             ok={isSupabaseConfigured}
+            palette={palette}
             onOpen={() =>
               Alert.alert(
                 "Supabase env",
@@ -101,21 +104,24 @@ export function StudioScreen() {
           <StatusRow
             label="Signed in"
             ok={Boolean(profile)}
+            palette={palette}
             onOpen={() => Alert.alert("Signed in", "Sign in from the first screen, then reopen Studio.")}
           />
           <StatusRow
             label="Widget payload"
             ok={Boolean(latest)}
+            palette={palette}
             onOpen={() => navigation.navigate("Main", { screen: "Today" })}
           />
           <StatusRow
             label="Direct reply slots"
             ok={slots.length > 0}
+            palette={palette}
             onOpen={() => Alert.alert("Reply slots", "Add code presets or use the default 8282 / 486 slots.")}
           />
         </View>
 
-        <Text style={type.metaValue}>WIDGET PREVIEW</Text>
+        <Text style={[type.metaValue, { color: palette.text }]}>WIDGET PREVIEW</Text>
         <View style={styles.previewRow}>
           <View style={styles.previewCard}>
             <WidgetCard
@@ -139,7 +145,7 @@ export function StudioScreen() {
           </View>
         </View>
 
-        <Text style={type.metaValue}>DIRECT REPLY SLOTS</Text>
+        <Text style={[type.metaValue, { color: palette.text }]}>DIRECT REPLY SLOTS</Text>
         <View style={styles.chips}>
           {slots.map((label) => (
             <ActionButton
@@ -158,10 +164,20 @@ export function StudioScreen() {
   );
 }
 
-function StatusRow({ label, ok, onOpen }: { label: string; ok: boolean; onOpen?: () => void }) {
+function StatusRow({
+  label,
+  ok,
+  palette,
+  onOpen,
+}: {
+  label: string;
+  ok: boolean;
+  palette: AppPalette;
+  onOpen?: () => void;
+}) {
   return (
-    <View style={styles.statusRow}>
-      <Text style={type.bodyMuted}>{label}</Text>
+    <View style={[styles.statusRow, { borderTopColor: palette.rule }]}>
+      <Text style={[type.bodyMuted, { color: palette.muted }]}>{label}</Text>
       {ok ? (
         <StatusDot color={colors.greenDot} size={8} />
       ) : onOpen ? (
@@ -170,10 +186,10 @@ function StatusRow({ label, ok, onOpen }: { label: string; ok: boolean; onOpen?:
           onPress={onOpen}
           style={({ pressed }) => [pressed && styles.pressed]}
         >
-          <Text style={type.monoValue}>OPEN</Text>
+          <Text style={[type.monoValue, { color: palette.text }]}>OPEN</Text>
         </Pressable>
       ) : (
-        <Text style={type.monoValue}>OPEN</Text>
+        <Text style={[type.monoValue, { color: palette.text }]}>OPEN</Text>
       )}
     </View>
   );

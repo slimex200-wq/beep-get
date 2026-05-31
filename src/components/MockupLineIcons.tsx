@@ -1,6 +1,7 @@
 import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import {
+  ArrowLeft,
   CalendarDays,
   Camera,
   ChevronRight,
@@ -102,4 +103,8 @@ export function CheckCircleLineIcon({ color = colors.greenDot, style }: IconProp
 
 export function XLineIcon({ color = colors.ink, style }: IconProps) {
   return <LucideLineIcon icon={X} color={color} style={style} strokeWidth={2.25} />;
+}
+
+export function BackLineIcon({ color = colors.ink, style }: IconProps) {
+  return <LucideLineIcon icon={ArrowLeft} color={color} style={style} strokeWidth={2.15} />;
 }

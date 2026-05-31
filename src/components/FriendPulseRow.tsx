@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import { StatusDot } from "@/components/StatusDot";
 
 type Props = {
@@ -11,12 +12,13 @@ type Props = {
 };
 
 export function FriendPulseRow({ name, summary, quiet = false }: Props) {
+  const palette = useAppPalette();
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { backgroundColor: palette.input, borderColor: palette.rule }]}>
       <StatusDot size={7} color={quiet ? colors.faint : colors.red} />
       <View style={styles.textBlock}>
-        <Text style={type.metaValue}>{name}</Text>
-        <Text style={type.bodyMuted}>{summary}</Text>
+        <Text style={[type.metaValue, { color: palette.text }]}>{name}</Text>
+        <Text style={[type.bodyMuted, { color: palette.muted }]}>{summary}</Text>
       </View>
     </View>
   );

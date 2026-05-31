@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 import { Signal } from '../data/mockSignals';
 import { SlipFrame } from './SlipFrame';
 import { SignalCode } from './SignalCode';
@@ -14,11 +15,12 @@ type Props = {
 };
 
 export function SignalSlip({ signal, title = '도착한 Beep', compact = false }: Props) {
+  const palette = useAppPalette();
   return (
     <SlipFrame title={title} compact={compact}>
-      <Text style={type.tinyMono}>NO.</Text>
+      <Text style={[type.tinyMono, { color: palette.muted }]}>NO.</Text>
       <SignalCode code={signal.code} size={compact ? 'medium' : 'hero'} />
-      <View style={styles.metaBlock}>
+      <View style={[styles.metaBlock, { borderBottomColor: palette.rule }]}>
         <MetaRow label="FROM." value={`${signal.sender} - NO ${signal.senderNo}`} />
         <MetaRow label="TIME." value={signal.time} mono />
         {signal.note ? <MetaRow label="NOTE." value={signal.note} /> : null}

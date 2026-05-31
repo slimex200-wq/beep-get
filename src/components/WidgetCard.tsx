@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../design/tokens';
 import { type } from '../design/typography';
+import { useAppPalette } from '../design/appTheme';
 import { BlinkStrip } from './BlinkStrip';
 import { DotRadar } from './DotRadar';
 import { MetaRow } from './MetaRow';
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Props) {
+  const palette = useAppPalette();
   const senderLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : 'Mina - NO 04';
   const code = signal?.code ?? '8282';
   const time = signal?.time ?? '14:56';
@@ -74,14 +76,14 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
     <SlipFrame title={isBlink ? 'Incoming Blink' : 'Incoming Beep'} compact accent={!isEmpty}>
       {isEmpty ? (
         <View style={styles.emptyBlock}>
-          <Text style={[type.tinyMono, styles.emptyLabel]}>NO.</Text>
-          <Text style={[type.codeMedium, styles.emptyCode]}>----</Text>
+          <Text style={[type.tinyMono, styles.emptyLabel, { color: palette.muted }]}>NO.</Text>
+          <Text style={[type.codeMedium, styles.emptyCode, { color: palette.text }]}>----</Text>
           <MetaRow label="FROM." value="—" />
           <MetaRow label="TIME." value="—" />
         </View>
       ) : (
         <>
-          <Text style={type.tinyMono}>NO.</Text>
+          <Text style={[type.tinyMono, { color: palette.muted }]}>NO.</Text>
           <SignalCode code={code} size="medium" />
           {isBlink ? <BlinkStrip compact frameUris={stripFrameUris} /> : null}
           <MetaRow label="FROM." value={senderLabel} />
