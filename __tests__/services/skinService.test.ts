@@ -202,6 +202,30 @@ describe("setActiveIdentityPack", () => {
       "grant execute on function public.set_active_identity_pack(text) to authenticated"
     );
   });
+
+  it("documents the migration that drops the palette mirror but keeps the column", () => {
+    const source = require("fs").readFileSync(
+      require("path").join(
+        process.cwd(),
+        "supabase/migrations/20260531160000_drop_identity_palette_mirror.sql"
+      ),
+      "utf8"
+    );
+
+    expect(source).toContain("create or replace function public.set_active_identity_pack");
+    // Mirror into active_skin_id is removed.
+    expect(source).not.toContain("active_skin_id = coalesce(v_skin_id, active_skin_id)");
+    expect(source).not.toContain("from public.skins");
+    // The column itself must NOT be dropped (deferred to M4).
+    expect(source).not.toContain("drop column");
+    // Entitlement check, auth guard, and grant are preserved.
+    expect(source).toContain("from public.identity_pack_entitlements e");
+    expect(source).toContain("Identity pack not owned");
+    expect(source).toContain("set active_identity_pack = p_pack_slug");
+    expect(source).toContain(
+      "grant execute on function public.set_active_identity_pack(text) to authenticated"
+    );
+  });
 });
 
 describe("getActiveIdentityPackSlug", () => {

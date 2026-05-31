@@ -41,6 +41,7 @@ export type IdentityPack = {
 // user-facing skin "main" (MY picker + WidgetStates), but the visual palette is
 // still derived from the legacy palette skins until M3 collapses palettes into
 // light/dark. WidgetStates, MY, and skinStore all import from here.
+// TODO(M4): dead after M3, remove with active_skin_id column drop
 export const IDENTITY_TO_SKIN_SLUG: Record<string, string> = {
   "classic-paper": "swiss-paper",
   "school-desk": "neumorphism",
@@ -60,6 +61,7 @@ export const SKIN_TO_IDENTITY_SLUG: Record<string, string> = {
 
 export const DEFAULT_IDENTITY_PACK_SLUG = "classic-paper";
 
+// TODO(M4): dead after M3, remove with active_skin_id column drop
 export function getSkinSlugForIdentity(identitySlug: string): string {
   return IDENTITY_TO_SKIN_SLUG[identitySlug] ?? identitySlug;
 }

@@ -13,16 +13,21 @@ describe("skinStore identity pack state", () => {
     expect(useSkinStore.getState().activeIdentityPackSlug).toBe("classic-paper");
   });
 
-  it("setLocalActiveIdentityPack derives the matching palette skin", () => {
+  it("does not track a palette skin slug anymore", () => {
+    // The app theme is now a system light/dark choice (themeStore), so the skin
+    // store only owns the identity-pack (widget skin) selection.
+    expect("activeSkinSlug" in useSkinStore.getState()).toBe(false);
+  });
+
+  it("setLocalActiveIdentityPack only updates the identity pack", () => {
     useSkinStore.getState().setLocalActiveIdentityPack("night-signal");
 
     const state = useSkinStore.getState();
     expect(state.activeIdentityPackSlug).toBe("night-signal");
-    // Palette must follow the identity pack so useAppPalette() keeps rendering.
-    expect(state.activeSkinSlug).toBe("cyber-neon");
+    expect("activeSkinSlug" in state).toBe(false);
   });
 
-  it("applyIdentityPack calls the RPC and mirrors the palette skin locally", async () => {
+  it("applyIdentityPack calls the RPC and stores only the identity pack", async () => {
     supabase.rpc.mockResolvedValue({ data: null, error: null });
 
     await useSkinStore.getState().applyIdentityPack("user-1", "school-desk");
@@ -32,16 +37,14 @@ describe("skinStore identity pack state", () => {
     });
     const state = useSkinStore.getState();
     expect(state.activeIdentityPackSlug).toBe("school-desk");
-    expect(state.activeSkinSlug).toBe("neumorphism");
+    expect("activeSkinSlug" in state).toBe(false);
   });
 
   it("applyIdentityPack stays local for the UI preview user", async () => {
     await useSkinStore.getState().applyIdentityPack(UI_PREVIEW_USER_ID, "cherry-dot");
 
     expect(supabase.rpc).not.toHaveBeenCalled();
-    const state = useSkinStore.getState();
-    expect(state.activeIdentityPackSlug).toBe("cherry-dot");
-    expect(state.activeSkinSlug).toBe("glassmorphism");
+    expect(useSkinStore.getState().activeIdentityPackSlug).toBe("cherry-dot");
   });
 
   it("fetchActiveIdentityPack reads the stored pack from the profile", async () => {

@@ -11,6 +11,7 @@ import { parseWidgetActionUrl } from "@/lib/widgetActions";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { useThemeStore } from "@/stores/themeStore";
 import { supabase } from "@/lib/supabase";
 import { exchangeOAuthCodeFromUrl } from "@/services/authService";
 import { getNotificationSignalId, registerPushToken } from "@/services/pushService";
@@ -226,6 +227,12 @@ export default function App() {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    useThemeStore.getState().hydrate().catch((err) =>
+      console.warn("Theme preference hydrate failed", err?.message ?? err),
+    );
   }, []);
 
   useEffect(() => {
