@@ -34,24 +34,6 @@ export async function purchaseSkin(userId: string, skinId: string) {
   }
 }
 
-// TODO(M4): dead after M3, remove with active_skin_id column drop
-export async function setActiveSkin(userId: string, skinId: string) {
-  void userId;
-  const { error } = await supabase.rpc("set_active_skin", { p_skin_id: skinId });
-  if (error) throw error;
-}
-
-// TODO(M4): dead after M3, remove with active_skin_id column drop
-export async function getActiveSkinSlug(userId: string): Promise<string> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("active_skin_id, active_skin:skins!profiles_active_skin_id_fkey(slug)")
-    .eq("id", userId)
-    .single();
-  if (error || !data?.active_skin) return "swiss-paper";
-  return (data.active_skin as any).slug ?? "swiss-paper";
-}
-
 export async function setActiveIdentityPack(packSlug: string) {
   const { error } = await supabase.rpc("set_active_identity_pack", {
     p_pack_slug: packSlug,
