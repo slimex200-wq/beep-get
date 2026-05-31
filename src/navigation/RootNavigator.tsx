@@ -4,6 +4,8 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
+import { useFriendStore } from "@/stores/friendStore";
+import { useMessageStore } from "@/stores/messageStore";
 import { colors } from "@/design/tokens";
 import { font } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -106,15 +108,28 @@ function MainTabs() {
 
 function TabIcon({ routeName, focused, color }: { routeName: keyof MainTabParamList; focused: boolean; color: string }) {
   const tint = color;
+  const hasUnreadSignals = useMessageStore((state) =>
+    state.received.some((message) => !message.is_read),
+  );
+  const inboundSeenAt = useAuthStore((state) => state.profile?.inbound_seen_at ?? null);
+  const inboundFriends = useFriendStore((state) => state.inboundFriends);
+  const unseenInboundCount = useFriendStore((state) => state.unseenInboundCount);
+  const hasUnseenInbound =
+    routeName === "People" && inboundFriends.length > 0 && unseenInboundCount(inboundSeenAt) > 0;
 
   return (
     <View style={styles.tabIconWrap}>
-      {routeName === "Today" ? <TodayCalendarIcon color={tint} /> : null}
+      {routeName === "Today" ? (
+        <>
+          <TodayCalendarIcon color={tint} />
+          {hasUnreadSignals ? <View style={styles.tabUnreadDot} /> : null}
+        </>
+      ) : null}
       {routeName === "Compose" ? <SendPlaneIcon color={tint} /> : null}
       {routeName === "People" ? (
         <>
           <FriendsGroupIcon color={tint} />
-          <View style={styles.tabUnreadDot} />
+          {hasUnseenInbound ? <View style={styles.tabUnreadDot} /> : null}
         </>
       ) : null}
       {routeName === "My" ? <MyUserIcon color={tint} /> : null}

@@ -3,6 +3,8 @@ import {
   addFriend,
   findUserByBeepId,
   getFriends,
+  getInboundFriends,
+  markInboundFriendsSeen,
   removeFriend,
   updateFriendNickname,
   updateVibrationPattern,
@@ -165,6 +167,62 @@ describe("getFriends", () => {
     supabase.from.mockReturnValue(chain);
 
     await expect(getFriends("user-1")).rejects.toEqual({ message: "fail" });
+  });
+});
+
+describe("getInboundFriends", () => {
+  it("queries relationships by friend_id with the owner profile join", async () => {
+    const inbound = [
+      {
+        id: "r1",
+        owner_id: "user-2",
+        friend_id: "user-1",
+        created_at: "2026-05-31T00:00:00.000Z",
+        owner: { id: "user-2", beep_id: "12345678", nickname: "B", status_icon: "online" },
+      },
+    ];
+    const chain = createMockChain({ data: inbound, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    const result = await getInboundFriends("user-1");
+
+    expect(supabase.from).toHaveBeenCalledWith("relationships");
+    expect(chain.select).toHaveBeenCalledWith(
+      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon)",
+    );
+    expect(chain.eq).toHaveBeenCalledWith("friend_id", "user-1");
+    expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(result).toEqual(inbound);
+  });
+
+  it("returns empty array when data is null", async () => {
+    const chain = createMockChain({ data: null, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    await expect(getInboundFriends("user-1")).resolves.toEqual([]);
+  });
+
+  it("throws on error", async () => {
+    const chain = createMockChain({ data: null, error: { message: "fail" } });
+    supabase.from.mockReturnValue(chain);
+
+    await expect(getInboundFriends("user-1")).rejects.toEqual({ message: "fail" });
+  });
+});
+
+describe("markInboundFriendsSeen", () => {
+  it("calls the mark_inbound_friends_seen rpc", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
+
+    await markInboundFriendsSeen();
+
+    expect(supabase.rpc).toHaveBeenCalledWith("mark_inbound_friends_seen");
+  });
+
+  it("throws on error", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
+
+    await expect(markInboundFriendsSeen()).rejects.toEqual({ message: "fail" });
   });
 });
 

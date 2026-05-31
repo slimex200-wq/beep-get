@@ -58,7 +58,8 @@ export function PeopleScreen() {
   const palette = useAppPalette();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile } = useAuthStore();
-  const { friends, fetch, add } = useFriendStore();
+  const { friends, inboundFriends, fetch, fetchInbound, markInboundSeen, add } =
+    useFriendStore();
   const { received, fetchReceived } = useMessageStore();
   const [beepId, setBeepId] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -71,6 +72,19 @@ export function PeopleScreen() {
     if (!profile) return;
     fetch(profile.id).catch(reportError);
   }, [profile?.id, fetch]);
+
+  useEffect(() => {
+    if (!profile) return;
+    let cancelled = false;
+    fetchInbound(profile.id)
+      .then(() => {
+        if (!cancelled) return markInboundSeen();
+      })
+      .catch(reportError);
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.id, fetchInbound, markInboundSeen]);
 
   useEffect(() => {
     if (!profile) return;
@@ -253,6 +267,22 @@ export function PeopleScreen() {
           )}
         </View>
 
+        {inboundFriends.length > 0 ? (
+          <>
+            <MockupSection label="Added You" hint={`${inboundFriends.length}`} />
+            <View style={styles.friendList}>
+              {inboundFriends.map((inbound) => (
+                <InboundRow
+                  key={inbound.id}
+                  name={inbound.owner.nickname?.trim() || inbound.owner.beep_id}
+                  beepId={inbound.owner.beep_id}
+                  time={formatSlipTime(inbound.created_at)}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
+
         {featuredBlink ? (
           <FavoriteSignalCard
             friend={featuredBlink.friend}
@@ -391,6 +421,31 @@ function FriendRow({
       </View>
       {online ? <View style={styles.onlineDot} /> : <Text style={[styles.timeText, { color: palette.text }]}>{rightText ?? friend.no}</Text>}
     </Pressable>
+  );
+}
+
+function InboundRow({
+  name,
+  beepId,
+  time,
+}: {
+  name: string;
+  beepId: string;
+  time: string;
+}) {
+  const palette = useAppPalette();
+
+  return (
+    <View style={[styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+      <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
+        <Text style={[styles.friendInitial, { color: palette.text }]}>{name.slice(0, 1)}</Text>
+      </View>
+      <View style={styles.friendCopy}>
+        <Text style={[styles.friendName, { color: palette.text }]}>{name}</Text>
+        <Text style={[styles.friendStatus, { color: palette.muted }]}>added you - {time}</Text>
+      </View>
+      <Text style={[styles.timeText, { color: palette.text }]}>{beepId.slice(-2)}</Text>
+    </View>
   );
 }
 

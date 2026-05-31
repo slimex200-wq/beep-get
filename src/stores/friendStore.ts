@@ -3,11 +3,19 @@ import {
   addFriend,
   findUserByBeepId,
   getFriends,
+  getInboundFriends,
+  markInboundFriendsSeen,
   removeFriend,
   updateFriendNickname,
   updateVibrationPattern,
+  type InboundRelationshipRow,
 } from "@/services/friendService";
-import { isUiPreviewUser, uiPreviewFriends } from "@/lib/uiPreview";
+import {
+  isUiPreviewUser,
+  uiPreviewFriends,
+  uiPreviewInboundFriends,
+} from "@/lib/uiPreview";
+import { useAuthStore } from "@/stores/authStore";
 import { buildDemoFriend, DEMO_FRIEND_ID, isDemoFriend } from "@/lib/demoFriend";
 
 interface Friend {
@@ -24,11 +32,17 @@ interface Friend {
   };
 }
 
+type InboundFriend = InboundRelationshipRow;
+
 interface FriendState {
   friends: Friend[];
+  inboundFriends: InboundFriend[];
   loading: boolean;
   reset: () => void;
   fetch: (userId: string) => Promise<void>;
+  fetchInbound: (userId: string) => Promise<void>;
+  markInboundSeen: () => Promise<void>;
+  unseenInboundCount: (inboundSeenAt?: string | null) => number;
   add: (
     userId: string,
     friendBeepId: string,
@@ -42,9 +56,10 @@ interface FriendState {
 
 export const useFriendStore = create<FriendState>((set, get) => ({
   friends: [],
+  inboundFriends: [],
   loading: false,
 
-  reset: () => set({ friends: [], loading: false }),
+  reset: () => set({ friends: [], inboundFriends: [], loading: false }),
 
   fetch: async (userId) => {
     if (isUiPreviewUser(userId)) {
@@ -55,6 +70,36 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     const remote = await getFriends(userId);
     const friends = [buildDemoFriend(userId), ...remote];
     set({ friends, loading: false });
+  },
+
+  fetchInbound: async (userId) => {
+    if (isUiPreviewUser(userId)) {
+      set({ inboundFriends: uiPreviewInboundFriends });
+      return;
+    }
+    const inboundFriends = await getInboundFriends(userId);
+    set({ inboundFriends });
+  },
+
+  markInboundSeen: async () => {
+    const profile = useAuthStore.getState().profile;
+    const seenAt = new Date().toISOString();
+    if (profile && isUiPreviewUser(profile.id)) {
+      useAuthStore.setState({ profile: { ...profile, inbound_seen_at: seenAt } });
+      return;
+    }
+    await markInboundFriendsSeen();
+    if (profile) {
+      useAuthStore.setState({ profile: { ...profile, inbound_seen_at: seenAt } });
+    }
+  },
+
+  unseenInboundCount: (inboundSeenAt) => {
+    const seenTime = inboundSeenAt ? new Date(inboundSeenAt).getTime() : null;
+    return get().inboundFriends.reduce((count, inbound) => {
+      if (seenTime === null) return count + 1;
+      return new Date(inbound.created_at).getTime() > seenTime ? count + 1 : count;
+    }, 0);
   },
 
   add: async (userId, friendBeepId, nickname, relationshipPreset) => {
