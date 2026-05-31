@@ -1,11 +1,9 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
-  getActiveSkinSlug,
   getActiveIdentityPackSlug,
   getAllSkins,
   getUserSkins,
   purchaseSkin,
-  setActiveSkin,
   setActiveIdentityPack,
 } from "@/services/skinService";
 
@@ -101,21 +99,11 @@ describe("purchaseSkin", () => {
   });
 });
 
-describe("setActiveSkin", () => {
-  it("updates profile active skin successfully", async () => {
-    supabase.rpc.mockResolvedValue({ data: null, error: null });
-
-    await setActiveSkin("u1", "s1");
-
-    expect(supabase.rpc).toHaveBeenCalledWith("set_active_skin", { p_skin_id: "s1" });
-  });
-
-  it("throws on error", async () => {
-    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
-
-    await expect(setActiveSkin("u1", "s1")).rejects.toEqual({ message: "fail" });
-  });
-
+// The set_active_skin RPC + restricted profile-update surface remain live in the
+// DB (the active_skin_id column drop is deferred to a later M4 DB migration), so
+// this migration-documentation check stays even though the JS setActiveSkin /
+// getActiveSkinSlug wrappers were removed in the M4 code cleanup.
+describe("profile write surface migration", () => {
   it("documents the restricted profile write surface migration", () => {
     const source = require("fs").readFileSync(
       require("path").join(
@@ -129,39 +117,6 @@ describe("setActiveSkin", () => {
     expect(source).toContain("grant update (avatar_url) on table public.profiles to authenticated");
     expect(source).toContain("create or replace function public.set_active_skin");
     expect(source).toContain("where user_id = v_user_id");
-  });
-});
-
-describe("getActiveSkinSlug", () => {
-  it("returns skin slug when profile has active skin", async () => {
-    const chain = createMockChain({
-      data: { active_skin_id: "s1", active_skin: { slug: "pixel-pager" } },
-      error: null,
-    });
-    supabase.from.mockReturnValue(chain);
-
-    const result = await getActiveSkinSlug("u1");
-
-    expect(supabase.from).toHaveBeenCalledWith("profiles");
-    expect(chain.single).toHaveBeenCalled();
-    expect(result).toBe("pixel-pager");
-  });
-
-  it("returns swiss-paper when no active skin data", async () => {
-    const chain = createMockChain({
-      data: { active_skin_id: null, active_skin: null },
-      error: null,
-    });
-    supabase.from.mockReturnValue(chain);
-
-    await expect(getActiveSkinSlug("u1")).resolves.toBe("swiss-paper");
-  });
-
-  it("returns swiss-paper on error", async () => {
-    const chain = createMockChain({ data: null, error: { message: "fail" } });
-    supabase.from.mockReturnValue(chain);
-
-    await expect(getActiveSkinSlug("u1")).resolves.toBe("swiss-paper");
   });
 });
 
