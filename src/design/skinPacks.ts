@@ -22,7 +22,7 @@ export type SkinPackMeta = {
 export const SKIN_PACK_PRESETS: SkinPackItem[] = [
   {
     id: "skin-swiss-paper",
-    name: "Swiss Paper",
+    name: "Classic Paper",
     slug: "swiss-paper",
     category: "starter",
     is_free: true,
@@ -65,7 +65,7 @@ export const SKIN_PACK_PRESETS: SkinPackItem[] = [
 const PACK_META: Record<string, SkinPackMeta> = {
   "swiss-paper": {
     slug: "swiss-paper",
-    name: "Swiss Paper",
+    name: "Classic Paper",
     shortName: "Paper",
     badge: "FREE",
     priceLabel: "OWNED",

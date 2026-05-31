@@ -12,7 +12,7 @@ beforeEach(() => jest.clearAllMocks());
 describe("getAllSkins", () => {
   it("returns all skins ordered by created_at", async () => {
     const skins = [
-      { id: "s1", name: "Swiss Paper", slug: "swiss-paper" },
+      { id: "s1", name: "Classic Paper", slug: "swiss-paper" },
       { id: "s2", name: "Pixel Pager", slug: "pixel-pager" },
     ];
     const chain = createMockChain({ data: skins, error: null });
@@ -42,7 +42,7 @@ describe("getAllSkins", () => {
 
 describe("getUserSkins", () => {
   it("returns user skins with skin details", async () => {
-    const userSkins = [{ id: "us1", user_id: "u1", skin: { id: "s1", name: "Swiss Paper" } }];
+    const userSkins = [{ id: "us1", user_id: "u1", skin: { id: "s1", name: "Classic Paper" } }];
     const chain = createMockChain({ data: userSkins, error: null });
     supabase.from.mockReturnValue(chain);
 

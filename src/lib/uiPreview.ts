@@ -157,7 +157,7 @@ export const uiPreviewDictionary = [
 export const uiPreviewSkins = [
   {
     id: "skin-swiss-paper",
-    name: "Swiss Paper",
+    name: "Classic Paper",
     slug: "swiss-paper",
     category: "editorial",
     assets_url: "",
