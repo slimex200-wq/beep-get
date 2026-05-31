@@ -14,8 +14,7 @@ describe("MyScreen production tools", () => {
       "Header opens Skin Packs",
       "Widget Skins",
       "Quick Replies",
-      "Apply Pack",
-      "Unlock Pack",
+      "Skin Packs",
       "Configure Slots",
       "+ active preview",
       "3 queued slots",
@@ -32,7 +31,7 @@ describe("MyScreen production tools", () => {
   it("does not expose internal Studio or Collection tools in the user room", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/MyScreen.tsx"), "utf8");
 
-    ["SM Widget", "MD List Widget", "SkinPackCard"].forEach((label) => {
+    ["SM Widget", "MD List Widget", "WidgetSkinPackCard"].forEach((label) => {
       expect(source).toContain(label);
     });
     expect(source).toContain("SkinPackSheet");
@@ -44,7 +43,7 @@ describe("MyScreen production tools", () => {
     expect(source).toContain("AVATAR_PRESETS");
     expect(source).toContain("chooseSkinPack");
     expect(source).toContain("Skin Pack Store");
-    expect(source).toContain("applySkinPack");
+    expect(source).toContain("applyIdentityPack");
     expect(source).toContain("ChevronRightLineIcon");
     expect(source).toContain("GearLineIcon");
     expect(source).toContain("quickReplyDrafts");

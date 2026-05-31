@@ -1,5 +1,6 @@
 import { useSkinStore } from "@/stores/skinStore";
 import { colors } from "@/design/tokens";
+import { IDENTITY_TO_SKIN_SLUG } from "@/design/identityPacks";
 
 export type AppMode = "light" | "dark";
 
@@ -113,13 +114,13 @@ const paletteBySkin: Record<string, AppPalette> = {
   "cyber-neon": neonPalette,
 };
 
+// Single source of truth for the identity-pack -> palette-skin mapping lives in
+// identityPacks.ts (IDENTITY_TO_SKIN_SLUG). We extend it with legacy palette
+// aliases that are not identity packs (e.g. the retired "pixel-pager" skin slug
+// still stored on some profiles) so normalizeSkinSlug stays backward compatible.
 const skinAliases: Record<string, string> = {
-  "classic-paper": "swiss-paper",
+  ...IDENTITY_TO_SKIN_SLUG,
   "pixel-pager": "swiss-paper",
-  "school-desk": "neumorphism",
-  "cherry-dot": "glassmorphism",
-  "photo-booth-blink": "retro-future",
-  "night-signal": "cyber-neon",
 };
 
 export function normalizeSkinSlug(slug: string): string {

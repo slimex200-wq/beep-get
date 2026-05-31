@@ -30,14 +30,14 @@ describe("legacy shell removal", () => {
     expect(source).not.toContain("My Beep Slip");
   });
 
-  it("makes personalization an in-place skin pack flow instead of opening the old collection UI", () => {
+  it("makes personalization an in-place identity pack flow instead of opening the old collection UI", () => {
     const source = screen("src/screens/MyScreen.tsx");
 
-    expect(source).toContain("setLocalActiveSkin");
+    expect(source).toContain("setLocalActiveIdentityPack");
+    expect(source).toContain("applyIdentityPack");
     expect(source).toContain("Personalize");
     expect(source).toContain("Header opens Skin Packs");
     expect(source).toContain("SkinPackSheet");
-    expect(source).toContain("Unlock Pack");
     expect(source).not.toContain('navigation.navigate("Collection")');
   });
 });

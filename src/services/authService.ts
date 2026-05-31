@@ -28,6 +28,7 @@ export type UserProfile = {
   nickname: string;
   status_icon: string;
   active_skin_id: string | null;
+  active_identity_pack?: string | null;
   avatar_url?: string | null;
   inbound_seen_at?: string | null;
 };
@@ -164,7 +165,9 @@ export async function updateProfileAvatar(avatarUrl: string): Promise<UserProfil
     .from("profiles")
     .update({ avatar_url: avatarUrl })
     .eq("id", userId)
-    .select("id, beep_id, nickname, status_icon, active_skin_id, avatar_url")
+    .select(
+      "id, beep_id, nickname, status_icon, active_skin_id, active_identity_pack, avatar_url"
+    )
     .single();
   if (error) throw error;
 
@@ -188,6 +191,10 @@ function readProfile(data: unknown): UserProfile | null {
           : {}),
         ...(typeof row.inbound_seen_at === "string" || row.inbound_seen_at === null
           ? { inbound_seen_at: row.inbound_seen_at }
+          : {}),
+        ...(typeof row.active_identity_pack === "string" ||
+        row.active_identity_pack === null
+          ? { active_identity_pack: row.active_identity_pack }
           : {}),
         id: typeof row.id === "string" ? row.id : "",
         beep_id: row.beep_id,

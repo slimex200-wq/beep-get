@@ -1,10 +1,12 @@
 const { supabase, createMockChain } = require("@/lib/supabase");
 import {
   getActiveSkinSlug,
+  getActiveIdentityPackSlug,
   getAllSkins,
   getUserSkins,
   purchaseSkin,
   setActiveSkin,
+  setActiveIdentityPack,
 } from "@/services/skinService";
 
 beforeEach(() => jest.clearAllMocks());
@@ -160,5 +162,76 @@ describe("getActiveSkinSlug", () => {
     supabase.from.mockReturnValue(chain);
 
     await expect(getActiveSkinSlug("u1")).resolves.toBe("swiss-paper");
+  });
+});
+
+describe("setActiveIdentityPack", () => {
+  it("calls the entitlement-checking RPC with the pack slug", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
+
+    await setActiveIdentityPack("school-desk");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("set_active_identity_pack", {
+      p_pack_slug: "school-desk",
+    });
+  });
+
+  it("throws on error", async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "fail" } });
+
+    await expect(setActiveIdentityPack("school-desk")).rejects.toEqual({
+      message: "fail",
+    });
+  });
+
+  it("documents the active_identity_pack migration and entitlement check", () => {
+    const source = require("fs").readFileSync(
+      require("path").join(
+        process.cwd(),
+        "supabase/migrations/20260531140000_active_identity_pack.sql"
+      ),
+      "utf8"
+    );
+
+    expect(source).toContain("add column if not exists active_identity_pack text");
+    expect(source).toContain("create or replace function public.set_active_identity_pack");
+    expect(source).toContain("from public.identity_pack_entitlements e");
+    expect(source).toContain("Identity pack not owned");
+    expect(source).toContain("active_skin_id = coalesce(v_skin_id, active_skin_id)");
+    expect(source).toContain(
+      "grant execute on function public.set_active_identity_pack(text) to authenticated"
+    );
+  });
+});
+
+describe("getActiveIdentityPackSlug", () => {
+  it("returns the stored active identity pack when present", async () => {
+    const chain = createMockChain({
+      data: { active_identity_pack: "night-signal", active_skin: { slug: "cyber-neon" } },
+      error: null,
+    });
+    supabase.from.mockReturnValue(chain);
+
+    const result = await getActiveIdentityPackSlug("u1");
+
+    expect(supabase.from).toHaveBeenCalledWith("profiles");
+    expect(result).toBe("night-signal");
+  });
+
+  it("derives the pack from the legacy palette skin when no pack is stored", async () => {
+    const chain = createMockChain({
+      data: { active_identity_pack: null, active_skin: { slug: "neumorphism" } },
+      error: null,
+    });
+    supabase.from.mockReturnValue(chain);
+
+    await expect(getActiveIdentityPackSlug("u1")).resolves.toBe("school-desk");
+  });
+
+  it("falls back to classic-paper on error", async () => {
+    const chain = createMockChain({ data: null, error: { message: "fail" } });
+    supabase.from.mockReturnValue(chain);
+
+    await expect(getActiveIdentityPackSlug("u1")).resolves.toBe("classic-paper");
   });
 });
