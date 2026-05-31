@@ -16,6 +16,19 @@ type RelationshipRow = {
   };
 };
 
+export type InboundRelationshipRow = {
+  id: string;
+  owner_id: string;
+  friend_id: string;
+  created_at: string;
+  owner: {
+    id: string;
+    beep_id: string;
+    nickname: string;
+    status_icon: string;
+  };
+};
+
 export async function findUserByBeepId(beepId: string) {
   if (!isValidBeepId(beepId)) return null;
   const { data, error } = await supabase.rpc("find_profile_by_beep_id", {
@@ -64,6 +77,24 @@ export async function getFriends(userId: string) {
 
   if (error) throw error;
   return ((data ?? []) as RelationshipRow[]).map(mapRelationshipToFriendship);
+}
+
+export async function getInboundFriends(userId: string) {
+  const { data, error } = await supabase
+    .from("relationships")
+    .select(
+      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon)"
+    )
+    .eq("friend_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as InboundRelationshipRow[];
+}
+
+export async function markInboundFriendsSeen() {
+  const { error } = await supabase.rpc("mark_inbound_friends_seen");
+  if (error) throw error;
 }
 
 export async function updateFriendNickname(

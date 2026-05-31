@@ -9,6 +9,7 @@ import { RootNavigator } from "@/navigation/RootNavigator";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { parseWidgetActionUrl } from "@/lib/widgetActions";
 import { useAuthStore } from "@/stores/authStore";
+import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 import { supabase } from "@/lib/supabase";
 import { exchangeOAuthCodeFromUrl } from "@/services/authService";
@@ -178,6 +179,23 @@ export default function App() {
     registerPushToken(profile.id).catch((err) =>
       console.warn("Push registration failed", err?.message ?? err),
     );
+  }, [profile?.id]);
+
+  // App-level fetch so the tab badges (Today unread, Friends inbound) reflect
+  // state from any tab, not only after visiting Today/People. Without this the
+  // badges never appear: received/inbound stay empty until their own screen
+  // mounts, and People marks inbound seen on mount.
+  useEffect(() => {
+    if (!profile?.id) return;
+    const uid = profile.id;
+    useMessageStore.getState().fetchReceived(uid).catch((err) =>
+      console.warn("fetchReceived (app-level) failed", err?.message ?? err),
+    );
+    useFriendStore.getState().fetchInbound(uid).catch((err) =>
+      console.warn("fetchInbound (app-level) failed", err?.message ?? err),
+    );
+    useMessageStore.getState().subscribeRealtime(uid);
+    return () => useMessageStore.getState().unsubscribeRealtime();
   }, [profile?.id]);
 
   useEffect(() => {

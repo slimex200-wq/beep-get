@@ -124,6 +124,33 @@ export const uiPreviewFriends = [
   },
 ];
 
+export const uiPreviewInboundFriends = [
+  {
+    id: "preview-inbound-1",
+    owner_id: "inbound-1",
+    friend_id: UI_PREVIEW_USER_ID,
+    created_at: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+    owner: {
+      id: "inbound-1",
+      beep_id: "07041988",
+      nickname: "도윤",
+      status_icon: "online",
+    },
+  },
+  {
+    id: "preview-inbound-2",
+    owner_id: "inbound-2",
+    friend_id: UI_PREVIEW_USER_ID,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+    owner: {
+      id: "inbound-2",
+      beep_id: "01130624",
+      nickname: "서아",
+      status_icon: "away",
+    },
+  },
+];
+
 export const uiPreviewDictionary = [
   {
     id: "preview-code-1",

@@ -29,6 +29,7 @@ export type UserProfile = {
   status_icon: string;
   active_skin_id: string | null;
   avatar_url?: string | null;
+  inbound_seen_at?: string | null;
 };
 
 export function generateBeepId(): string {
@@ -184,6 +185,9 @@ function readProfile(data: unknown): UserProfile | null {
       return {
         ...(typeof row.avatar_url === "string" || row.avatar_url === null
           ? { avatar_url: row.avatar_url }
+          : {}),
+        ...(typeof row.inbound_seen_at === "string" || row.inbound_seen_at === null
+          ? { inbound_seen_at: row.inbound_seen_at }
           : {}),
         id: typeof row.id === "string" ? row.id : "",
         beep_id: row.beep_id,
