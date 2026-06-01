@@ -21,6 +21,7 @@ import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useCollectionStore } from "@/stores/collectionStore";
 import { useSkinStore } from "@/stores/skinStore";
 import { mockupPhotoUris } from "@/design/mockupPhotos";
+import { accountDeletionUrl, privacyPolicyUrl, supportUrl } from "@/lib/releaseFlags";
 
 function resetUserStores() {
   useMessageStore.getState().reset();
@@ -29,11 +30,6 @@ function resetUserStores() {
   useCollectionStore.getState().reset();
   useSkinStore.getState().reset();
 }
-
-const PRIVACY_POLICY_URL =
-  process.env.EXPO_PUBLIC_PRIVACY_URL ?? "https://hypeboyo.com/beep-get/privacy";
-const ACCOUNT_DELETION_URL =
-  process.env.EXPO_PUBLIC_ACCOUNT_DELETION_URL ?? "https://hypeboyo.com/beep-get/delete-account";
 
 const APPEARANCE_OPTIONS: ReadonlyArray<{ value: ThemePreference; label: string }> = [
   { value: "system", label: "System" },
@@ -62,7 +58,12 @@ export function SettingsScreen() {
     await Share.share({ message: generateShareText(profile.beep_id, profile.nickname) });
   };
 
-  const openUrl = async (url: string) => {
+  const openUrl = async (url: string | null, label: string) => {
+    if (!url) {
+      Alert.alert("Link unavailable", `${label} URL is not configured for this build.`);
+      return;
+    }
+
     try {
       await Linking.openURL(url);
     } catch {
@@ -180,13 +181,19 @@ export function SettingsScreen() {
           <ActionButton
             label="Privacy Policy"
             variant="ghost"
-            onPress={() => openUrl(PRIVACY_POLICY_URL)}
+            onPress={() => openUrl(privacyPolicyUrl, "Privacy policy")}
+            disabled={busy}
+          />
+          <ActionButton
+            label="Support"
+            variant="ghost"
+            onPress={() => openUrl(supportUrl, "Support")}
             disabled={busy}
           />
           <ActionButton
             label="Web Delete Request"
             variant="ghost"
-            onPress={() => openUrl(ACCOUNT_DELETION_URL)}
+            onPress={() => openUrl(accountDeletionUrl, "Account deletion")}
             disabled={busy}
           />
           <ActionButton

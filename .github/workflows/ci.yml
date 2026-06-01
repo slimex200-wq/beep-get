@@ -41,6 +41,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: iOS release readiness
+        run: npm run release:ios:check
+
       - name: Run Jest tests
         run: npm test -- --runInBand
 

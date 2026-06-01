@@ -34,6 +34,6 @@ describe("WidgetSkinPackCard shared identity-pack preview", () => {
   });
 
   it("drives owned/active labels from the identity pack price label", () => {
-    expect(source).toContain('active ? "ACTIVE" : owned ? "OWNED" : skin.priceLabel');
+    expect(source).toContain('active ? "ACTIVE" : owned ? "OWNED" : lockedLabel ?? skin.priceLabel');
   });
 });

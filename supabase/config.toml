@@ -393,6 +393,9 @@ deno_version = 2
 [functions.delete-account]
 verify_jwt = true
 
+[functions.store-apple-revocation-token]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

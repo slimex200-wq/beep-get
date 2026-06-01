@@ -1,4 +1,5 @@
 const Contacts = require("expo-contacts");
+const { supabase } = require("@/lib/supabase");
 import {
   requestContactPermission,
   findRegisteredContacts,
@@ -109,6 +110,9 @@ describe("findRegisteredContacts", () => {
     expect(Contacts.getContactsAsync).toHaveBeenCalledWith({
       fields: [Contacts.Fields.PhoneNumbers],
     });
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(supabase.functions.invoke).not.toHaveBeenCalled();
   });
 
   it("returns empty array when contacts data is empty", async () => {

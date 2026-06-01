@@ -33,6 +33,7 @@ import {
   DEFAULT_QUICK_REPLY_SLOTS,
   buildQuickReplySlots,
 } from "@/lib/quickReplySlots";
+import { isIdentityPackStoreEnabled } from "@/lib/releaseFlags";
 
 type PreviewState = "empty" | "incoming-beep" | "incoming-blink";
 type WidgetSize = "small" | "medium";
@@ -97,6 +98,7 @@ export function WidgetStatesScreen() {
   }, [entries]);
   const previewPack = useMemo(() => getIdentityPack(previewPackSlug), [previewPackSlug]);
   const previewStates = PREVIEW_STATES_BY_SIZE[size];
+  const lockedSkinLabel = isIdentityPackStoreEnabled ? undefined : "PREVIEW";
 
   const handleSizeChange = (nextSize: WidgetSize) => {
     setSize(nextSize);
@@ -217,6 +219,7 @@ export function WidgetStatesScreen() {
               size={size}
               active={skin.slug === previewPack.slug}
               owned={ownedPackSlugs.has(skin.slug)}
+              lockedLabel={lockedSkinLabel}
               onPress={() => chooseSkinPack(skin)}
             />
           ))}

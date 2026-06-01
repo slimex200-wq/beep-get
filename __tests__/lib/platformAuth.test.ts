@@ -23,16 +23,18 @@ describe("platform auth", () => {
     expect(getPlatformAuthVariant(provider)).toBe("light");
   });
 
-  it("lists Apple first, then Google and Kakao in the launch login order", () => {
+  it("keeps the iOS launch review login surface to Apple by default", () => {
     const providers = getPlatformAuthProviders("ios");
 
-    expect(providers).toEqual(["apple", "google", "kakao"]);
+    expect(providers).toEqual(["apple"]);
     expect(providers.map(getPlatformAuthLabel)).toEqual([
       "Sign in with Apple",
-      "Sign in with Google",
-      "Log in with Kakao",
     ]);
     expect(getPlatformAuthVariant("kakao")).toBe("kakao");
+  });
+
+  it("keeps Google as the default Android login provider", () => {
+    expect(getPlatformAuthProviders("android")).toEqual(["google"]);
   });
 
   it("uses native Apple sign-in only on iOS", () => {

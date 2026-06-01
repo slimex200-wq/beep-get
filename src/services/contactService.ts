@@ -1,5 +1,4 @@
 import * as Contacts from "expo-contacts";
-import { supabase } from "@/lib/supabase";
 
 export async function requestContactPermission(): Promise<boolean> {
   const { status } = await Contacts.requestPermissionsAsync();
@@ -32,7 +31,6 @@ export async function findRegisteredContacts(): Promise<
 
   if (phoneNumbers.length === 0) return [];
 
-  void supabase;
   return [];
 }
 
