@@ -64,6 +64,12 @@ Host these pages on stable HTTPS URLs:
 - Account deletion: `docs/legal/account-deletion.md`
 - Support URL: `docs/legal/support.md`
 
+Current GitHub Pages URLs for this submission pass:
+
+- Privacy policy: `https://slimex200-wq.github.io/beep-get/privacy.html`
+- Account deletion: `https://slimex200-wq.github.io/beep-get/account-deletion.html`
+- Support URL: `https://slimex200-wq.github.io/beep-get/support.html`
+
 The repo also includes a static public legal bundle that can be uploaded directly to a static HTTPS host:
 
 - Privacy policy HTML: `docs/legal/public/privacy.html`
@@ -80,6 +86,8 @@ Then set App Store Connect metadata:
 - Privacy Choices URL: hosted deletion/privacy choices URL, if desired.
 
 Set EAS production env values:
+
+As of 2026-06-01, EAS `production` has been externally checked with the required public Supabase variable names, the GitHub Pages URL values above, and conservative first-review flags. Re-run `npx eas-cli@latest env:list production --format short` before building to confirm no drift.
 
 ```powershell
 npx eas-cli@latest env:create production --name EXPO_PUBLIC_SUPABASE_URL --value "<supabase-url>" --visibility plaintext --non-interactive

@@ -3,7 +3,13 @@
 Last updated: 2026-06-01
 
 This folder is the static hosting bundle for the first iOS submission.
-Upload these files to a stable HTTPS host before App Store review:
+Current GitHub Pages hosting for this submission pass:
+
+- Privacy policy: `https://slimex200-wq.github.io/beep-get/privacy.html`
+- Account deletion: `https://slimex200-wq.github.io/beep-get/account-deletion.html`
+- Support: `https://slimex200-wq.github.io/beep-get/support.html`
+
+Files in this bundle:
 
 - `privacy.html`
 - `account-deletion.html`

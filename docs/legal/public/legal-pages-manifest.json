@@ -11,10 +11,15 @@
     "accountDeletion": "account-deletion.html",
     "support": "support.html"
   },
+  "hostedUrls": {
+    "privacy": "https://slimex200-wq.github.io/beep-get/privacy.html",
+    "accountDeletion": "https://slimex200-wq.github.io/beep-get/account-deletion.html",
+    "support": "https://slimex200-wq.github.io/beep-get/support.html"
+  },
   "requiredEasEnv": [
     "EXPO_PUBLIC_PRIVACY_URL",
     "EXPO_PUBLIC_ACCOUNT_DELETION_URL",
     "EXPO_PUBLIC_SUPPORT_URL"
   ],
-  "submissionNote": "Host these files on stable public HTTPS URLs before App Store submission."
+  "submissionNote": "GitHub Pages currently hosts these files for the iOS submission pass; keep hosted URLs, EAS production env, and App Store Connect entries in sync."
 }

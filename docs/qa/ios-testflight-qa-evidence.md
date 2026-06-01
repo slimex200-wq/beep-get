@@ -118,9 +118,9 @@ Use this shape. The template generator writes the same structure, starts in a fa
     }
   },
   "publicUrls": {
-    "privacyUrl": "https://your-domain.example/privacy",
-    "accountDeletionUrl": "https://your-domain.example/account-deletion",
-    "supportUrl": "https://your-domain.example/support"
+    "privacyUrl": "https://slimex200-wq.github.io/beep-get/privacy.html",
+    "accountDeletionUrl": "https://slimex200-wq.github.io/beep-get/account-deletion.html",
+    "supportUrl": "https://slimex200-wq.github.io/beep-get/support.html"
   },
   "evidenceRefs": {
     "build": ["private-release/testflight-build-summary.png"],
@@ -145,9 +145,9 @@ Use this shape. The template generator writes the same structure, starts in a fa
     ],
     "publicValues": {
       "EXPO_PUBLIC_SUPABASE_URL": "https://dyuzxilukcwiavtvbmci.supabase.co",
-      "EXPO_PUBLIC_PRIVACY_URL": "https://beep-get.app/privacy",
-      "EXPO_PUBLIC_ACCOUNT_DELETION_URL": "https://beep-get.app/account-deletion",
-      "EXPO_PUBLIC_SUPPORT_URL": "https://beep-get.app/support",
+      "EXPO_PUBLIC_PRIVACY_URL": "https://slimex200-wq.github.io/beep-get/privacy.html",
+      "EXPO_PUBLIC_ACCOUNT_DELETION_URL": "https://slimex200-wq.github.io/beep-get/account-deletion.html",
+      "EXPO_PUBLIC_SUPPORT_URL": "https://slimex200-wq.github.io/beep-get/support.html",
       "EXPO_PUBLIC_ENABLE_GOOGLE_AUTH": "0",
       "EXPO_PUBLIC_ENABLE_KAKAO_AUTH": "0",
       "EXPO_PUBLIC_ENABLE_IAP_STORE": "0"
@@ -175,8 +175,8 @@ Use this shape. The template generator writes the same structure, starts in a fa
       "privacy": ["private-release/app-store-connect-privacy-answers.png"],
       "reviewNotes": ["private-release/app-store-connect-review-notes.png"]
     },
-    "privacyPolicyUrl": "https://beep-get.app/privacy",
-    "supportUrl": "https://beep-get.app/support"
+    "privacyPolicyUrl": "https://slimex200-wq.github.io/beep-get/privacy.html",
+    "supportUrl": "https://slimex200-wq.github.io/beep-get/support.html"
   },
   "testflight": {
     "twoAccounts": true,

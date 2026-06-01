@@ -5,8 +5,8 @@ const root = process.cwd();
 
 const checks = [];
 const externalActions = [
-  "Publish privacy/account deletion/support pages to stable HTTPS URLs.",
-  "Set EAS production env values, including public Supabase keys and policy/support URLs.",
+  "Confirm the hosted privacy/account deletion/support URLs remain live and match App Store Connect plus EAS production.",
+  "Reconfirm EAS production env values before the reviewed build, including public Supabase names, policy/support URLs, and release flags.",
   "Complete App Store Connect metadata, screenshots, privacy answers, support URL, and review notes.",
   "Deploy and verify Sign in with Apple token revocation on TestFlight with disposable accounts.",
   "Finish IAP product metadata and sandbox QA before enabling EXPO_PUBLIC_ENABLE_IAP_STORE=1.",
@@ -434,7 +434,7 @@ if (failures.length > 0) {
 }
 
 console.log(`iOS release readiness repo-local checks passed (${checks.length}/${checks.length}).`);
-console.log("External release actions still required:");
+console.log("External release actions to complete or reconfirm before submission:");
 externalActions.forEach((item) => console.log(`- ${item}`));
 
 function check(label, ok) {
