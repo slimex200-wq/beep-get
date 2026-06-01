@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Beep Get Account Deletion</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #fff8ef;
+        --ink: #171412;
+        --muted: #625b52;
+        --paper: #ffffff;
+        --line: #d7cfc4;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 20px 72px;
+      }
+      article {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        padding: 28px;
+      }
+      h1, h2 {
+        line-height: 1.15;
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .updated {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      li {
+        margin: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Beep Get Account Deletion</h1>
+        <p class="updated">Last updated: 2026-06-01</p>
+        <p>Beep Get supports in-app account deletion from Account settings.</p>
+
+        <h2>In-App Deletion</h2>
+        <ol>
+          <li>Open Beep Get.</li>
+          <li>Sign in to the account you want to delete.</li>
+          <li>Open My, then Account settings.</li>
+          <li>Tap Delete Account.</li>
+          <li>Confirm the deletion prompt.</li>
+        </ol>
+        <p>This removes your profile, Beep ID, relationships, Beeps, Blinks, private Blink media, encrypted Sign in with Apple revocation token material, and Supabase Auth user. This cannot be undone.</p>
+        <p>The in-app flow sends an authenticated deletion request, confirms intent before deletion, and attempts Sign in with Apple token revocation for Apple accounts. Test this only with disposable accounts.</p>
+
+        <h2>Web Request</h2>
+        <p>If you cannot access the app, use the public account deletion URL configured for the production release or contact the app owner through the App Store listing. Include the Beep ID or sign-in email for the account, but do not send passwords or private keys.</p>
+
+        <h2>Retention</h2>
+        <p>After deletion, Beep Get may retain a hashed audit record that proves a deletion request was completed without retaining the raw user ID.</p>
+      </article>
+    </main>
+  </body>
+</html>

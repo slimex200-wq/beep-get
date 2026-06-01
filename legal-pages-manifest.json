@@ -1,0 +1,20 @@
+{
+  "app": "Beep Get",
+  "lastUpdated": "2026-06-01",
+  "sourceFiles": {
+    "privacy": "docs/legal/privacy-policy.md",
+    "accountDeletion": "docs/legal/account-deletion.md",
+    "support": "docs/legal/support.md"
+  },
+  "publicFiles": {
+    "privacy": "privacy.html",
+    "accountDeletion": "account-deletion.html",
+    "support": "support.html"
+  },
+  "requiredEasEnv": [
+    "EXPO_PUBLIC_PRIVACY_URL",
+    "EXPO_PUBLIC_ACCOUNT_DELETION_URL",
+    "EXPO_PUBLIC_SUPPORT_URL"
+  ],
+  "submissionNote": "Host these files on stable public HTTPS URLs before App Store submission."
+}
