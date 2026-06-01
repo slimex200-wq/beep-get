@@ -114,7 +114,7 @@ describe("development scripts", () => {
     expect(source).toContain("Submission runbook includes redacted evidence instruction");
     expect(source).toContain("Delete account Edge Function requires bearer authentication");
     expect(source).toContain("Delete account Edge Function deletes Supabase Auth user");
-    expect(source).toContain("External release actions still required");
+    expect(source).toContain("External release actions to complete or reconfirm before submission");
     expect(source).toContain("iOS production submit is guarded by submission gate");
     expect(source).toContain("CI validate runs repo-local iOS release readiness gate");
     expect(githubCi).toContain("npm run release:ios:check");
