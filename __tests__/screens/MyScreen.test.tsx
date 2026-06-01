@@ -42,7 +42,8 @@ describe("MyScreen production tools", () => {
     expect(source).toContain("updateAvatar");
     expect(source).toContain("AVATAR_PRESETS");
     expect(source).toContain("chooseSkinPack");
-    expect(source).toContain("Skin Pack Store");
+    expect(source).toContain("Skin Pack Preview");
+    expect(source).toContain("isIdentityPackStoreEnabled");
     expect(source).toContain("applyIdentityPack");
     expect(source).toContain("ChevronRightLineIcon");
     expect(source).toContain("GearLineIcon");

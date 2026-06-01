@@ -19,6 +19,7 @@ Pull requests into `master` must pass the GitHub Actions `validate` job before m
 npm ci
 npx --yes expo-doctor
 npm run typecheck
+npm run release:ios:check
 npm test -- --runInBand
 ```
 

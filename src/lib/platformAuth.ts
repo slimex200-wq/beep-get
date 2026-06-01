@@ -1,19 +1,34 @@
 import type { PlatformOSType } from "react-native";
+import { isGoogleAuthEnabled, isKakaoAuthEnabled } from "@/lib/releaseFlags";
 
 export type PlatformAuthProvider = "google" | "apple" | "kakao";
 
 type RuntimePlatform = PlatformOSType | string;
 
-const AUTH_PROVIDER_ORDER: PlatformAuthProvider[] = ["apple", "google", "kakao"];
+const addProvider = (
+  providers: PlatformAuthProvider[],
+  provider: PlatformAuthProvider,
+) => {
+  if (!providers.includes(provider)) providers.push(provider);
+};
 
 export function getPlatformAuthProvider(platform: RuntimePlatform): PlatformAuthProvider {
   return platform === "ios" ? "apple" : "google";
 }
 
 export function getPlatformAuthProviders(
-  _platform: RuntimePlatform
+  platform: RuntimePlatform
 ): PlatformAuthProvider[] {
-  return [...AUTH_PROVIDER_ORDER];
+  const providers: PlatformAuthProvider[] = [getPlatformAuthProvider(platform)];
+
+  if (platform === "ios") {
+    if (isGoogleAuthEnabled) addProvider(providers, "google");
+  } else {
+    addProvider(providers, "google");
+  }
+  if (isKakaoAuthEnabled) addProvider(providers, "kakao");
+
+  return providers;
 }
 
 export function shouldUseNativeAppleSignIn(

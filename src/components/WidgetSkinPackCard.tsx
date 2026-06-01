@@ -73,12 +73,14 @@ export function WidgetSkinPackCard({
   size = "small",
   active,
   owned,
+  lockedLabel,
   onPress,
 }: {
   skin: IdentityPack;
   size?: WidgetPreviewSize;
   active: boolean;
   owned: boolean;
+  lockedLabel?: string;
   onPress: () => void;
 }) {
   const palette = useAppPalette();
@@ -104,7 +106,7 @@ export function WidgetSkinPackCard({
         <View style={styles.skinPackTitleRow}>
           <Text style={[styles.skinPackName, { color: palette.text }]}>{skin.name}</Text>
           <Text style={[styles.skinPackState, { color: active ? palette.text : getPackVisual(skin).accent }]}>
-            {active ? "ACTIVE" : owned ? "OWNED" : skin.priceLabel}
+            {active ? "ACTIVE" : owned ? "OWNED" : lockedLabel ?? skin.priceLabel}
           </Text>
         </View>
         <Text numberOfLines={2} style={[type.bodyMuted, { color: palette.muted }]}>
