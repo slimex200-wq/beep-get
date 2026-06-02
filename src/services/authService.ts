@@ -71,6 +71,9 @@ export async function signInWithApple() {
   if (!credential.identityToken) {
     throw new Error("Apple sign-in did not return an identity token.");
   }
+  if (!credential.authorizationCode) {
+    throw new Error("Apple sign-in did not return an authorization code for account deletion support.");
+  }
 
   const fullName = formatAppleFullName(credential.fullName);
   const { data, error } = await supabase.auth.signInWithIdToken({
@@ -79,6 +82,7 @@ export async function signInWithApple() {
     nonce: rawNonce,
   });
   if (error) throw error;
+  await storeAppleRevocationToken(credential.authorizationCode, data?.session?.access_token);
   if (fullName) {
     // Apple full_name metadata is a best-effort enrichment - the user can
     // still set their nickname in onboarding. Don't block sign-in on failure.
@@ -90,6 +94,28 @@ export async function signInWithApple() {
     });
   }
   return data;
+}
+
+async function storeAppleRevocationToken(
+  authorizationCode: string,
+  accessToken?: string
+) {
+  const { error } = await supabase.functions.invoke("store-apple-revocation-token", {
+    method: "POST",
+    body: { authorizationCode },
+    ...(accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : {}),
+  });
+
+  if (!error) return;
+
+  await supabase.auth.signOut().catch(() => undefined);
+  const message =
+    typeof error.message === "string" && error.message.trim()
+      ? error.message
+      : "Apple account deletion support is not configured.";
+  throw new Error(message);
 }
 
 export async function exchangeOAuthCodeFromUrl(url: string): Promise<boolean> {

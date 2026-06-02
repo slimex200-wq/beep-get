@@ -18,5 +18,6 @@ dist/
 .omc/
 .omx/
 coverage/
+.release/
 .gstack/
 .lazyweb/

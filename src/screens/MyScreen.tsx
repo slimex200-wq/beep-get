@@ -46,6 +46,8 @@ import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useSkinStore } from "@/stores/skinStore";
 import { MAX_CODE_LENGTH } from "@/lib/constants";
+import { isIdentityPackStoreEnabled } from "@/lib/releaseFlags";
+import { purchaseIdentityPack } from "@/services/purchaseService";
 import {
   DEFAULT_QUICK_REPLY_SLOTS,
   buildQuickReplySlots,
@@ -127,10 +129,23 @@ export function MyScreen() {
 
     try {
       if (!isOwned) {
-        Alert.alert(
-          "Skin Pack Store",
-          `${pack.name} unlocks as a full set for the app, Send cards, widgets, avatar frame, and emotes.`,
-        );
+        if (!isIdentityPackStoreEnabled) {
+          Alert.alert(
+            "Skin Pack Preview",
+            `${pack.name} is part of the upcoming paid skin set. The first iOS release only lets you preview locked packs.`,
+          );
+          return;
+        }
+
+        if (!profile) {
+          Alert.alert("Sign in needed", "Sign in before unlocking a skin pack.");
+          return;
+        }
+
+        await purchaseIdentityPack(pack.slug);
+        setOwnedPackSlugs((current) => new Set([...current, pack.slug]));
+        await applyIdentityPack(profile.id, pack.slug);
+        setSkinSheetVisible(false);
         return;
       }
 
@@ -489,6 +504,7 @@ function SkinPackSheet({
   if (!visible) return null;
 
   const activePack = getIdentityPack(activePackSlug);
+  const lockedSkinLabel = isIdentityPackStoreEnabled ? undefined : "PREVIEW";
 
   return (
     <Modal transparent visible animationType="fade" onRequestClose={onClose}>
@@ -520,6 +536,7 @@ function SkinPackSheet({
                   size="small"
                   active={pack.slug === activePackSlug}
                   owned={ownedPackSlugs.has(pack.slug)}
+                  lockedLabel={lockedSkinLabel}
                   onPress={() => onSelect(pack)}
                 />
               ))}
@@ -540,7 +557,7 @@ function IdentityPackPreview({ pack }: { pack: IdentityPack }) {
       <View style={styles.identityPreviewHead}>
         <Text style={[styles.rowTitle, { color: palette.text }]}>{pack.name}</Text>
         <Text style={[type.tinyMono, { color: getPackVisual(pack).accent }]}>
-          {pack.isFree ? "FREE" : pack.priceLabel}
+          {pack.isFree ? "FREE" : isIdentityPackStoreEnabled ? pack.priceLabel : "PREVIEW"}
         </Text>
       </View>
       <Text numberOfLines={2} style={[type.bodyMuted, { color: palette.muted }]}>

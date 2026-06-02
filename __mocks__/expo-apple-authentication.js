@@ -5,6 +5,7 @@ module.exports = {
   },
   signInAsync: jest.fn().mockResolvedValue({
     identityToken: "apple-id-token",
+    authorizationCode: "apple-auth-code",
     nonce: "apple-nonce",
     fullName: {
       givenName: "Beepy",

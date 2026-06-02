@@ -34,13 +34,14 @@
         "expo-camera",
         {
           "cameraPermission": "BEEP-GET uses the camera to record 2 second Blink messages.",
+          "microphonePermission": false,
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-contacts",
         {
-          "contactsPermission": "BEEP-GET can use contacts to help find friends."
+          "contactsPermission": "BEEP-GET can read contacts locally to help find friends."
         }
       ],
       "./modules/beep-widget/plugin/build/index",
@@ -60,6 +61,18 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "1C8F.1"
+            ]
+          }
+        ],
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": []
       }
     },
     "android": {

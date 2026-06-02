@@ -146,6 +146,14 @@ describe("signInWithApple", () => {
       token: "apple-id-token",
       nonce: expect.stringMatching(/^[0-9A-Za-z._-]{32}$/),
     });
+    expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      "store-apple-revocation-token",
+      {
+        method: "POST",
+        body: { authorizationCode: "apple-auth-code" },
+        headers: { Authorization: "Bearer session" },
+      }
+    );
     expectAppleNoncePair();
     expect(supabase.auth.updateUser).toHaveBeenCalledWith({
       data: {
@@ -160,6 +168,7 @@ describe("signInWithApple", () => {
   it("does not require Apple fullName because Apple only returns it once", async () => {
     AppleAuthentication.signInAsync.mockResolvedValueOnce({
       identityToken: "apple-id-token",
+      authorizationCode: "apple-auth-code",
       fullName: null,
     });
     supabase.auth.signInWithIdToken.mockResolvedValue({ data: {}, error: null });
@@ -172,6 +181,42 @@ describe("signInWithApple", () => {
       nonce: expect.stringMatching(/^[0-9A-Za-z._-]{32}$/),
     });
     expectAppleNoncePair();
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("throws before Supabase login when Apple does not return an authorization code", async () => {
+    AppleAuthentication.signInAsync.mockResolvedValueOnce({
+      identityToken: "apple-id-token",
+      authorizationCode: null,
+      fullName: null,
+    });
+
+    await expect(signInWithApple()).rejects.toThrow("authorization code");
+    expect(supabase.auth.signInWithIdToken).not.toHaveBeenCalled();
+    expect(supabase.functions.invoke).not.toHaveBeenCalled();
+  });
+
+  it("signs out and fails closed when Apple revocation token storage fails", async () => {
+    supabase.auth.signInWithIdToken.mockResolvedValue({
+      data: { session: { access_token: "session" } },
+      error: null,
+    });
+    supabase.functions.invoke.mockResolvedValueOnce({
+      data: null,
+      error: { message: "revocation setup failed" },
+    });
+
+    await expect(signInWithApple()).rejects.toThrow("revocation setup failed");
+
+    expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      "store-apple-revocation-token",
+      {
+        method: "POST",
+        body: { authorizationCode: "apple-auth-code" },
+        headers: { Authorization: "Bearer session" },
+      }
+    );
+    expect(supabase.auth.signOut).toHaveBeenCalled();
     expect(supabase.auth.updateUser).not.toHaveBeenCalled();
   });
 
