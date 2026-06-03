@@ -37,6 +37,15 @@ describe("platform auth", () => {
     expect(getPlatformAuthProviders("android")).toEqual(["google"]);
   });
 
+  it("shows the iOS-first provider stack on web so the login design can be reviewed", () => {
+    expect(getPlatformAuthProviders("web")).toEqual(["apple", "google", "kakao"]);
+    expect(getPlatformAuthProviders("web").map(getPlatformAuthLabel)).toEqual([
+      "Sign in with Apple",
+      "Sign in with Google",
+      "Log in with Kakao",
+    ]);
+  });
+
   it("uses native Apple sign-in only on iOS", () => {
     expect(shouldUseNativeAppleSignIn("apple", "ios")).toBe(true);
     expect(shouldUseNativeAppleSignIn("apple", "android")).toBe(false);

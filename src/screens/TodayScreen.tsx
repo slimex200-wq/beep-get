@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { getMockupFriendPhotoUri, mockupBlinkFrameUris } from "@/design/mockupPhotos";
+import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
@@ -27,6 +27,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 import {
   DEFAULT_QUICK_REPLY_SLOTS,
@@ -82,6 +83,7 @@ export function TodayScreen() {
     () => (latestMessage ? messageToSlipSignal(latestMessage, { index: 0 }) : null),
     [latestMessage]
   );
+  const latestAvatarSource = getAvatarImageSource(latestSignal?.avatarUri);
   const signalQueue = useMemo(
     () =>
       received
@@ -172,11 +174,17 @@ export function TodayScreen() {
               <View style={styles.latestTopRow}>
                 <View style={styles.senderRow}>
                   <View style={styles.senderAvatar}>
-                    <Image
-                      source={{ uri: getMockupFriendPhotoUri(latestSignal.sender, 0) }}
-                      style={styles.senderAvatarImage}
-                      resizeMode="cover"
-                    />
+                    {latestAvatarSource ? (
+                      <Image
+                        source={latestAvatarSource}
+                        style={styles.senderAvatarImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={[styles.senderInitial, { color: palette.text }]}>
+                        {latestSignal.sender.slice(0, 1)}
+                      </Text>
+                    )}
                   </View>
                   <View>
                     <Text style={[styles.senderName, { color: palette.text }]}>{latestSignal.sender}</Text>
@@ -354,6 +362,10 @@ const styles = StyleSheet.create({
   senderAvatarImage: {
     width: "100%",
     height: "100%",
+  },
+  senderInitial: {
+    ...type.metaValue,
+    fontSize: 11,
   },
   senderName: {
     ...type.metaValue,

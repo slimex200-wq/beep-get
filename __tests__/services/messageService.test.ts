@@ -25,7 +25,7 @@ const signal = {
   is_saved: false,
   expires_at: "2026-05-04T00:00:00.000Z",
   created_at: "2026-05-03T00:00:00.000Z",
-  from_user_profile: { nickname: "A", beep_id: "12345678" },
+  from_user_profile: { nickname: "A", beep_id: "12345678", avatar_url: "https://example.com/a.jpg" },
 };
 
 describe("validateMessage", () => {
@@ -82,7 +82,7 @@ describe("sendMessage", () => {
       expires_at: "2026-05-04T00:00:00.000Z",
       created_at: "2026-05-03T00:00:00.000Z",
       kind: "beep",
-      from_user_profile: { nickname: "A", beep_id: "12345678" },
+      from_user_profile: { nickname: "A", beep_id: "12345678", avatar_url: "https://example.com/a.jpg" },
       media: null,
     });
   });
@@ -179,6 +179,9 @@ describe("getReceivedMessages", () => {
     const result = await getReceivedMessages("u2");
 
     expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.select).toHaveBeenCalledWith(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
+    );
     expect(chain.eq).toHaveBeenCalledWith("receiver_id", "u2");
     expect(result[0]).toEqual(
       expect.objectContaining({
@@ -268,6 +271,9 @@ describe("getMessageById", () => {
     const result = await getMessageById("m1");
 
     expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.select).toHaveBeenCalledWith(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
+    );
     expect(chain.eq).toHaveBeenCalledWith("id", "m1");
     expect(chain.single).toHaveBeenCalled();
     expect(result.id).toBe("m1");
@@ -318,6 +324,9 @@ describe("getSavedMessages", () => {
     const result = await getSavedMessages("u2");
 
     expect(supabase.from).toHaveBeenCalledWith("signals");
+    expect(chain.select).toHaveBeenCalledWith(
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
+    );
     expect(chain.eq).toHaveBeenCalledWith("receiver_id", "u2");
     expect(chain.eq).toHaveBeenCalledWith("is_saved", true);
     expect(result[0].is_saved).toBe(true);

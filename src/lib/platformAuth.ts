@@ -19,7 +19,14 @@ export function getPlatformAuthProvider(platform: RuntimePlatform): PlatformAuth
 export function getPlatformAuthProviders(
   platform: RuntimePlatform
 ): PlatformAuthProvider[] {
-  const providers: PlatformAuthProvider[] = [getPlatformAuthProvider(platform)];
+  const providers: PlatformAuthProvider[] =
+    platform === "web" ? ["apple"] : [getPlatformAuthProvider(platform)];
+
+  if (platform === "web") {
+    addProvider(providers, "google");
+    addProvider(providers, "kakao");
+    return providers;
+  }
 
   if (platform === "ios") {
     if (isGoogleAuthEnabled) addProvider(providers, "google");

@@ -25,7 +25,7 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { AVATAR_PRESETS } from "@/design/avatarPresets";
-import { mockupPhotoUris } from "@/design/mockupPhotos";
+import { getAvatarImageSource, getAvatarLabel, normalizeAvatarUri } from "@/lib/avatarSource";
 import {
   identityPacks,
   getIdentityPack,
@@ -35,7 +35,6 @@ import {
   WidgetSkinPackCard,
   getPackVisual,
 } from "@/components/WidgetSkinPackCard";
-import { BlinkPersonStrip } from "@/components/BlinkPersonStrip";
 import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
 import {
   ChevronRightLineIcon,
@@ -122,7 +121,10 @@ export function MyScreen() {
   }, [entries]);
 
   const activePack = getIdentityPack(activeIdentityPackSlug);
-  const avatarUri = profile?.avatar_url?.trim() ? profile.avatar_url : mockupPhotoUris.profile;
+  const avatarUri = normalizeAvatarUri(profile?.avatar_url) ?? "";
+  const avatarSource = getAvatarImageSource(avatarUri);
+  const avatarLabel = getAvatarLabel(profile, "ME");
+  const skinPackPreviewName = profile?.nickname?.trim() || profile?.beep_id?.trim() || "You";
 
   const chooseSkinPack = async (pack: IdentityPack) => {
     const isOwned = ownedPackSlugs.has(pack.slug);
@@ -246,7 +248,8 @@ export function MyScreen() {
         <KotlinHeader
           title="My Settings"
           centered
-          avatarSource={{ uri: avatarUri }}
+          avatarLabel={avatarLabel}
+          avatarSource={avatarSource}
           avatarAccessibilityLabel="Open skin packs"
           onAvatarPress={() => setSkinSheetVisible(true)}
           actions={[
@@ -270,7 +273,7 @@ export function MyScreen() {
             pressed && styles.pressed,
           ]}
         >
-          <Avatar label={profile?.nickname ?? "Me"} source={{ uri: avatarUri }} size={54} />
+          <Avatar label={avatarLabel} source={avatarSource} size={54} />
           <View style={styles.flexCopy}>
             <Text style={[styles.rowTitle, { color: palette.text }]}>
               {profile?.nickname ?? "Profile Avatar"}
@@ -473,6 +476,7 @@ export function MyScreen() {
         visible={skinSheetVisible}
         activePackSlug={activeIdentityPackSlug}
         ownedPackSlugs={ownedPackSlugs}
+        previewFrom={skinPackPreviewName}
         onClose={() => setSkinSheetVisible(false)}
         onSelect={chooseSkinPack}
       />
@@ -491,43 +495,45 @@ function SkinPackSheet({
   visible,
   activePackSlug,
   ownedPackSlugs,
+  previewFrom,
   onClose,
   onSelect,
 }: {
   visible: boolean;
   activePackSlug: string;
   ownedPackSlugs: ReadonlySet<string>;
+  previewFrom: string;
   onClose: () => void;
   onSelect: (pack: IdentityPack) => void;
 }) {
-  const palette = useAppPalette();
   if (!visible) return null;
 
   const activePack = getIdentityPack(activePackSlug);
+  const activeVisual = getPackVisual(activePack);
   const lockedSkinLabel = isIdentityPackStoreEnabled ? undefined : "PREVIEW";
 
-  return (
-    <Modal transparent visible animationType="fade" onRequestClose={onClose}>
+  const sheet = (
       <View style={styles.sheetOverlay}>
         <Pressable accessibilityLabel="Close skin packs" onPress={onClose} style={styles.sheetBackdrop} />
-        <View style={[styles.sheetPanel, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+        <View style={[styles.sheetPanel, Platform.OS === "web" && styles.webSheetPanel, { backgroundColor: activeVisual.surface, borderColor: activeVisual.border }]}>
           <View style={styles.sheetHeader}>
             <View>
-              <Text style={[styles.sheetTitle, { color: palette.text }]}>Skin Packs</Text>
-              <Text style={[type.bodyMuted, { color: palette.muted }]}>
+              <Text style={[styles.sheetTitle, { color: activeVisual.text }]}>Skin Packs</Text>
+              <Text style={[type.bodyMuted, { color: activeVisual.muted }]}>
                 Widget skin, avatar frame, and emote pack as one set.
               </Text>
             </View>
             <Pressable
+              accessibilityLabel="Close skin packs"
               accessibilityRole="button"
               onPress={onClose}
-              style={[styles.sheetClose, { backgroundColor: palette.chip, borderColor: palette.rule }]}
+              style={[styles.sheetClose, { backgroundColor: activeVisual.chip, borderColor: activeVisual.border }]}
             >
-              <Text style={[styles.sheetCloseText, { color: palette.text }]}>Close</Text>
+              <Text style={[styles.sheetCloseText, { color: activeVisual.text }]}>Close</Text>
             </Pressable>
           </View>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.skinSheetScroll}>
-            <IdentityPackPreview pack={activePack} />
+            <IdentityPackPreview pack={activePack} previewFrom={previewFrom} />
             <View style={styles.skinPackGrid}>
               {identityPacks.map((pack) => (
                 <WidgetSkinPackCard
@@ -537,6 +543,7 @@ function SkinPackSheet({
                   active={pack.slug === activePackSlug}
                   owned={ownedPackSlugs.has(pack.slug)}
                   lockedLabel={lockedSkinLabel}
+                  previewFrom={previewFrom}
                   onPress={() => onSelect(pack)}
                 />
               ))}
@@ -544,30 +551,39 @@ function SkinPackSheet({
           </ScrollView>
         </View>
       </View>
+  );
+
+  if (Platform.OS === "web") {
+    return <View style={styles.webSheetHost}>{sheet}</View>;
+  }
+
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={onClose}>
+      {sheet}
     </Modal>
   );
 }
 
-function IdentityPackPreview({ pack }: { pack: IdentityPack }) {
-  const palette = useAppPalette();
+function IdentityPackPreview({ pack, previewFrom }: { pack: IdentityPack; previewFrom: string }) {
   const emotes = pack.expressions.filter((expression) => expression.asset).slice(0, 6);
+  const visual = getPackVisual(pack);
 
   return (
-    <View style={[styles.identityPreview, { borderColor: palette.rule }]}>
+    <View style={[styles.identityPreview, { backgroundColor: visual.chip, borderColor: visual.border }]}>
       <View style={styles.identityPreviewHead}>
-        <Text style={[styles.rowTitle, { color: palette.text }]}>{pack.name}</Text>
+        <Text style={[styles.rowTitle, { color: visual.text }]}>{pack.name}</Text>
         <Text style={[type.tinyMono, { color: getPackVisual(pack).accent }]}>
           {pack.isFree ? "FREE" : isIdentityPackStoreEnabled ? pack.priceLabel : "PREVIEW"}
         </Text>
       </View>
-      <Text numberOfLines={2} style={[type.bodyMuted, { color: palette.muted }]}>
+      <Text numberOfLines={2} style={[type.bodyMuted, { color: visual.muted }]}>
         {pack.shortCopy}
       </Text>
       <View style={styles.identityEmoteRow}>
         {emotes.map((expression) => (
           <View
             key={expression.id}
-            style={[styles.identityEmoteCell, { backgroundColor: palette.input, borderColor: palette.rule }]}
+            style={[styles.identityEmoteCell, { backgroundColor: visual.surface, borderColor: visual.border }]}
           >
             {expression.asset ? (
               <Image source={expression.asset} style={styles.identityEmoteImage} resizeMode="contain" />
@@ -575,7 +591,9 @@ function IdentityPackPreview({ pack }: { pack: IdentityPack }) {
           </View>
         ))}
       </View>
-      <BlinkPersonStrip compact />
+      <Text numberOfLines={1} style={[type.tinyMono, { color: visual.muted }]}>
+        FROM {previewFrom}
+      </Text>
     </View>
   );
 }
@@ -594,11 +612,10 @@ function AvatarPickerSheet({
   const palette = useAppPalette();
   if (!visible) return null;
 
-  return (
-    <Modal transparent visible animationType="fade" onRequestClose={onClose}>
+  const sheet = (
       <View style={styles.sheetOverlay}>
         <Pressable accessibilityLabel="Close avatar picker" onPress={onClose} style={styles.sheetBackdrop} />
-        <View style={[styles.sheetPanel, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+        <View style={[styles.sheetPanel, Platform.OS === "web" && styles.webSheetPanel, { backgroundColor: palette.card, borderColor: palette.rule }]}>
           <View style={styles.sheetHeader}>
             <View>
               <Text style={[styles.sheetTitle, { color: palette.text }]}>Profile Avatar</Text>
@@ -617,6 +634,7 @@ function AvatarPickerSheet({
           <View style={styles.avatarGrid}>
             {AVATAR_PRESETS.map((uri, index) => {
               const active = avatarUri === uri;
+              const avatarSource = getAvatarImageSource(uri);
               return (
                 <Pressable
                   key={uri}
@@ -633,13 +651,24 @@ function AvatarPickerSheet({
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Image source={{ uri }} style={styles.avatarChoiceImage} resizeMode="cover" />
+                  {avatarSource ? (
+                    <Image source={avatarSource} style={styles.avatarChoiceImage} resizeMode="cover" />
+                  ) : null}
                 </Pressable>
               );
             })}
           </View>
         </View>
       </View>
+  );
+
+  if (Platform.OS === "web") {
+    return <View style={styles.webSheetHost}>{sheet}</View>;
+  }
+
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={onClose}>
+      {sheet}
     </Modal>
   );
 }
@@ -928,17 +957,30 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     backgroundColor: "rgba(0,0,0,0.52)",
   },
+  webSheetHost: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    elevation: 20,
+  },
+  webSheetPanel: {
+    marginBottom: 86,
+  },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   sheetPanel: {
-    maxHeight: "82%",
+    maxHeight: "76%",
     gap: spacing[4],
+    marginHorizontal: spacing[3],
+    marginBottom: spacing[3],
     padding: spacing[5],
     paddingBottom: spacing[8],
-    borderTopWidth: 1,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+    shadowColor: colors.ink,
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: -6 },
   },
   sheetHeader: {
     minHeight: 42,

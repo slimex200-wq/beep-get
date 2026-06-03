@@ -23,6 +23,7 @@ import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
+  Avatar,
   KotlinHeader,
   MockupCard,
   MockupSection,
@@ -37,12 +38,12 @@ import {
   SearchLineIcon,
 } from "@/components/MockupLineIcons";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
-import { getMockupFriendPhotoUri, mockupPhotoUris } from "@/design/mockupPhotos";
 import {
   formatSlipTime,
   relationshipToSlipFriend,
   type SlipFriend,
 } from "@/lib/slipUiModels";
+import { getAvatarImageSource, getAvatarLabel } from "@/lib/avatarSource";
 import { generateShareText } from "@/services/contactService";
 import { isValidBeepId } from "@/services/authService";
 import { useAuthStore } from "@/stores/authStore";
@@ -67,6 +68,10 @@ export function PeopleScreen() {
   const [addDialogVisible, setAddDialogVisible] = useState(false);
   const [selectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const profileAvatarSource = getAvatarImageSource(profile?.avatar_url);
+  const profileAvatarLabel = getAvatarLabel(profile, "ME");
+  const profileName = profile?.nickname?.trim() || "My Beep ID";
+  const profileHandle = profile?.beep_id?.trim() ? `@${profile.beep_id}` : "@--------";
 
   useEffect(() => {
     if (!profile) return;
@@ -176,6 +181,7 @@ export function PeopleScreen() {
       friendId: friend.id,
       friendName: friend.name,
       friendNo: friend.no,
+      ...(friend.avatarUri ? { friendAvatarUri: friend.avatarUri } : {}),
       mode,
       initialCode,
     });
@@ -187,7 +193,8 @@ export function PeopleScreen() {
         <KotlinHeader
           title="Friends"
           centered
-          avatarSource={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }}
+          avatarLabel={profileAvatarLabel}
+          avatarSource={profileAvatarSource}
           actions={[
             {
               label: "Settings",
@@ -210,10 +217,10 @@ export function PeopleScreen() {
 
         <MockupSection label="MY ID" hint="SHARE" />
         <MockupCard style={styles.myIdCard}>
-          <Image source={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }} style={styles.myIdAvatar} resizeMode="cover" />
+          <Avatar label={profileAvatarLabel} source={profileAvatarSource} size={52} />
           <View style={styles.myIdCopy}>
-            <Text style={[styles.friendName, { color: palette.text }]}>{profile?.nickname ?? "Alex"} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
-            <Text style={[styles.handle, { color: palette.muted }]}>@{profile?.beep_id ?? "alexb"}</Text>
+            <Text style={[styles.friendName, { color: palette.text }]}>{profileName} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
+            <Text style={[styles.handle, { color: palette.muted }]}>{profileHandle}</Text>
           </View>
           <Pressable
             accessibilityLabel={copyFeedback ? "Beep ID shared" : "Copy Beep ID"}
@@ -253,7 +260,7 @@ export function PeopleScreen() {
                   (index === 0 ? "Widget seen - 18:05" : index === 1 ? "frequent code 486" : "quiet receiving")
                 }
                 accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
-                avatarUri={getMockupFriendPhotoUri(friend.name, index)}
+                avatarUri={friend.avatarUri}
                 online={index === 0}
                 rightText={index === 1 ? favoriteSignalCode : friend.no}
                 onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
@@ -276,6 +283,7 @@ export function PeopleScreen() {
                   key={inbound.id}
                   name={inbound.owner.nickname?.trim() || inbound.owner.beep_id}
                   beepId={inbound.owner.beep_id}
+                  avatarUri={inbound.owner.avatar_url}
                   time={formatSlipTime(inbound.created_at)}
                 />
               ))}
@@ -404,12 +412,13 @@ function FriendRow({
   onPress: () => void;
 }) {
   const palette = useAppPalette();
+  const avatarSource = getAvatarImageSource(avatarUri);
 
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }, pressed && styles.pressed]}>
       <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.friendAvatarImage} resizeMode="cover" />
+        {avatarSource ? (
+          <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
         ) : (
           <Text style={[styles.friendInitial, { color: palette.text }]}>{friend.name.slice(0, 1)}</Text>
         )}
@@ -428,17 +437,24 @@ function InboundRow({
   name,
   beepId,
   time,
+  avatarUri,
 }: {
   name: string;
   beepId: string;
   time: string;
+  avatarUri?: string | null;
 }) {
   const palette = useAppPalette();
+  const avatarSource = getAvatarImageSource(avatarUri);
 
   return (
     <View style={[styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
       <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
-        <Text style={[styles.friendInitial, { color: palette.text }]}>{name.slice(0, 1)}</Text>
+        {avatarSource ? (
+          <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
+        ) : (
+          <Text style={[styles.friendInitial, { color: palette.text }]}>{name.slice(0, 1)}</Text>
+        )}
       </View>
       <View style={styles.friendCopy}>
         <Text style={[styles.friendName, { color: palette.text }]}>{name}</Text>
@@ -451,7 +467,7 @@ function InboundRow({
 
 function formatOwnNo(beepId?: string | null) {
   const digits = beepId?.replace(/\D/g, "");
-  return digits && digits.length >= 2 ? digits.slice(-2) : "04";
+  return digits && digits.length >= 2 ? digits.slice(-2) : "--";
 }
 
 function reportError(err: unknown) {

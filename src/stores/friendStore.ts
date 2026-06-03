@@ -29,6 +29,7 @@ interface Friend {
     beep_id: string;
     nickname: string;
     status_icon: string;
+    avatar_url: string | null;
   };
 }
 
@@ -115,6 +116,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
           beep_id: friendBeepId,
           nickname: nickname || "New friend",
           status_icon: "online",
+          avatar_url: null,
         },
       };
       set((state) => ({ friends: [friend, ...state.friends] }));

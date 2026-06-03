@@ -74,6 +74,7 @@ export function WidgetSkinPackCard({
   active,
   owned,
   lockedLabel,
+  previewFrom,
   onPress,
 }: {
   skin: IdentityPack;
@@ -81,6 +82,7 @@ export function WidgetSkinPackCard({
   active: boolean;
   owned: boolean;
   lockedLabel?: string;
+  previewFrom?: string;
   onPress: () => void;
 }) {
   const palette = useAppPalette();
@@ -101,7 +103,7 @@ export function WidgetSkinPackCard({
         pressed && styles.pressed,
       ]}
     >
-      <SkinPackWidgetPreview size={size} skin={skin} />
+      <SkinPackWidgetPreview size={size} skin={skin} previewFrom={previewFrom} />
       <View style={styles.skinPackCardCopy}>
         <View style={styles.skinPackTitleRow}>
           <Text style={[styles.skinPackName, { color: palette.text }]}>{skin.name}</Text>
@@ -120,12 +122,16 @@ export function WidgetSkinPackCard({
 function SkinPackWidgetPreview({
   size,
   skin,
+  previewFrom,
 }: {
   size: WidgetPreviewSize;
   skin: IdentityPack;
+  previewFrom?: string;
 }) {
+  const fromLabel = previewFrom?.trim() || skin.from;
+
   if (size === "medium") {
-    return <MediumSkinPackWidgetPreview skin={skin} />;
+    return <MediumSkinPackWidgetPreview skin={skin} fromLabel={fromLabel} />;
   }
   const visual = getPackVisual(skin);
 
@@ -144,13 +150,13 @@ function SkinPackWidgetPreview({
         <SignalPayloadPreview pack={skin} visual={visual} size="small" />
       </View>
       <Text numberOfLines={1} style={[styles.skinPackMeaning, { color: visual.muted }]}>
-        {skin.from}
+        {fromLabel}
       </Text>
     </View>
   );
 }
 
-function MediumSkinPackWidgetPreview({ skin }: { skin: IdentityPack }) {
+function MediumSkinPackWidgetPreview({ skin, fromLabel }: { skin: IdentityPack; fromLabel: string }) {
   const visual = getPackVisual(skin);
 
   return (
@@ -178,7 +184,7 @@ function MediumSkinPackWidgetPreview({ skin }: { skin: IdentityPack }) {
           <View style={styles.skinPackMediumFromRow}>
             <Text style={[styles.skinPackMediumLabel, { color: visual.muted }]}>FROM</Text>
             <Text numberOfLines={1} style={[styles.skinPackMediumFrom, { color: visual.text }]}>
-              {skin.from}
+              {fromLabel}
             </Text>
           </View>
           <Text style={[styles.skinPackMediumLabel, { color: visual.muted }]}>2.0s - MUTE</Text>

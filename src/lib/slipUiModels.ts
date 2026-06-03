@@ -1,5 +1,6 @@
 import type { Signal } from "@/data/mockSignals";
 import type { LegacyMessage } from "@/services/messageService";
+import { normalizeAvatarUri } from "@/lib/avatarSource";
 
 export type SlipSignal = Signal;
 
@@ -14,6 +15,7 @@ export type RelationshipFriend = {
     beep_id: string;
     nickname: string;
     status_icon: string;
+    avatar_url?: string | null;
   };
 };
 
@@ -23,6 +25,7 @@ export type SlipFriend = {
   name: string;
   relation: string;
   presets: string[];
+  avatarUri?: string;
   isClose?: boolean;
 };
 
@@ -36,6 +39,7 @@ export function messageToSlipSignal(
   const hasBlink = message.kind === "blink" || Boolean(message.media);
   const memo = message.memo?.trim();
   const blinkNote = hasBlink ? "2 SEC BLINK" : "CODE-ONLY BEEP";
+  const avatarUri = normalizeAvatarUri(message.from_user_profile?.avatar_url);
 
   return {
     id: message.id,
@@ -44,6 +48,7 @@ export function messageToSlipSignal(
     senderNo: senderNoFromBeepId(message.from_user_profile?.beep_id, options.index),
     time: formatSlipTime(message.created_at),
     note: memo ? `${blinkNote} / ${memo}` : blinkNote,
+    ...(avatarUri ? { avatarUri } : {}),
     hasBlink,
     status: expired ? "expired" : message.is_saved ? "saved" : message.is_read ? "read" : "new",
   };
@@ -53,12 +58,15 @@ export function relationshipToSlipFriend(
   relationship: RelationshipFriend,
   index: number
 ): SlipFriend {
+  const avatarUri = normalizeAvatarUri(relationship.friend.avatar_url);
+
   return {
     id: relationship.friend_id,
     no: senderNoFromBeepId(relationship.friend.beep_id, index),
     name: relationship.nickname?.trim() || relationship.friend.nickname || "UNKNOWN",
     relation: relationship.vibration_pattern || relationship.friend.status_icon || "close circuit",
     presets: ["8282", "486", "1004"],
+    ...(avatarUri ? { avatarUri } : {}),
     isClose: index === 0 || relationship.friend.status_icon === "online",
   };
 }

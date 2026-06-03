@@ -3,13 +3,14 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 
 export type PickableFriend = {
   id: string;
   name: string;
   no: string;
   relation?: string;
-  avatarUri?: string;
+  avatarUri?: string | null;
 };
 
 type Props = {
@@ -39,6 +40,7 @@ export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }:
       </Pressable>
       {friends.map((friend) => {
         const selected = friend.id === selectedId;
+        const avatarSource = getAvatarImageSource(friend.avatarUri);
         return (
           <Pressable
             key={friend.id}
@@ -49,8 +51,8 @@ export function FriendPickerStrip({ friends, selectedId, onSelect, onAddPress }:
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
             <View style={[styles.avatar, { backgroundColor: palette.input }, selected && styles.avatarSelected]}>
-              {friend.avatarUri ? (
-                <Image source={{ uri: friend.avatarUri }} style={styles.avatarImage} resizeMode="cover" />
+              {avatarSource ? (
+                <Image source={avatarSource} style={styles.avatarImage} resizeMode="cover" />
               ) : (
                 <Text style={[styles.avatarText, { color: palette.text }, selected && styles.selectedText]}>{friend.name.slice(0, 1)}</Text>
               )}

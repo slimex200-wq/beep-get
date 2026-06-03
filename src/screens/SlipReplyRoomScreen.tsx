@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { getMockupFriendPhotoUri, mockupBlinkFrameUris } from "@/design/mockupPhotos";
+import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
@@ -21,6 +21,7 @@ import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 import { messageToSlipSignal } from "@/lib/slipUiModels";
 import {
   DEFAULT_QUICK_REPLY_SLOTS,
@@ -141,6 +142,7 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
     navigation.navigate("Send", {
       friendId: message.from_user,
       friendName: signal.sender,
+      ...(signal.avatarUri ? { friendAvatarUri: signal.avatarUri } : {}),
       mode: "blink",
     });
   };
@@ -178,7 +180,8 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
     signal.note ??
     FALLBACK_MEANINGS[signal.code] ??
     "signal";
-  const senderAvatarUri = getMockupFriendPhotoUri(signal.sender, 0);
+  const senderAvatarUri = signal.avatarUri;
+  const senderAvatarSource = getAvatarImageSource(senderAvatarUri);
   const statusLabel = message.is_saved ? "Saved" : message.is_read ? "Read" : "Private";
   const statusTone: "muted" | "red" | "green" = message.is_saved
     ? "green"
@@ -212,7 +215,13 @@ export function ReplyRoomScreen({ route, navigation }: Props) {
                   { backgroundColor: palette.chip, borderColor: palette.rule },
                 ]}
               >
-                <Image source={{ uri: senderAvatarUri }} style={styles.senderAvatarImage} resizeMode="cover" />
+                {senderAvatarSource ? (
+                  <Image source={senderAvatarSource} style={styles.senderAvatarImage} resizeMode="cover" />
+                ) : (
+                  <Text style={[styles.senderInitial, { color: palette.text }]}>
+                    {signal.sender.slice(0, 1)}
+                  </Text>
+                )}
               </View>
               <View>
                 <Text style={[styles.senderName, { color: palette.text }]}>{signal.sender}</Text>
@@ -401,6 +410,10 @@ const styles = StyleSheet.create({
   senderAvatarImage: {
     width: "100%",
     height: "100%",
+  },
+  senderInitial: {
+    ...type.metaValue,
+    fontSize: 11,
   },
   senderName: {
     ...type.metaValue,

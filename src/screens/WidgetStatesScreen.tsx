@@ -99,6 +99,7 @@ export function WidgetStatesScreen() {
   const previewPack = useMemo(() => getIdentityPack(previewPackSlug), [previewPackSlug]);
   const previewStates = PREVIEW_STATES_BY_SIZE[size];
   const lockedSkinLabel = isIdentityPackStoreEnabled ? undefined : "PREVIEW";
+  const widgetPreviewFrom = profile?.nickname?.trim() || profile?.beep_id?.trim() || "You";
 
   const handleSizeChange = (nextSize: WidgetSize) => {
     setSize(nextSize);
@@ -170,7 +171,13 @@ export function WidgetStatesScreen() {
             <Text style={[type.tinyMono, { color: palette.muted }]}>LIVE PREVIEW</Text>
             <StatusPill label={size === "medium" ? "3 queued slots" : "active preview"} tone="green" />
           </View>
-          <WidgetMockup size={size} state={previewState} slots={replySlots} pack={previewPack} />
+          <WidgetMockup
+            size={size}
+            state={previewState}
+            slots={replySlots}
+            pack={previewPack}
+            fromLabel={widgetPreviewFrom}
+          />
         </MockupCard>
 
         <MockupSection label="Widget State" />
@@ -220,6 +227,7 @@ export function WidgetStatesScreen() {
               active={skin.slug === previewPack.slug}
               owned={ownedPackSlugs.has(skin.slug)}
               lockedLabel={lockedSkinLabel}
+              previewFrom={widgetPreviewFrom}
               onPress={() => chooseSkinPack(skin)}
             />
           ))}
@@ -239,15 +247,17 @@ function WidgetMockup({
   state,
   slots,
   pack,
+  fromLabel,
 }: {
   size: WidgetSize;
   state: PreviewState;
   slots: string[];
   pack: IdentityPack;
+  fromLabel: string;
 }) {
   const visual = getPackVisual(pack);
   if (size === "medium") {
-    return <MediumWidgetMockup state={state} slots={slots} pack={pack} />;
+    return <MediumWidgetMockup state={state} slots={slots} pack={pack} fromLabel={fromLabel} />;
   }
 
   const isEmpty = state === "empty";
@@ -303,10 +313,12 @@ function MediumWidgetMockup({
   state,
   slots,
   pack,
+  fromLabel,
 }: {
   state: PreviewState;
   slots: string[];
   pack: IdentityPack;
+  fromLabel: string;
 }) {
   const visual = getPackVisual(pack);
   const isEmpty = state === "empty";
@@ -342,7 +354,7 @@ function MediumWidgetMockup({
           <View style={styles.mediumWidgetFromRow}>
             <Text style={[styles.mediumWidgetLabel, { color: visual.muted }]}>FROM</Text>
             <Text numberOfLines={1} style={[styles.mediumWidgetFrom, { color: visual.text }]}>
-              {isEmpty ? "None" : pack.from}
+              {isEmpty ? "None" : fromLabel}
             </Text>
           </View>
           <Text style={[styles.mediumWidgetLabel, { color: visual.muted }]}>

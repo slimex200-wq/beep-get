@@ -17,7 +17,7 @@ import {
 } from "@/components/MockupLineIcons";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
-import { getMockupFriendPhotoUri, mockupPhotoUris } from "@/design/mockupPhotos";
+import { normalizeAvatarUri } from "@/lib/avatarSource";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
@@ -32,7 +32,6 @@ import { SendBeepScreen } from "@/screens/SendBeepScreen";
 import { SendBlinkScreen } from "@/screens/SendBlinkScreen";
 
 type SendMode = "beep" | "blink";
-type CameraCaptureMode = "picture" | "video";
 type SendRouteParams = Partial<RootStackParamList["Send"]>;
 
 const DEFAULT_SLOT_DECK = ["8282", "486", "1004", "7942", "0404"];
@@ -57,11 +56,10 @@ export function SendSignalScreen() {
   const [recording, setRecording] = useState(false);
   const [blinkDraft, setBlinkDraft] = useState<BlinkDraft | null>(null);
   const [captureStatus, setCaptureStatus] = useState("Ready to capture Blink");
-  const [cameraMode, setCameraMode] = useState<CameraCaptureMode>("picture");
   const [sendSettingsVisible, setSendSettingsVisible] = useState(false);
   const [sentFeedback, setSentFeedback] = useState(false);
   const previewMode = Boolean(profile && isUiPreviewUser(profile.id));
-  const headerAvatarUri = profile?.avatar_url ?? mockupPhotoUris.profile;
+  const headerAvatarUri = normalizeAvatarUri(profile?.avatar_url);
 
   useEffect(() => {
     if (!profile) return;
@@ -85,17 +83,17 @@ export function SendSignalScreen() {
             name: params.friendName ?? "Friend",
             no: params.friendNo ?? friendNo(params.friendName),
             relation: "SELECTED",
-            avatarUri: getMockupFriendPhotoUri(params.friendName ?? "Friend", 0),
+            ...(params.friendAvatarUri ? { avatarUri: params.friendAvatarUri } : {}),
           },
         ]
       : [];
 
-    const storeFriends = friends.map((friend, index) => ({
+    const storeFriends = friends.map((friend) => ({
       id: friend.friend_id,
       name: friend.nickname || friend.friend.nickname,
       no: friend.friend.beep_id.slice(-2),
       relation: friend.vibration_pattern || friend.friend.status_icon || "CLOSE",
-      avatarUri: getMockupFriendPhotoUri(friend.nickname || friend.friend.nickname, index),
+      avatarUri: friend.friend.avatar_url,
     }));
 
     const byId = new Map<string, PickableFriend>();
@@ -173,11 +171,6 @@ export function SendSignalScreen() {
     return [];
   }, [blinkDraft?.previewFrameUris]);
 
-  const prepareCameraMode = async (nextMode: CameraCaptureMode) => {
-    setCameraMode(nextMode);
-    await new Promise((resolve) => setTimeout(resolve, 120));
-  };
-
   const deckHeader = recipient ? (
     <View style={styles.deck}>
       <View style={styles.deckSection}>
@@ -199,7 +192,7 @@ export function SendSignalScreen() {
                 mirror
                 mute
                 style={styles.captureCamera}
-                mode={cameraMode}
+                mode="video"
                 videoBitrate={2500000}
                 videoQuality="480p"
               />
@@ -338,8 +331,8 @@ export function SendSignalScreen() {
     setRecording(true);
     setSending(true);
     try {
-      await prepareCameraMode("video");
       const captured = await cameraRef.current.recordAsync({
+        codec: "avc1",
         maxDuration: BLINK_DURATION_SECONDS,
         maxFileSize: BLINK_MAX_BYTES,
       });
@@ -358,7 +351,6 @@ export function SendSignalScreen() {
     } finally {
       setRecording(false);
       setSending(false);
-      setCameraMode("picture");
     }
   };
 

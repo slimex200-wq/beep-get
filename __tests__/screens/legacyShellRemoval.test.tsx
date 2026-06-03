@@ -9,7 +9,7 @@ describe("legacy shell removal", () => {
 
     expect(source).toContain("DetailBlinkPreview");
     expect(source).toContain("DetailFrameStrip");
-    expect(source).toContain("getMockupFriendPhotoUri");
+    expect(source).toContain("signal.avatarUri");
     expect(source).toContain("SignalSlotRail");
     expect(source).toContain("confirmedSlot={quickReplyFeedback}");
     expect(source).toContain("XLineIcon");
