@@ -75,6 +75,34 @@ class StartupErrorBoundary extends React.Component<
 }
 
 export default function App() {
+  return (
+    <StartupErrorBoundary>
+      <AppRuntime />
+    </StartupErrorBoundary>
+  );
+}
+
+class OptionalUpdateBoundary extends React.Component<
+  { children: React.ReactNode },
+  { failed: boolean }
+> {
+  state: { failed: boolean } = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("Update banner disabled", error.message);
+  }
+
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
+}
+
+function AppRuntime() {
   const { setSession, fetchProfile, session, profile } = useAuthStore();
   const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
@@ -82,24 +110,8 @@ export default function App() {
   const [startupTimedOut, setStartupTimedOut] = useState(false);
   const [navigationReady, setNavigationReady] = useState(false);
   const [pendingWidgetUrl, setPendingWidgetUrl] = useState<string | null>(null);
-  const [updateDismissed, setUpdateDismissed] = useState(false);
-  const [updateReloading, setUpdateReloading] = useState(false);
   const appReady = fontsLoaded || Boolean(fontError) || startupTimedOut;
   const canHandleWidgetActions = Boolean(appReady && navigationReady && session && profile);
-  const updatesState = useUpdates();
-  const showUpdateBanner =
-    Boolean(updatesState.isUpdatePending) && !updateDismissed;
-
-  const applyUpdate = useCallback(async () => {
-    if (updateReloading) return;
-    setUpdateReloading(true);
-    try {
-      await Updates.reloadAsync();
-    } catch (err: any) {
-      console.warn("Update reload failed", err?.message ?? err);
-      setUpdateReloading(false);
-    }
-  }, [updateReloading]);
 
   const handleWidgetUrl = useCallback(
     async (url: string) => {
@@ -157,15 +169,24 @@ export default function App() {
       });
     };
 
-    Linking.getInitialURL().then((url) => {
-      if (!url) return;
-      handleOAuthUrl(url).then((handled) => {
-        if (!handled) handleWidgetUrl(url);
+    Linking.getInitialURL()
+      .then((url) => {
+        if (!url) return;
+        handleOAuthUrl(url).then((handled) => {
+          if (!handled) handleWidgetUrl(url);
+        });
+      })
+      .catch((err: any) => {
+        console.warn("Initial link handling failed", err?.message ?? err);
       });
-    });
 
-    const sub = Linking.addEventListener("url", handleUrl);
-    return () => sub.remove();
+    let sub: { remove: () => void } | null = null;
+    try {
+      sub = Linking.addEventListener("url", handleUrl);
+    } catch (err: any) {
+      console.warn("Link listener unavailable", err?.message ?? err);
+    }
+    return () => sub?.remove();
   }, [handleWidgetUrl, read]);
 
   useEffect(() => {
@@ -200,33 +221,50 @@ export default function App() {
   }, [profile?.id]);
 
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const signalId = getNotificationSignalId(response);
-      if (signalId) navigationRef.current?.navigate("ReplyRoom", { signalId });
-    });
-    return () => sub.remove();
+    let sub: { remove: () => void } | null = null;
+    try {
+      sub = Notifications.addNotificationResponseReceivedListener((response) => {
+        const signalId = getNotificationSignalId(response);
+        if (signalId) navigationRef.current?.navigate("ReplyRoom", { signalId });
+      });
+    } catch (err: any) {
+      console.warn("Notification response listener unavailable", err?.message ?? err);
+    }
+    return () => sub?.remove();
   }, []);
 
   useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    try {
+      supabase.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          setSession(session);
+          if (session) fetchProfile();
+        })
+        .catch((err) => {
+          console.warn("Initial auth session failed", err?.message ?? err);
+          setSession(null);
+        });
+    } catch (err: any) {
+      console.warn("Initial auth session failed", err?.message ?? err);
+      setSession(null);
+    }
+
+    try {
+      const {
+        data: { subscription: nextSubscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
         if (session) fetchProfile();
-      })
-      .catch((err) => {
-        console.warn("Initial auth session failed", err?.message ?? err);
-        setSession(null);
       });
+      subscription = nextSubscription;
+    } catch (err: any) {
+      console.warn("Auth state listener unavailable", err?.message ?? err);
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) fetchProfile();
-    });
-
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -263,23 +301,45 @@ export default function App() {
   if (!appReady) return null;
 
   return (
-    <StartupErrorBoundary>
-      <ThemeProvider>
-        <NavigationContainer
-          ref={navigationRef}
-          linking={linking}
-          onReady={() => setNavigationReady(true)}
-        >
-          <RootNavigator />
-        </NavigationContainer>
-        <UpdateBannerSlip
-          visible={showUpdateBanner}
-          onReload={applyUpdate}
-          onDismiss={() => setUpdateDismissed(true)}
-          busy={updateReloading}
-        />
-      </ThemeProvider>
-    </StartupErrorBoundary>
+    <ThemeProvider>
+      <NavigationContainer
+        ref={navigationRef}
+        linking={linking}
+        onReady={() => setNavigationReady(true)}
+      >
+        <RootNavigator />
+      </NavigationContainer>
+      <OptionalUpdateBoundary>
+        <UpdateBannerController />
+      </OptionalUpdateBoundary>
+    </ThemeProvider>
+  );
+}
+
+function UpdateBannerController() {
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [updateReloading, setUpdateReloading] = useState(false);
+  const updatesState = useUpdates();
+  const showUpdateBanner = Boolean(updatesState.isUpdatePending) && !updateDismissed;
+
+  const applyUpdate = useCallback(async () => {
+    if (updateReloading) return;
+    setUpdateReloading(true);
+    try {
+      await Updates.reloadAsync();
+    } catch (err: any) {
+      console.warn("Update reload failed", err?.message ?? err);
+      setUpdateReloading(false);
+    }
+  }, [updateReloading]);
+
+  return (
+    <UpdateBannerSlip
+      visible={showUpdateBanner}
+      onReload={applyUpdate}
+      onDismiss={() => setUpdateDismissed(true)}
+      busy={updateReloading}
+    />
   );
 }
 

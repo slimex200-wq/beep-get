@@ -15,7 +15,14 @@ module.exports = {
     "^expo-secure-store$": "<rootDir>/__mocks__/expo-secure-store.js",
     "^expo-video-thumbnails$": "<rootDir>/__mocks__/expo-video-thumbnails.js",
   },
-  testPathIgnorePatterns: ["/node_modules/", "/ios/", "/android/"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/ios/",
+    "/android/",
+    "<rootDir>/.omx/",
+    "<rootDir>/.worktrees/",
+    "<rootDir>/qa-capture/",
+  ],
   transformIgnorePatterns: [
     "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@supabase/.*|zustand)",
   ],
