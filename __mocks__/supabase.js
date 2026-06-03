@@ -36,6 +36,7 @@ const createMockStorageBucket = () => ({
 });
 
 module.exports = {
+  isSupabaseConfigured: true,
   supabase: {
     from: mockFrom,
     rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
