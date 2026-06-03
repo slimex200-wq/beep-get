@@ -30,6 +30,7 @@ interface MessageState {
   saved: Message[];
   loading: boolean;
   channel: RealtimeChannel | null;
+  realtimeUserId: string | null;
   quickReplyActionKeys: string[];
   reset: () => void;
   fetchReceived: (userId: string, friends?: any[]) => Promise<void>;
@@ -47,6 +48,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   saved: [],
   loading: false,
   channel: null,
+  realtimeUserId: null,
   quickReplyActionKeys: [],
 
   reset: () => {
@@ -59,6 +61,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       saved: [],
       loading: false,
       channel: null,
+      realtimeUserId: null,
       quickReplyActionKeys: [],
     });
   },
@@ -238,10 +241,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   subscribeRealtime: (userId) => {
-    if (isUiPreviewUser(userId)) return;
-    const channel = supabase
-      .channel(`signals:${userId}`)
-      .on(
+    const { channel, realtimeUserId } = get();
+    if (isUiPreviewUser(userId)) {
+      if (channel) supabase.removeChannel(channel);
+      set({ channel: null, realtimeUserId: null });
+      return;
+    }
+
+    if (channel && realtimeUserId === userId) return;
+
+    if (channel) supabase.removeChannel(channel);
+
+    let nextChannel: RealtimeChannel | null = null;
+    try {
+      nextChannel = supabase.channel(`signals:${userId}`);
+      nextChannel.on(
         "postgres_changes",
         {
           event: "INSERT",
@@ -252,16 +266,24 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         async () => {
           await get().fetchReceived(userId);
         }
-      )
-      .subscribe();
-    set({ channel });
+      );
+      nextChannel.subscribe();
+      set({ channel: nextChannel, realtimeUserId: userId });
+    } catch (error) {
+      if (nextChannel) supabase.removeChannel(nextChannel);
+      set({ channel: null, realtimeUserId: null });
+      console.warn(
+        "Realtime subscription unavailable; continuing without live signal refresh.",
+        error,
+      );
+    }
   },
 
   unsubscribeRealtime: () => {
     const { channel } = get();
     if (channel) {
       supabase.removeChannel(channel);
-      set({ channel: null });
     }
+    set({ channel: null, realtimeUserId: null });
   },
 }));
