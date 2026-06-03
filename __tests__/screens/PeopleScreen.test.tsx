@@ -27,7 +27,8 @@ describe("PeopleScreen product sections", () => {
     expect(peopleSource).toContain("SearchLineIcon");
     expect(peopleSource).toContain("Friends settings");
     expect(peopleSource).toContain('navigation.navigate("Account")');
-    expect(peopleSource).toContain("getMockupFriendPhotoUri");
+    expect(peopleSource).toContain("friend.avatarUri");
+    expect(peopleSource).toContain("friendAvatarUri");
     expect(peopleSource).toContain("Haptics.selectionAsync");
   });
 });

@@ -5,6 +5,7 @@ export type Signal = {
   senderNo: string;
   time: string;
   note?: string;
+  avatarUri?: string;
   hasBlink?: boolean;
   status?: 'new' | 'read' | 'saved' | 'expired';
 };
@@ -15,6 +16,7 @@ export type Friend = {
   name: string;
   relation: string;
   presets: string[];
+  avatarUri?: string;
   isClose?: boolean;
 };
 

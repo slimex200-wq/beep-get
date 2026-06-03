@@ -86,6 +86,7 @@ export function buildDemoFriend(ownerId: string) {
       beep_id: DEMO_FRIEND_BEEP_ID,
       nickname: "Beepy",
       status_icon: "online",
+      avatar_url: null,
     },
   };
 }

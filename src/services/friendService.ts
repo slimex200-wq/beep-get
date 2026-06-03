@@ -13,6 +13,7 @@ type RelationshipRow = {
     beep_id: string;
     nickname: string;
     status_icon: string;
+    avatar_url: string | null;
   };
 };
 
@@ -26,6 +27,7 @@ export type InboundRelationshipRow = {
     beep_id: string;
     nickname: string;
     status_icon: string;
+    avatar_url: string | null;
   };
 };
 
@@ -71,7 +73,7 @@ export async function removeFriend(userId: string, friendId: string) {
 export async function getFriends(userId: string) {
   const { data, error } = await supabase
     .from("relationships")
-    .select("*, friend:profiles!relationships_friend_id_fkey(id, beep_id, nickname, status_icon)")
+    .select("*, friend:profiles!relationships_friend_id_fkey(id, beep_id, nickname, status_icon, avatar_url)")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
 
@@ -83,7 +85,7 @@ export async function getInboundFriends(userId: string) {
   const { data, error } = await supabase
     .from("relationships")
     .select(
-      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon)"
+      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon, avatar_url)"
     )
     .eq("friend_id", userId)
     .order("created_at", { ascending: false });

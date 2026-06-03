@@ -31,7 +31,14 @@ import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 export type RootStackParamList = {
   Auth: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
-  Send: { friendId: string; friendName: string; friendNo?: string; mode?: "beep" | "blink"; initialCode?: string };
+  Send: {
+    friendId: string;
+    friendName: string;
+    friendNo?: string;
+    friendAvatarUri?: string;
+    mode?: "beep" | "blink";
+    initialCode?: string;
+  };
   ReplyRoom: { signalId: string };
   WidgetStates: { size?: "small" | "medium" } | undefined;
   Logs: undefined;

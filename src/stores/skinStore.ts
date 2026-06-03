@@ -14,6 +14,7 @@ import {
 } from "@/lib/uiPreview";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { DEFAULT_IDENTITY_PACK_SLUG } from "@/design/identityPacks";
+import { useAuthStore } from "@/stores/authStore";
 
 interface Skin {
   id: string;
@@ -62,6 +63,10 @@ export const useSkinStore = create<SkinState>((set, get) => ({
     }),
 
   fetchAll: async () => {
+    if (isUiPreviewUser(useAuthStore.getState().profile?.id)) {
+      set({ allSkins: uiPreviewSkins });
+      return;
+    }
     if (!isSupabaseConfigured) {
       set({ allSkins: uiPreviewSkins });
       return;

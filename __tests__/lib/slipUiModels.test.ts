@@ -18,7 +18,11 @@ describe("messageToSlipSignal", () => {
         kind: "blink",
         expires_at: "2026-05-04T10:00:00",
         created_at: "2026-05-04T09:00:00",
-        from_user_profile: { nickname: "Mina", beep_id: "12031997" },
+        from_user_profile: {
+          nickname: "Mina",
+          beep_id: "12031997",
+          avatar_url: "https://example.com/mina.jpg",
+        },
         media: {
           durationMs: 2000,
           status: "processed",
@@ -37,6 +41,7 @@ describe("messageToSlipSignal", () => {
       note: "2 SEC BLINK / call now",
       hasBlink: true,
       status: "new",
+      avatarUri: "https://example.com/mina.jpg",
     });
   });
 
@@ -75,6 +80,7 @@ describe("relationshipToSlipFriend", () => {
             beep_id: "12031997",
             nickname: "Mina",
             status_icon: "online",
+            avatar_url: "https://example.com/mina.jpg",
           },
         },
         0
@@ -86,6 +92,7 @@ describe("relationshipToSlipFriend", () => {
       relation: "short",
       presets: ["8282", "486", "1004"],
       isClose: true,
+      avatarUri: "https://example.com/mina.jpg",
     });
   });
 });

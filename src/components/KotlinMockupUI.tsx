@@ -1,19 +1,17 @@
 import React from "react";
 import {
   Image,
-  ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type ImageSourcePropType,
   type ViewStyle,
 } from "react-native";
 import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
-
-const beepyAvatar = require("../../assets/brand/beepy-handdrawn.png");
 
 type HeaderAction = {
   label: string;
@@ -36,7 +34,7 @@ type HeaderProps = {
 export function KotlinHeader({
   title,
   avatarLabel = "B",
-  avatarSource = beepyAvatar,
+  avatarSource,
   actions = [],
   centered = false,
   showAvatar = true,
@@ -183,7 +181,11 @@ export function MockupSection({
   return (
     <View style={[styles.sectionRow, style]}>
       <Text style={[styles.sectionLabel, { color: palette.muted }]}>{label}</Text>
-      {hint ? <Text style={[styles.sectionHint, { color: palette.muted }]}>{hint}</Text> : null}
+      {hint ? (
+        <Text numberOfLines={1} style={[styles.sectionHint, { color: palette.muted }]}>
+          {hint}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     letterSpacing: 0,
     color: colors.muted,
-    flex: 1,
+    maxWidth: "58%",
     flexShrink: 1,
     textAlign: "right",
   },

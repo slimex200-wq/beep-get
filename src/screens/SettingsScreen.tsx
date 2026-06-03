@@ -20,7 +20,7 @@ import { useFriendStore } from "@/stores/friendStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useCollectionStore } from "@/stores/collectionStore";
 import { useSkinStore } from "@/stores/skinStore";
-import { mockupPhotoUris } from "@/design/mockupPhotos";
+import { getAvatarImageSource, getAvatarLabel } from "@/lib/avatarSource";
 import { accountDeletionUrl, privacyPolicyUrl, supportUrl } from "@/lib/releaseFlags";
 
 function resetUserStores() {
@@ -44,6 +44,10 @@ export function SettingsScreen() {
   const themePreference = useThemeStore((state) => state.themePreference);
   const setThemePreference = useThemeStore((state) => state.setThemePreference);
   const [busy, setBusy] = useState(false);
+  const avatarLabel = getAvatarLabel(profile, "ME");
+  const avatarSource = getAvatarImageSource(profile?.avatar_url);
+  const displayName = profile?.nickname?.trim() || "Profile";
+  const beepHandle = profile?.beep_id?.trim() ? `@${profile.beep_id}` : "@--------";
 
   const closeToMy = () => {
     if (navigation.canGoBack()) {
@@ -116,27 +120,33 @@ export function SettingsScreen() {
   return (
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader title="Account" centered actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close account settings", onPress: closeToMy }]} />
+        <KotlinHeader
+          title="Account"
+          centered
+          avatarLabel={avatarLabel}
+          avatarSource={avatarSource}
+          actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close account settings", onPress: closeToMy }]}
+        />
 
-        <MockupSection label="My Beep ID" />
+        <MockupSection label="My Beep ID" style={styles.sectionInset} />
         <MockupCard style={styles.identityCard}>
-          <Avatar label={profile?.nickname ?? "Me"} source={{ uri: profile?.avatar_url ?? mockupPhotoUris.profile }} size={46} />
+          <Avatar label={avatarLabel} source={avatarSource} size={46} />
           <View style={styles.identityCopy}>
-            <Text style={[styles.name, { color: palette.text }]}>{profile?.nickname ?? "Unknown"}</Text>
+            <Text style={[styles.name, { color: palette.text }]}>{displayName}</Text>
             <Text selectable style={[styles.handle, { color: palette.muted }]}>
-              @{profile?.beep_id ?? "--------"}
+              {beepHandle}
             </Text>
           </View>
           <StatusPill label={profile?.status_icon ?? "online"} tone="green" />
         </MockupCard>
 
-        <MockupSection label="Account Actions" />
+        <MockupSection label="Account Actions" style={styles.sectionInset} />
         <MockupCard style={styles.actionCard}>
           <ActionButton label="Share Beep ID" onPress={shareBeepId} disabled={!profile || busy} />
           <ActionButton label="Log Out" variant="ghost" onPress={logout} disabled={busy} />
         </MockupCard>
 
-        <MockupSection label="Appearance" hint="System / Light / Dark" />
+        <MockupSection label="Appearance" hint="System / Light / Dark" style={styles.sectionInset} />
         <MockupCard style={styles.actionCard}>
           <Text style={[type.bodyMuted, { color: palette.muted }]}>
             Choose the app theme. System follows your device light or dark setting.
@@ -173,7 +183,7 @@ export function SettingsScreen() {
           </View>
         </MockupCard>
 
-        <MockupSection label="Privacy & Data" />
+        <MockupSection label="Privacy & Data" style={styles.sectionInset} />
         <MockupCard style={styles.actionCard}>
           <Text style={[type.bodyMuted, { color: palette.muted }]}>
             Account deletion removes your profile, relationships, Beeps, Blinks, and private Blink media.
@@ -212,6 +222,9 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 96,
     gap: spacing[4],
+  },
+  sectionInset: {
+    marginHorizontal: spacing[5],
   },
   identityCard: {
     minHeight: 76,

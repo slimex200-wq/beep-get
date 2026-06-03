@@ -26,7 +26,7 @@ type Props = {
 
 export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Props) {
   const palette = useAppPalette();
-  const senderLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : 'Mina - NO 04';
+  const participantLabel = signal ? `${signal.sender} - NO ${signal.senderNo}` : 'BEEP-GET - NO --';
   const code = signal?.code ?? '8282';
   const time = signal?.time ?? '14:56';
   const isMedium = size === 'medium';
@@ -35,9 +35,9 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
     return (
       <SlipFrame title="Sent Beep" variant="success" compact accent={false}>
         <View style={styles.centerState}>
-          <Text style={styles.check}>✓</Text>
-          <MetaRow label="TO." value="Mina - NO 04" />
-          <MetaRow label="TIME." value="14:57" mono />
+          <Text style={styles.check}>OK</Text>
+          <MetaRow label="TO." value={participantLabel} />
+          <MetaRow label="TIME." value={time} mono />
         </View>
       </SlipFrame>
     );
@@ -47,8 +47,8 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
     return (
       <SlipFrame title="Send Failed" variant="danger" compact>
         <View style={styles.centerState}>
-          <Text style={styles.x}>×</Text>
-          <MetaRow label="TO." value="Mina - NO 04" />
+          <Text style={styles.x}>X</Text>
+          <MetaRow label="TO." value={participantLabel} />
           <View style={styles.redButton}>
             <Text style={[type.button, styles.redButtonText]}>OPEN APP</Text>
           </View>
@@ -62,7 +62,7 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
       <SlipFrame title="Sending..." compact>
         <View style={styles.centerState}>
           <DotRadar size={104} label="" />
-          <MetaRow label="TO." value="Mina - NO 04" />
+          <MetaRow label="TO." value={participantLabel} />
           <MetaRow label="TIME." value="00:02 / 02.0" mono />
         </View>
       </SlipFrame>
@@ -78,15 +78,15 @@ export function WidgetCard({ state, signal, stripFrameUris, size = 'small' }: Pr
         <View style={styles.emptyBlock}>
           <Text style={[type.tinyMono, styles.emptyLabel, { color: palette.muted }]}>NO.</Text>
           <Text style={[type.codeMedium, styles.emptyCode, { color: palette.text }]}>----</Text>
-          <MetaRow label="FROM." value="—" />
-          <MetaRow label="TIME." value="—" />
+          <MetaRow label="FROM." value="--" />
+          <MetaRow label="TIME." value="--" />
         </View>
       ) : (
         <>
           <Text style={[type.tinyMono, { color: palette.muted }]}>NO.</Text>
           <SignalCode code={code} size="medium" />
           {isBlink ? <BlinkStrip compact frameUris={stripFrameUris} /> : null}
-          <MetaRow label="FROM." value={senderLabel} />
+          <MetaRow label="FROM." value={participantLabel} />
           <MetaRow label="TIME." value={time} mono />
           {isMedium ? <MediumWidgetActions /> : null}
         </>

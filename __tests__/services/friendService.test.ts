@@ -141,7 +141,13 @@ describe("getFriends", () => {
         nickname: "A",
         vibration_pattern: null,
         created_at: "2026-05-03T00:00:00.000Z",
-        friend: { id: "user-2", beep_id: "12345678", nickname: "A", status_icon: "online" },
+        friend: {
+          id: "user-2",
+          beep_id: "12345678",
+          nickname: "A",
+          status_icon: "online",
+          avatar_url: "https://example.com/a.jpg",
+        },
       },
     ];
     const chain = createMockChain({ data: relationships, error: null });
@@ -150,9 +156,12 @@ describe("getFriends", () => {
     const result = await getFriends("user-1");
 
     expect(supabase.from).toHaveBeenCalledWith("relationships");
-    expect(chain.select).toHaveBeenCalled();
+    expect(chain.select).toHaveBeenCalledWith(
+      "*, friend:profiles!relationships_friend_id_fkey(id, beep_id, nickname, status_icon, avatar_url)",
+    );
     expect(chain.eq).toHaveBeenCalledWith("owner_id", "user-1");
     expect(result[0]).toEqual(expect.objectContaining({ user_id: "user-1" }));
+    expect(result[0]?.friend.avatar_url).toBe("https://example.com/a.jpg");
   });
 
   it("returns empty array when data is null", async () => {
@@ -178,7 +187,13 @@ describe("getInboundFriends", () => {
         owner_id: "user-2",
         friend_id: "user-1",
         created_at: "2026-05-31T00:00:00.000Z",
-        owner: { id: "user-2", beep_id: "12345678", nickname: "B", status_icon: "online" },
+        owner: {
+          id: "user-2",
+          beep_id: "12345678",
+          nickname: "B",
+          status_icon: "online",
+          avatar_url: "https://example.com/b.jpg",
+        },
       },
     ];
     const chain = createMockChain({ data: inbound, error: null });
@@ -188,7 +203,7 @@ describe("getInboundFriends", () => {
 
     expect(supabase.from).toHaveBeenCalledWith("relationships");
     expect(chain.select).toHaveBeenCalledWith(
-      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon)",
+      "id, owner_id, friend_id, created_at, owner:profiles!relationships_owner_id_fkey(id, beep_id, nickname, status_icon, avatar_url)",
     );
     expect(chain.eq).toHaveBeenCalledWith("friend_id", "user-1");
     expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: false });

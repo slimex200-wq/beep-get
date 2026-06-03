@@ -11,6 +11,7 @@ describe("AuthScreen profile completion", () => {
     expect(source).toContain("classic-paper__waiting.png");
     expect(source).toContain("classic-paper__open-signal.png");
     expect(source).toContain("ProviderLogo");
+    expect(source).toContain("secondaryProviderRow");
     expect(source).toContain("Sign in once. Your private Beep ID comes next.");
     expect(source).toContain("AppleAuthenticationButton");
     expect(source).not.toContain("Join / Continue");
@@ -22,8 +23,8 @@ describe("AuthScreen profile completion", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/AuthScreen.tsx"), "utf8");
 
     expect(source).toContain("AVATAR_PRESETS");
-    expect(source).toContain("mockupPhotoUris.profile");
-    expect(source).toContain("PROFILE PHOTO");
+    expect(source).toContain("DEFAULT_AVATAR_URI");
+    expect(source).toContain("PROFILE AVATAR");
     expect(source).toContain("accessibilityState={{ selected: active }}");
     expect(source).toContain("initProfile(trimmed, avatarUri)");
     expect(source).toContain("FINISH PROFILE");

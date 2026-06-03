@@ -1,11 +1,14 @@
 import { UI_PREVIEW_USER_ID } from "@/lib/uiPreview";
+import { useAuthStore } from "@/stores/authStore";
 import { useSkinStore } from "@/stores/skinStore";
 
 const { supabase, createMockChain } = require("@/lib/supabase");
 
 beforeEach(() => {
   jest.clearAllMocks();
+  supabase.from.mockReturnValue(createMockChain());
   useSkinStore.getState().reset();
+  useAuthStore.setState({ session: null, user: null, profile: null, loading: false });
 });
 
 describe("skinStore identity pack state", () => {
@@ -64,6 +67,31 @@ describe("skinStore identity pack state", () => {
 
     expect(supabase.from).not.toHaveBeenCalled();
     expect(useSkinStore.getState().activeIdentityPackSlug).toBe("classic-paper");
+  });
+
+  it("fetchAll uses preview skins when the auth profile is the UI preview user", async () => {
+    useAuthStore.setState({
+      profile: {
+        id: UI_PREVIEW_USER_ID,
+        beep_id: "00000000",
+        nickname: "Preview User",
+        status_icon: "online",
+        active_skin_id: null,
+        active_identity_pack: "classic-paper",
+        avatar_url: null,
+      },
+    });
+
+    await useSkinStore.getState().fetchAll();
+
+    expect(useSkinStore.getState().allSkins).toHaveLength(5);
+    expect(useSkinStore.getState().allSkins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "skin-swiss-paper" }),
+        expect.objectContaining({ id: "skin-glass" }),
+      ]),
+    );
+    expect(supabase.from).not.toHaveBeenCalled();
   });
 
   it("reset restores the default identity pack", () => {

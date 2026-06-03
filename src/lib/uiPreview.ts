@@ -1,6 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import type { LegacyMessage } from "@/services/messageService";
-import { mockupBlinkFrameUris, mockupPhotoUris } from "@/design/mockupPhotos";
+import { AVATAR_PRESETS, DEFAULT_AVATAR_URI } from "@/design/avatarPresets";
+import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
 export const isUiPreviewEnabled = process.env.EXPO_PUBLIC_UI_PREVIEW === "1";
@@ -8,11 +9,11 @@ export const isUiPreviewUser = (userId?: string | null) => userId === UI_PREVIEW
 
 export const uiPreviewProfile = {
   id: UI_PREVIEW_USER_ID,
-  beep_id: "alexc",
-  nickname: "Alex Chen",
+  beep_id: "preview",
+  nickname: "Preview User",
   status_icon: "online",
   active_skin_id: "skin-swiss-paper",
-  avatar_url: mockupPhotoUris.profile,
+  avatar_url: DEFAULT_AVATAR_URI,
 };
 
 export function createUiPreviewSession(): Session {
@@ -94,6 +95,7 @@ export const uiPreviewFriends = [
       beep_id: "12031997",
       nickname: "비피",
       status_icon: "busy",
+      avatar_url: AVATAR_PRESETS[1] ?? DEFAULT_AVATAR_URI,
     },
   },
   {
@@ -107,6 +109,7 @@ export const uiPreviewFriends = [
       beep_id: "01012026",
       nickname: "민아",
       status_icon: "online",
+      avatar_url: AVATAR_PRESETS[2] ?? DEFAULT_AVATAR_URI,
     },
   },
   {
@@ -120,6 +123,7 @@ export const uiPreviewFriends = [
       beep_id: "01012027",
       nickname: "준",
       status_icon: "away",
+      avatar_url: AVATAR_PRESETS[3] ?? DEFAULT_AVATAR_URI,
     },
   },
 ];
@@ -135,6 +139,7 @@ export const uiPreviewInboundFriends = [
       beep_id: "07041988",
       nickname: "도윤",
       status_icon: "online",
+      avatar_url: AVATAR_PRESETS[1] ?? DEFAULT_AVATAR_URI,
     },
   },
   {
@@ -147,6 +152,7 @@ export const uiPreviewInboundFriends = [
       beep_id: "01130624",
       nickname: "서아",
       status_icon: "away",
+      avatar_url: AVATAR_PRESETS[2] ?? DEFAULT_AVATAR_URI,
     },
   },
 ];

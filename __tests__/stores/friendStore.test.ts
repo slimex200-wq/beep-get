@@ -50,14 +50,14 @@ describe("friendStore inbound friends", () => {
           owner_id: "o1",
           friend_id: "user-1",
           created_at: "2026-05-30T00:00:00.000Z",
-          owner: { id: "o1", beep_id: "11111111", nickname: "Old", status_icon: "online" },
+          owner: { id: "o1", beep_id: "11111111", nickname: "Old", status_icon: "online", avatar_url: null },
         },
         {
           id: "new",
           owner_id: "o2",
           friend_id: "user-1",
           created_at: "2026-05-31T12:00:00.000Z",
-          owner: { id: "o2", beep_id: "22222222", nickname: "New", status_icon: "online" },
+          owner: { id: "o2", beep_id: "22222222", nickname: "New", status_icon: "online", avatar_url: null },
         },
       ],
     });

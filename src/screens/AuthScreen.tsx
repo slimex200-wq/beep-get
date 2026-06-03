@@ -18,8 +18,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { BeepyMascot } from "@/components/BeepyMascot";
-import { AVATAR_PRESETS } from "@/design/avatarPresets";
-import { mockupPhotoUris } from "@/design/mockupPhotos";
+import { AVATAR_PRESETS, DEFAULT_AVATAR_URI } from "@/design/avatarPresets";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import {
@@ -28,6 +27,7 @@ import {
   shouldUseNativeAppleSignIn,
   type PlatformAuthProvider,
 } from "@/lib/platformAuth";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 import { isUiPreviewEnabled } from "@/lib/uiPreview";
 import {
   signInWithApple,
@@ -46,17 +46,20 @@ const authBeepyFrames = {
 export function AuthScreen() {
   const { enterPreviewMode, initProfile, profile, user } = useAuthStore();
   const [nickname, setNickname] = useState(profile?.nickname ?? "");
-  const [avatarUri, setAvatarUri] = useState(profile?.avatar_url ?? mockupPhotoUris.profile);
+  const [avatarUri, setAvatarUri] = useState(profile?.avatar_url ?? DEFAULT_AVATAR_URI);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const authProviders = getPlatformAuthProviders(Platform.OS);
+  const primaryAuthProvider = authProviders[0];
+  const secondaryAuthProviders = authProviders.slice(1);
   const showNicknameForm = Boolean(user);
   const profileHint = profile?.nickname
-    ? "Choose a profile photo to finish your Beep ID."
-    : "Set a nickname and profile photo to create your Beep ID.";
+    ? "Choose a profile avatar to finish your Beep ID."
+    : "Set a nickname and profile avatar to create your Beep ID.";
+  const selectedAvatarSource = getAvatarImageSource(avatarUri);
 
   useEffect(() => {
     if (profile?.nickname) setNickname(profile.nickname);
-    setAvatarUri(profile?.avatar_url?.trim() ? profile.avatar_url : mockupPhotoUris.profile);
+    setAvatarUri(profile?.avatar_url?.trim() ? profile.avatar_url : DEFAULT_AVATAR_URI);
   }, [profile?.avatar_url, profile?.nickname]);
 
   const handleProviderLogin = async (provider: PlatformAuthProvider) => {
@@ -137,17 +140,20 @@ export function AuthScreen() {
                 onSubmitEditing={handleSetNickname}
               />
               <View style={styles.avatarSetup}>
-                <Text style={styles.label}>PROFILE PHOTO</Text>
+                <Text style={styles.label}>PROFILE AVATAR</Text>
                 <View style={styles.avatarPreviewFrame}>
-                  <Image source={{ uri: avatarUri }} style={styles.avatarPreviewImage} resizeMode="cover" />
+                  {selectedAvatarSource ? (
+                    <Image source={selectedAvatarSource} style={styles.avatarPreviewImage} resizeMode="cover" />
+                  ) : null}
                 </View>
                 <View style={styles.avatarOptions}>
                   {AVATAR_PRESETS.map((uri, index) => {
                     const active = avatarUri === uri;
+                    const avatarSource = getAvatarImageSource(uri);
                     return (
                       <Pressable
                         key={uri}
-                        accessibilityLabel={`Choose profile photo ${index + 1}`}
+                        accessibilityLabel={`Choose profile avatar ${index + 1}`}
                         accessibilityRole="button"
                         accessibilityState={{ selected: active }}
                         onPress={() => setAvatarUri(uri)}
@@ -157,7 +163,9 @@ export function AuthScreen() {
                           pressed && styles.pressed,
                         ]}
                       >
-                        <Image source={{ uri }} style={styles.avatarChoiceImage} resizeMode="cover" />
+                        {avatarSource ? (
+                          <Image source={avatarSource} style={styles.avatarChoiceImage} resizeMode="cover" />
+                        ) : null}
                       </Pressable>
                     );
                   })}
@@ -178,17 +186,23 @@ export function AuthScreen() {
                 Sign in once. Your private Beep ID comes next.
               </Text>
               <ProviderAuthButton
-                provider={authProviders[0]}
-                onPress={() => handleProviderLogin(authProviders[0])}
+                provider={primaryAuthProvider}
+                onPress={() => handleProviderLogin(primaryAuthProvider)}
                 prominent
               />
-              {authProviders.slice(1).map((provider) => (
-                <ProviderAuthButton
-                  key={provider}
-                  provider={provider}
-                  onPress={() => handleProviderLogin(provider)}
-                />
-              ))}
+              {secondaryAuthProviders.length ? (
+                <View style={styles.secondaryProviderRow}>
+                  {secondaryAuthProviders.map((provider) => (
+                    <ProviderAuthButton
+                      key={provider}
+                      provider={provider}
+                      onPress={() => handleProviderLogin(provider)}
+                      compact
+                      style={styles.secondaryProviderButton}
+                    />
+                  ))}
+                </View>
+              ) : null}
               {isUiPreviewEnabled ? (
                 <Pressable
                   accessibilityLabel="Open UI preview"
@@ -335,6 +349,7 @@ function ProviderLogo({ provider, light = false }: { provider: PlatformAuthProvi
 
 function AuthSignalDemo() {
   const progress = useRef(new Animated.Value(0)).current;
+  const demoFriendAvatarSource = getAvatarImageSource(AVATAR_PRESETS[2] ?? DEFAULT_AVATAR_URI);
 
   useEffect(() => {
     const useNativeDriver = Platform.OS !== "web";
@@ -449,7 +464,7 @@ function AuthSignalDemo() {
   });
 
   return (
-    <View style={styles.demoWrap} accessibilityLabel="Animated Beepy sending a Beep to Mina's widget" accessibilityRole="image">
+    <View style={styles.demoWrap} accessibilityLabel="Animated Beepy sending a Beep to a friend's widget" accessibilityRole="image">
       <View style={styles.demoHeader}>
         <View style={styles.demoLiveDot} />
         <Text style={styles.demoHeaderText}>LIVE BEEP SEND</Text>
@@ -512,9 +527,13 @@ function AuthSignalDemo() {
         >
           <Animated.View style={[styles.demoReceiveGlow, { opacity: receiveGlowOpacity }]} />
           <View style={styles.demoReceiverTop}>
-            <Image source={{ uri: mockupPhotoUris.mina }} style={styles.demoFriendPhoto} resizeMode="cover" />
+            {demoFriendAvatarSource ? (
+              <Image source={demoFriendAvatarSource} style={styles.demoFriendPhoto} resizeMode="cover" />
+            ) : (
+              <Text style={styles.demoFriendInitial}>M</Text>
+            )}
             <View style={styles.demoReceiverMeta}>
-              <Text style={styles.demoFriendName}>Mina</Text>
+              <Text style={styles.demoFriendName}>Friend</Text>
               <Text style={styles.demoFriendCode}>WIDGET</Text>
             </View>
             <Animated.View style={[styles.demoReceiveDot, { opacity: receiptOpacity }]} />
@@ -791,6 +810,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.ink,
   },
+  demoFriendInitial: {
+    ...type.metaValue,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.ink,
+    textAlign: "center",
+    lineHeight: 26,
+    color: colors.ink,
+  },
   demoReceiverMeta: {
     flex: 1,
     gap: 1,
@@ -859,6 +889,13 @@ const styles = StyleSheet.create({
   },
   buttons: {
     gap: spacing[4],
+  },
+  secondaryProviderRow: {
+    flexDirection: "row",
+    gap: spacing[3],
+  },
+  secondaryProviderButton: {
+    flex: 1,
   },
   authHint: {
     ...type.bodyMuted,

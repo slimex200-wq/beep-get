@@ -44,7 +44,7 @@ type SignalRow = {
   is_saved: boolean;
   expires_at: string;
   created_at: string;
-  from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
+  from_user_profile?: { nickname: string | null; beep_id: string | null; avatar_url?: string | null } | null;
   media?: SignalMediaRow | SignalMediaRow[] | null;
 };
 
@@ -59,7 +59,7 @@ export type LegacyMessage = {
   expires_at: string;
   created_at: string;
   kind?: SignalKind;
-  from_user_profile?: { nickname: string | null; beep_id: string | null } | null;
+  from_user_profile?: { nickname: string | null; beep_id: string | null; avatar_url?: string | null } | null;
   media?: {
     durationMs: number;
     status: SignalMediaStatus;
@@ -144,7 +144,7 @@ export async function getReceivedMessages(userId: string) {
   const { data, error } = await supabase
     .from("signals")
     .select(
-      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
     )
     .eq("receiver_id", userId)
     .gt("expires_at", new Date().toISOString())
@@ -160,7 +160,7 @@ export async function getMessageById(messageId: string) {
   const { data, error } = await supabase
     .from("signals")
     .select(
-      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
     )
     .eq("id", messageId)
     .single();
@@ -187,7 +187,7 @@ export async function getSavedMessages(userId: string) {
   const { data, error } = await supabase
     .from("signals")
     .select(
-      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id), media:signal_media(*)"
+      "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
     )
     .eq("receiver_id", userId)
     .eq("is_saved", true)
