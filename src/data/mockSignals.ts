@@ -26,7 +26,7 @@ export const latestSignal: Signal = {
   sender: 'Mina',
   senderNo: '04',
   time: '14:56',
-  note: '2 sec Blink',
+  note: 'Blink received',
   hasBlink: true,
   status: 'new',
 };

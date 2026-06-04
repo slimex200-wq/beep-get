@@ -32,6 +32,8 @@ describe("demoFriend", () => {
   it("builds the demo Blink like a real widget-ready Blink", () => {
     const message = buildDemoBlinkMessage("user-1");
 
+    expect(message.memo).toBe("Welcome Blink");
+    expect(message.memo).not.toMatch(/demo blink|2\s*sec/i);
     expect(message.media.playbackUri).toBeTruthy();
     expect(message.media.thumbnailUri).toMatch(/^data:image\/jpeg;base64,/);
     expect(message.media.stripFrameUris).toHaveLength(3);

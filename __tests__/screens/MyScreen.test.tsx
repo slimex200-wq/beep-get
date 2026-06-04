@@ -12,12 +12,9 @@ describe("MyScreen production tools", () => {
       "Edit Avatar",
       "Personalize",
       "Header opens Skin Packs",
-      "Widget Skins",
       "Quick Replies",
       "Skin Packs",
       "Configure Slots",
-      "+ active preview",
-      "3 queued slots",
       "Signal Directory (On-Demand)",
       "Define New Signal Token",
       "8282 / 집중중 🔕",
@@ -31,8 +28,11 @@ describe("MyScreen production tools", () => {
   it("does not expose internal Studio or Collection tools in the user room", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/MyScreen.tsx"), "utf8");
 
-    ["SM Widget", "MD List Widget", "WidgetSkinPackCard"].forEach((label) => {
+    ["WidgetSkinPackCard"].forEach((label) => {
       expect(source).toContain(label);
+    });
+    ["Widget Skins", "SM Widget", "MD List Widget", "+ active preview", "3 queued slots", "WidgetStates"].forEach((label) => {
+      expect(source).not.toContain(label);
     });
     expect(source).toContain("SkinPackSheet");
     expect(source).toContain("AvatarPickerSheet");

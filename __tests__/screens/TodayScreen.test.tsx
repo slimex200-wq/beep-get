@@ -20,7 +20,8 @@ describe("TodayScreen product sections", () => {
 
     expect(source).toContain("TodayFrameStrip");
     expect(source).toContain("frameUris={latestMessage.media?.stripFrameUris}");
-    expect(source).toContain("mockupBlinkFrameUris");
+    expect(source).toContain("latestMessage.media?.stripFrameUris?.length");
+    expect(source).not.toContain("mockupBlinkFrameUris");
     expect(source).not.toContain("playbackUri={latestMessage.media?.playbackUri}");
   });
 });

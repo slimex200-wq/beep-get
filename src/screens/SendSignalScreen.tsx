@@ -21,7 +21,6 @@ import { normalizeAvatarUri } from "@/lib/avatarSource";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES, BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
-import { isDemoFriend } from "@/lib/demoFriend";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { sendBlinkVideo } from "@/services/blinkSendService";
 import { useAuthStore } from "@/stores/authStore";
@@ -202,7 +201,7 @@ export function SendSignalScreen() {
           )
         ) : (
           <View style={styles.captureFramesBlock}>
-            <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>SM WIDGET PREVIEW</Text>
+            <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>BEEP SEND PREVIEW</Text>
             <SmBeepWidgetPreview code={code} recipientName={recipient.name} />
           </View>
         )}
@@ -212,7 +211,7 @@ export function SendSignalScreen() {
               {recording ? "Recording 2 second Blink" : captureStatus}
             </Text>
             <View style={styles.captureFramesBlock}>
-              <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>MD WIDGET PREVIEW</Text>
+              <Text style={[styles.captureFramesLabel, { color: palette.muted }]}>BLINK SEND PREVIEW</Text>
               <BlinkMdWidgetPreview code={code} recipientName={recipient.name} frameUris={visibleFrameUris} />
             </View>
           </>
@@ -244,14 +243,6 @@ export function SendSignalScreen() {
 
   const sendBeep = async () => {
     if (!profile || !recipient || !code || sending) return;
-    if (isDemoFriend(recipient.id)) {
-      Alert.alert(
-        "Beepy is a demo friend",
-        `${code} 송신 시연이에요. 진짜 친구는 FRIENDS 에서 Beep ID 로 추가하세요.`,
-      );
-      setMemo("");
-      return;
-    }
     setSending(true);
     try {
       await send(profile.id, recipient.id, code, memo || undefined);
@@ -267,14 +258,6 @@ export function SendSignalScreen() {
 
   const sendBlink = async () => {
     if (!profile || !recipient || !code || sending || recording) return;
-
-    if (isDemoFriend(recipient.id)) {
-      Alert.alert(
-        "Beepy is a demo friend",
-        "Blink 시연은 진짜 친구가 추가된 뒤에 가능합니다.",
-      );
-      return;
-    }
 
     if (!blinkDraft && previewMode) {
       setBlinkDraft(createPreviewBlinkDraft());

@@ -5,7 +5,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
@@ -197,7 +196,7 @@ export function TodayScreen() {
                 <SignalCode code={latestSignal.code} style={styles.todayCode} />
                 <Text style={[styles.meaningText, { color: palette.text }]}>{latestMeaning}</Text>
               </View>
-              {latestSignal.hasBlink ? (
+              {latestSignal.hasBlink && latestMessage.media?.stripFrameUris?.length ? (
                 <TodayFrameStrip frameUris={latestMessage.media?.stripFrameUris} />
               ) : null}
               <View style={styles.latestActions}>
@@ -285,7 +284,7 @@ export function TodayScreen() {
 }
 
 function TodayFrameStrip({ frameUris }: { frameUris?: string[] | null }) {
-  const frames = (frameUris?.length ? frameUris : mockupBlinkFrameUris).slice(0, 3);
+  const frames = frameUris?.slice(0, 3) ?? [];
   return (
     <View style={styles.todayFrameStrip}>
       {frames.map((uri, index) => (

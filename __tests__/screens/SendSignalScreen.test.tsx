@@ -11,8 +11,12 @@ describe("SendSignalScreen product sections", () => {
     expect(source).toContain("CaptureFrameStrip");
     expect(source).toContain("SmBeepWidgetPreview");
     expect(source).toContain("BlinkMdWidgetPreview");
-    expect(source).toContain("SM WIDGET PREVIEW");
-    expect(source).toContain("MD WIDGET PREVIEW");
+    expect(source).toContain("BEEP SEND PREVIEW");
+    expect(source).toContain("BLINK SEND PREVIEW");
+    expect(source).not.toContain("SM WIDGET PREVIEW");
+    expect(source).not.toContain("MD WIDGET PREVIEW");
+    expect(source).not.toContain("Beepy is a demo friend");
+    expect(source).not.toContain("isDemoFriend");
     expect(source).toContain("SIGNAL SLOTS");
     expect(source).toContain("2.0s - MUTE");
     expect(source).toContain("3 frames extracted from 2s Blink");

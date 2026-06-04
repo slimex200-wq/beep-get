@@ -130,19 +130,6 @@ export function StudioScreen() {
               stripFrameUris={latest?.media?.stripFrameUris}
             />
           </View>
-          <View style={styles.sizeColumn}>
-            <ActionButton
-              label="SMALL"
-              mono
-              onPress={() => navigation.navigate("WidgetStates", { size: "small" })}
-            />
-            <ActionButton
-              label="MEDIUM"
-              mono
-              variant="dark"
-              onPress={() => navigation.navigate("WidgetStates", { size: "medium" })}
-            />
-          </View>
         </View>
 
         <Text style={[type.metaValue, { color: palette.text }]}>DIRECT REPLY SLOTS</Text>
@@ -232,10 +219,6 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     flex: 1,
-  },
-  sizeColumn: {
-    width: 88,
-    gap: spacing[3],
   },
   chips: {
     flexDirection: "row",

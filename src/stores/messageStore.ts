@@ -15,10 +15,7 @@ import { syncWidgetData } from "@/services/widgetService";
 import { isUiPreviewUser, uiPreviewMessages } from "@/lib/uiPreview";
 import { buildQuickReplyActionKey } from "@/lib/widgetActions";
 import {
-  buildDemoBlinkMessage,
   buildDemoWelcomeMessage,
-  DEMO_BLINK_SIGNAL_ID,
-  DEMO_WELCOME_SIGNAL_ID,
   isDemoSignal,
 } from "@/lib/demoFriend";
 import { useFriendStore } from "./friendStore";
@@ -74,14 +71,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
     set({ loading: true });
     try {
-      const remote = await getReceivedMessages(userId);
-      const previous = get().received;
-      const localBlink = previous.find((m) => m.id === DEMO_BLINK_SIGNAL_ID);
-      const localBeep = previous.find((m) => m.id === DEMO_WELCOME_SIGNAL_ID);
-      const demoBlink = localBlink ?? buildDemoBlinkMessage(userId);
-      const demoBeep = localBeep ?? buildDemoWelcomeMessage(userId);
-      // Blink first so the widget's latestMessage shows the 3-frame strip demo.
-      const received = [demoBlink as Message, demoBeep as Message, ...remote];
+      const received = await getReceivedMessages(userId);
       set({ received, loading: false });
       syncWidgetData(received, friends ?? []);
     } catch (err) {
@@ -195,9 +185,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     const msg = get().received.find((m) => m.id === messageId);
     if (isDemoSignal(messageId) || (msg && isUiPreviewUser(msg.to_user))) {
       set((state) => ({
-        received: state.received.map((m) =>
-          m.id === messageId ? { ...m, is_read: true } : m
-        ),
+        received: state.received.filter((m) => m.id !== messageId),
       }));
       syncWidgetData(get().received, useFriendStore.getState().friends);
       return;
@@ -205,9 +193,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
     await markAsRead(messageId);
     set((state) => ({
-      received: state.received.map((m) =>
-        m.id === messageId ? { ...m, is_read: true } : m
-      ),
+      received: state.received.filter((m) => m.id !== messageId),
     }));
     syncWidgetData(get().received, useFriendStore.getState().friends);
   },

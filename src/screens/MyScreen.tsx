@@ -325,45 +325,6 @@ export function MyScreen() {
           </View>
         </Pressable>
 
-        <MockupSection label="Widget Skins" hint="Preview each pack on SM and MD" style={styles.standaloneSection} />
-        <View style={styles.widgetLayoutGrid}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate("WidgetStates", { size: "small" })}
-            style={({ pressed }) => [
-              styles.widgetPreviewCard,
-              { backgroundColor: palette.card, borderColor: palette.rule },
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={[styles.widgetPreviewLabel, { color: palette.muted }]}>SM Widget</Text>
-            <View style={[styles.smallWidgetPreview, { backgroundColor: palette.input }]}>
-              <Text style={[styles.previewCode, { color: palette.text }]}>8282</Text>
-            </View>
-            <View style={styles.widgetPreviewFooter}>
-              <Text style={styles.activePreviewText}>+ active preview</Text>
-            </View>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate("WidgetStates", { size: "medium" })}
-            style={({ pressed }) => [
-              styles.widgetPreviewCard,
-              { backgroundColor: palette.card, borderColor: palette.rule },
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={[styles.widgetPreviewLabel, { color: palette.muted }]}>MD List Widget</Text>
-            <View style={styles.mediumWidgetPreview}>
-              <View style={[styles.previewLineLong, { backgroundColor: palette.ruleStrong }]} />
-              <View style={[styles.previewLineShort, { backgroundColor: palette.rule }]} />
-            </View>
-            <View style={styles.widgetPreviewFooter}>
-              <Text style={[styles.widgetMetaText, { color: palette.muted }]}>3 queued slots</Text>
-            </View>
-          </Pressable>
-        </View>
-
         <View style={styles.sectionActionRow}>
           <MockupSection label="Quick Replies" />
           <Pressable

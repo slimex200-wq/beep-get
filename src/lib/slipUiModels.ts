@@ -38,7 +38,7 @@ export function messageToSlipSignal(
     !message.is_saved && new Date(message.expires_at).getTime() <= now.getTime();
   const hasBlink = message.kind === "blink" || Boolean(message.media);
   const memo = message.memo?.trim();
-  const blinkNote = hasBlink ? "2 SEC BLINK" : "CODE-ONLY BEEP";
+  const blinkNote = hasBlink ? "Blink received" : "CODE-ONLY BEEP";
   const avatarUri = normalizeAvatarUri(message.from_user_profile?.avatar_url);
 
   return {

@@ -8,9 +8,21 @@ describe("PeopleScreen product sections", () => {
     ["KotlinHeader", "MY ID", "Search ID or name", "Add Friend", "Close Friends", "Configure Friend Info"].forEach((label) => {
       expect(peopleSource).toContain(label);
     });
-    ["FavoriteSignalCard", "Send Blink", "NEW", "favoriteSignalCode", "initialCode", "featuredBlink.imageUri"].forEach((label) => {
+    ["FavoriteSignalCard", "Send Blink", "NEW", "initialCode", "featuredBlink.imageUri"].forEach((label) => {
       expect(peopleSource).toContain(label);
     });
+    [
+      "Widget seen",
+      "uses code often",
+      "frequent code 486",
+      "quiet receiving",
+      "2 sec Blink",
+      "favoriteSignalCode",
+    ].forEach((label) => {
+      expect(peopleSource).not.toContain(label);
+    });
+    expect(peopleSource).toContain("No signals yet");
+    expect(peopleSource).toContain("Latest Blink from");
     expect(peopleSource).not.toContain('label="Discover"');
     expect(peopleSource).not.toContain("CLOSE CIRCUIT");
     expect(peopleSource).not.toContain("WIDGET CIRCLE");

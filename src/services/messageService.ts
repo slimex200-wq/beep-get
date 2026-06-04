@@ -147,7 +147,7 @@ export async function getReceivedMessages(userId: string) {
       "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
     )
     .eq("receiver_id", userId)
-    .gt("expires_at", new Date().toISOString())
+    .gt("expires_at", new Date().toISOString()).neq("status", "read")
     .order("created_at", { ascending: false });
 
   if (error) throw error;

@@ -30,10 +30,21 @@ describe("RootNavigator primary tabs", () => {
     const source = readFileSync(path.join(process.cwd(), "src/navigation/RootNavigator.tsx"), "utf8");
     const replyRoomBlock = source.slice(
       source.indexOf('name="ReplyRoom"'),
-      source.indexOf('name="WidgetStates"')
+      source.indexOf('name="Logs"')
     );
 
     expect(replyRoomBlock).toContain("SlipReplyRoomScreen");
     expect(replyRoomBlock).not.toContain('presentation: "modal"');
+  });
+
+  it("does not register preview-only tooling as authenticated app screens", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/navigation/RootNavigator.tsx"), "utf8");
+
+    expect(source).not.toContain('name="WidgetStates"');
+    expect(source).not.toContain('name="StudioTools"');
+    expect(source).not.toContain('name="Collection"');
+    expect(source).not.toContain("WidgetStates:");
+    expect(source).not.toContain("StudioTools:");
+    expect(source).not.toContain("Collection:");
   });
 });

@@ -51,7 +51,6 @@ import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 
 const relationshipPresets = ["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"] as const;
-const favoriteSignalCode = "486";
 const blinkHeroImage = require("../../assets/brand/blink/blink-person-model-strip.png");
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
@@ -128,14 +127,13 @@ export function PeopleScreen() {
       time: formatSlipTime(message.created_at),
     };
   }, [received, visibleFriends]);
-  const featuredFriend = visibleFriends[1] ?? visibleFriends[0] ?? null;
-
   const lastSignalByFriend = useMemo(() => {
     const map = new Map<string, string>();
     received.forEach((message) => {
       if (map.has(message.from_user)) return;
-      const kind = message.kind === "blink" || message.media ? "Widget seen" : "uses code often";
-      map.set(message.from_user, kind);
+      const time = formatSlipTime(message.created_at);
+      const kind = message.kind === "blink" || message.media ? "Received Blink" : "Last Beep";
+      map.set(message.from_user, `${kind} ${message.number_code} - ${time}`);
     });
     return map;
   }, [received]);
@@ -248,21 +246,17 @@ export function PeopleScreen() {
           <ChevronRightLineIcon />
         </Pressable>
 
-        <MockupSection label="Close Friends" hint={`${visibleFriends.length} ONLINE`} />
+        <MockupSection label="Close Friends" hint={`${visibleFriends.length} FRIENDS`} />
         <View style={styles.friendList}>
           {visibleFriends.length > 0 ? (
             visibleFriends.map((friend, index) => (
               <FriendRow
                 key={friend.id}
                 friend={friend}
-                status={
-                  lastSignalByFriend.get(friend.id) ??
-                  (index === 0 ? "Widget seen - 18:05" : index === 1 ? "frequent code 486" : "quiet receiving")
-                }
+                status={lastSignalByFriend.get(friend.id) ?? "No signals yet"}
                 accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
                 avatarUri={friend.avatarUri}
-                online={index === 0}
-                rightText={index === 1 ? favoriteSignalCode : friend.no}
+                rightText={friend.no}
                 onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
               />
             ))
@@ -298,13 +292,6 @@ export function PeopleScreen() {
             imageUri={featuredBlink.imageUri}
             subtitle={`${featuredBlink.time} received Blink - code ${featuredBlink.code}`}
             onSend={() => navigateSend(featuredBlink.friend, "blink", featuredBlink.code)}
-          />
-        ) : featuredFriend ? (
-          <FavoriteSignalCard
-            friend={featuredFriend}
-            code={favoriteSignalCode}
-            subtitle={`2 sec Blink - code ${favoriteSignalCode}`}
-            onSend={() => navigateSend(featuredFriend, "blink", favoriteSignalCode)}
           />
         ) : null}
       </ScrollView>
@@ -375,7 +362,7 @@ function FavoriteSignalCard({
           </View>
         </View>
         <View style={styles.favoriteCopy}>
-          <Text style={styles.favoriteTitle}>Frequent signal for {friend.name}</Text>
+          <Text style={styles.favoriteTitle}>Latest Blink from {friend.name}</Text>
           <Text style={styles.favoriteSubtitle}>{subtitle}</Text>
         </View>
         <View style={styles.sendBlinkButton}>

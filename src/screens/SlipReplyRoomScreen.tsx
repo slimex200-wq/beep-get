@@ -5,7 +5,6 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import {
@@ -326,12 +325,12 @@ function DetailBlinkPreview({
     );
   }
 
-  return <DetailFrameStrip frameUris={frameUris} />;
+  return frameUris?.length ? <DetailFrameStrip frameUris={frameUris} /> : null;
 }
 
 function DetailFrameStrip({ frameUris }: { frameUris?: string[] | null }) {
   const palette = useAppPalette();
-  const frames = (frameUris?.length ? frameUris : mockupBlinkFrameUris).slice(0, 3);
+  const frames = frameUris?.slice(0, 3) ?? [];
 
   return (
     <View style={styles.detailFrameStrip}>

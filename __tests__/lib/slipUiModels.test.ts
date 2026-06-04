@@ -38,7 +38,7 @@ describe("messageToSlipSignal", () => {
       sender: "Mina",
       senderNo: "97",
       time: "09:00",
-      note: "2 SEC BLINK / call now",
+      note: "Blink received / call now",
       hasBlink: true,
       status: "new",
       avatarUri: "https://example.com/mina.jpg",
@@ -62,6 +62,27 @@ describe("messageToSlipSignal", () => {
         { now: new Date("2026-05-04T00:00:00.000Z") }
       ).status
     ).toBe("expired");
+  });
+
+  it("uses product-state copy instead of timed demo copy for Blinks", () => {
+    const signal = messageToSlipSignal(
+      {
+        id: "message-3",
+        from_user: "friend-1",
+        to_user: "user-1",
+        number_code: "8282",
+        memo: null,
+        is_read: false,
+        is_saved: false,
+        kind: "blink",
+        expires_at: "2026-05-04T10:00:00",
+        created_at: "2026-05-04T09:00:00",
+      },
+      { now: new Date("2026-05-04T09:30:00") }
+    );
+
+    expect(signal.note).toBe("Blink received");
+    expect(signal.note).not.toMatch(/2\s*sec|demo/i);
   });
 });
 

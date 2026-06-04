@@ -16,7 +16,6 @@ import {
   TodayCalendarIcon,
 } from "@/components/MockupLineIcons";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { CollectionScreen } from "@/screens/CollectionScreen";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -24,9 +23,7 @@ import { PeopleScreen } from "@/screens/PeopleScreen";
 import { SendSignalScreen } from "@/screens/SendSignalScreen";
 import { ReplyRoomScreen as SlipReplyRoomScreen } from "@/screens/SlipReplyRoomScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
-import { StudioScreen } from "@/screens/StudioScreen";
 import { TodayScreen } from "@/screens/TodayScreen";
-import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -40,12 +37,9 @@ export type RootStackParamList = {
     initialCode?: string;
   };
   ReplyRoom: { signalId: string };
-  WidgetStates: { size?: "small" | "medium" } | undefined;
   Logs: undefined;
-  StudioTools: undefined;
   Account: undefined;
   Dictionary: undefined;
-  Collection: undefined;
 };
 
 export type MainTabParamList = {
@@ -172,18 +166,8 @@ export function RootNavigator() {
             component={SlipReplyRoomScreen}
           />
           <Stack.Screen
-            name="WidgetStates"
-            component={WidgetStatesScreen}
-            options={{ presentation: "fullScreenModal" }}
-          />
-          <Stack.Screen
             name="Logs"
             component={LogsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="StudioTools"
-            component={StudioScreen}
             options={{ presentation: "modal" }}
           />
           <Stack.Screen
@@ -194,11 +178,6 @@ export function RootNavigator() {
           <Stack.Screen
             name="Dictionary"
             component={DictionaryScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Collection"
-            component={CollectionScreen}
             options={{ presentation: "modal" }}
           />
         </>
