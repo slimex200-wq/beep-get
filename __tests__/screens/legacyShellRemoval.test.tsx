@@ -1,9 +1,14 @@
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
 
 const screen = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("legacy shell removal", () => {
+  it("does not keep orphaned pre-refresh preview cards in the app bundle", () => {
+    expect(existsSync(path.join(process.cwd(), "src/components/BlinkHeroPreview.tsx"))).toBe(false);
+    expect(existsSync(path.join(process.cwd(), "src/components/FriendCard.tsx"))).toBe(false);
+  });
+
   it("keeps widget tap reply room visually tied to the Today expanded card", () => {
     const source = screen("src/screens/SlipReplyRoomScreen.tsx");
 
@@ -30,13 +35,13 @@ describe("legacy shell removal", () => {
     expect(source).not.toContain("My Beep Slip");
   });
 
-  it("makes personalization an in-place identity pack flow instead of opening the old collection UI", () => {
+  it("makes the skin pack area an in-place identity pack flow instead of opening the old collection UI", () => {
     const source = screen("src/screens/MyScreen.tsx");
 
     expect(source).toContain("setLocalActiveIdentityPack");
     expect(source).toContain("applyIdentityPack");
-    expect(source).toContain("Personalize");
-    expect(source).toContain("Header opens Skin Packs");
+    expect(source).toContain("Skin Pack");
+    expect(source).toContain("widget mood first");
     expect(source).toContain("SkinPackSheet");
     expect(source).not.toContain('navigation.navigate("Collection")');
   });

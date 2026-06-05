@@ -6,9 +6,10 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { isUiPreviewUser } from "@/lib/uiPreview";
 import { colors } from "@/design/tokens";
 import { font } from "@/design/typography";
-import { useAppPalette } from "@/design/appTheme";
+import { lightPalette, useAppPalette } from "@/design/appTheme";
 import {
   FriendsGroupIcon,
   MyUserIcon,
@@ -16,7 +17,6 @@ import {
   TodayCalendarIcon,
 } from "@/components/MockupLineIcons";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { CollectionScreen } from "@/screens/CollectionScreen";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -24,9 +24,7 @@ import { PeopleScreen } from "@/screens/PeopleScreen";
 import { SendSignalScreen } from "@/screens/SendSignalScreen";
 import { ReplyRoomScreen as SlipReplyRoomScreen } from "@/screens/SlipReplyRoomScreen";
 import { SettingsScreen } from "@/screens/SettingsScreen";
-import { StudioScreen } from "@/screens/StudioScreen";
 import { TodayScreen } from "@/screens/TodayScreen";
-import { WidgetStatesScreen } from "@/screens/WidgetStatesScreen";
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -40,12 +38,9 @@ export type RootStackParamList = {
     initialCode?: string;
   };
   ReplyRoom: { signalId: string };
-  WidgetStates: { size?: "small" | "medium" } | undefined;
   Logs: undefined;
-  StudioTools: undefined;
   Account: undefined;
   Dictionary: undefined;
-  Collection: undefined;
 };
 
 export type MainTabParamList = {
@@ -58,17 +53,21 @@ export type MainTabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-export const primaryTabLabels = ["TODAY", "SEND", "FRIENDS", "MY"] as const;
+export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
 
 const tabLabels: Record<keyof MainTabParamList, string> = {
-  Today: "Today",
-  Compose: "Send",
-  People: "Friends",
-  My: "My",
+  Today: "TODAY",
+  Compose: "SEND",
+  People: "PEOPLE",
+  My: "MY",
 };
 
 function MainTabs() {
-  const palette = useAppPalette();
+  const themedPalette = useAppPalette();
+  const profileId = useAuthStore((state) => state.profile?.id ?? null);
+  const isPreviewSession = isUiPreviewUser(profileId);
+  const palette = isPreviewSession ? lightPalette : themedPalette;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -152,8 +151,10 @@ function TabLabel({ label, focused, color }: { label: string; focused: boolean; 
 
 export function RootNavigator() {
   const { session, profile } = useAuthStore();
+  const isPreviewSession = isUiPreviewUser(profile?.id);
   const needsOnboarding =
-    !session || !profile || !profile.nickname?.trim() || !profile.avatar_url?.trim();
+    !isPreviewSession &&
+    (!session || !profile || !profile.nickname?.trim() || !profile.avatar_url?.trim());
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -172,18 +173,8 @@ export function RootNavigator() {
             component={SlipReplyRoomScreen}
           />
           <Stack.Screen
-            name="WidgetStates"
-            component={WidgetStatesScreen}
-            options={{ presentation: "fullScreenModal" }}
-          />
-          <Stack.Screen
             name="Logs"
             component={LogsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="StudioTools"
-            component={StudioScreen}
             options={{ presentation: "modal" }}
           />
           <Stack.Screen
@@ -194,11 +185,6 @@ export function RootNavigator() {
           <Stack.Screen
             name="Dictionary"
             component={DictionaryScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Collection"
-            component={CollectionScreen}
             options={{ presentation: "modal" }}
           />
         </>

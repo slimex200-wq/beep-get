@@ -21,23 +21,20 @@ export type AppPalette = {
   statusBar: "light" | "dark";
 };
 
-// Light is the Classic Paper baseline (warm ivory paper, white cards, dark ink
-// primary). This is the same palette the app shipped as `swiss-paper` before the
-// skin system collapsed into a system light/dark theme.
 export const lightPalette: AppPalette = {
   mode: "light",
-  background: "#F8F6F1",
-  card: "#FFFFFF",
-  cardSoft: "#F7F4EF",
-  input: "#F0EEE9",
-  chip: "#F1EEE8",
+  background: "#FBF7EF",
+  card: "#FFFDF9",
+  cardSoft: "#F7F1EA",
+  input: "#F1ECE5",
+  chip: "#F4E9F8",
   text: colors.ink,
   muted: colors.muted,
   muted2: colors.muted2,
-  rule: colors.rule,
-  ruleStrong: colors.ruleStrong,
-  primary: colors.ink,
-  primaryText: colors.paperWarm,
+  rule: "rgba(86, 63, 54, 0.16)",
+  ruleStrong: "rgba(86, 63, 54, 0.30)",
+  primary: "#8F5EC7",
+  primaryText: "#FFFDF9",
   statusBar: "dark",
 };
 

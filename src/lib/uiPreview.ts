@@ -2,9 +2,11 @@ import type { Session, User } from "@supabase/supabase-js";
 import type { LegacyMessage } from "@/services/messageService";
 import { AVATAR_PRESETS, DEFAULT_AVATAR_URI } from "@/design/avatarPresets";
 import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
+import { buildDemoFriend } from "@/lib/demoFriend";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
-export const isUiPreviewEnabled = process.env.EXPO_PUBLIC_UI_PREVIEW === "1";
+export const isUiPreviewEnabled =
+  process.env.EXPO_PUBLIC_UI_PREVIEW === "1" && process.env.NODE_ENV !== "production";
 export const isUiPreviewUser = (userId?: string | null) => userId === UI_PREVIEW_USER_ID;
 
 export const uiPreviewProfile = {
@@ -43,7 +45,7 @@ export const uiPreviewMessages: LegacyMessage[] = [
     to_user: UI_PREVIEW_USER_ID,
     kind: "blink",
     number_code: "8282",
-    memo: "2 sec blink",
+    memo: "Almost there",
     is_read: false,
     is_saved: false,
     expires_at: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
@@ -84,6 +86,7 @@ export const uiPreviewMessages: LegacyMessage[] = [
 ];
 
 export const uiPreviewFriends = [
+  buildDemoFriend(UI_PREVIEW_USER_ID),
   {
     id: "preview-friendship-1",
     user_id: UI_PREVIEW_USER_ID,

@@ -6,10 +6,12 @@ import {
 } from "@/design/appTheme";
 
 describe("app light/dark palettes", () => {
-  it("keeps the Classic Paper baseline as the light palette", () => {
+  it("keeps the soft ivory and lavender baseline as the light palette", () => {
     expect(lightPalette.mode).toBe("light");
-    expect(lightPalette.background).toBe("#F8F6F1");
-    expect(lightPalette.card).toBe("#FFFFFF");
+    expect(lightPalette.background).toBe("#FBF7EF");
+    expect(lightPalette.card).toBe("#FFFDF9");
+    expect(lightPalette.chip).toBe("#F4E9F8");
+    expect(lightPalette.primary).toBe("#8F5EC7");
     expect(lightPalette.statusBar).toBe("dark");
   });
 

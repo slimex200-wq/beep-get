@@ -22,6 +22,7 @@ import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { CloseCircuitMap, type CircuitFriend } from "@/components/CloseCircuitMap";
 import {
   Avatar,
   KotlinHeader,
@@ -51,7 +52,6 @@ import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 
 const relationshipPresets = ["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"] as const;
-const favoriteSignalCode = "486";
 const blinkHeroImage = require("../../assets/brand/blink/blink-person-model-strip.png");
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
@@ -128,17 +128,26 @@ export function PeopleScreen() {
       time: formatSlipTime(message.created_at),
     };
   }, [received, visibleFriends]);
-  const featuredFriend = visibleFriends[1] ?? visibleFriends[0] ?? null;
-
   const lastSignalByFriend = useMemo(() => {
     const map = new Map<string, string>();
     received.forEach((message) => {
       if (map.has(message.from_user)) return;
-      const kind = message.kind === "blink" || message.media ? "Widget seen" : "uses code often";
-      map.set(message.from_user, kind);
+      const time = formatSlipTime(message.created_at);
+      const kind = message.kind === "blink" || message.media ? "Received Blink" : "Last Beep";
+      map.set(message.from_user, `${kind} ${message.number_code} - ${time}`);
     });
     return map;
   }, [received]);
+  const circuitFriends = useMemo<CircuitFriend[]>(() => {
+    const statusByIndex = ["BEEP", "BLINK", "quiet"] as const;
+
+    return visibleFriends.slice(0, 4).map((friend, index) => ({
+      id: friend.id,
+      name: friend.name,
+      ...(friend.avatarUri ? { avatarUri: friend.avatarUri } : {}),
+      status: statusByIndex[index] ?? "quiet",
+    }));
+  }, [visibleFriends]);
 
   const pulse = () => {
     Haptics.selectionAsync().catch(() => undefined);
@@ -191,7 +200,7 @@ export function PeopleScreen() {
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
-          title="Friends"
+          title="People"
           centered
           avatarLabel={profileAvatarLabel}
           avatarSource={profileAvatarSource}
@@ -199,7 +208,7 @@ export function PeopleScreen() {
             {
               label: "Settings",
               icon: <GearLineIcon />,
-              accessibilityLabel: "Friends settings",
+              accessibilityLabel: "People settings",
               onPress: openSettings,
             },
           ]}
@@ -215,7 +224,7 @@ export function PeopleScreen() {
           />
         </View>
 
-        <MockupSection label="MY ID" hint="SHARE" />
+        <MockupSection label="My Beep ID" hint="SHARE" />
         <MockupCard style={styles.myIdCard}>
           <Avatar label={profileAvatarLabel} source={profileAvatarSource} size={52} />
           <View style={styles.myIdCopy}>
@@ -242,27 +251,24 @@ export function PeopleScreen() {
             <AddPersonLineIcon />
           </View>
           <View style={styles.addCopy}>
-            <Text style={[styles.friendName, { color: palette.text }]}>Add Friend</Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>Connect with an 8-digit Beep ID</Text>
+                <Text style={[styles.friendName, { color: palette.text }]}>Invite Friend</Text>
+                <Text style={[type.bodyMuted, { color: palette.muted }]}>Close Circuit starts with a private Beep ID</Text>
           </View>
           <ChevronRightLineIcon />
         </Pressable>
 
-        <MockupSection label="Close Friends" hint={`${visibleFriends.length} ONLINE`} />
+        <MockupSection label="Close Circuit" hint={`${visibleFriends.length} PEOPLE`} />
+        <CloseCircuitMap friends={circuitFriends} capacity={4} onInvite={openAddDialog} />
         <View style={styles.friendList}>
           {visibleFriends.length > 0 ? (
             visibleFriends.map((friend, index) => (
               <FriendRow
                 key={friend.id}
                 friend={friend}
-                status={
-                  lastSignalByFriend.get(friend.id) ??
-                  (index === 0 ? "Widget seen - 18:05" : index === 1 ? "frequent code 486" : "quiet receiving")
-                }
+                status={lastSignalByFriend.get(friend.id) ?? "No signals yet"}
                 accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
                 avatarUri={friend.avatarUri}
-                online={index === 0}
-                rightText={index === 1 ? favoriteSignalCode : friend.no}
+                rightText={friendStatusBadge(index)}
                 onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
               />
             ))
@@ -298,13 +304,6 @@ export function PeopleScreen() {
             imageUri={featuredBlink.imageUri}
             subtitle={`${featuredBlink.time} received Blink - code ${featuredBlink.code}`}
             onSend={() => navigateSend(featuredBlink.friend, "blink", featuredBlink.code)}
-          />
-        ) : featuredFriend ? (
-          <FavoriteSignalCard
-            friend={featuredFriend}
-            code={favoriteSignalCode}
-            subtitle={`2 sec Blink - code ${favoriteSignalCode}`}
-            onSend={() => navigateSend(featuredFriend, "blink", favoriteSignalCode)}
           />
         ) : null}
       </ScrollView>
@@ -375,7 +374,7 @@ function FavoriteSignalCard({
           </View>
         </View>
         <View style={styles.favoriteCopy}>
-          <Text style={styles.favoriteTitle}>Frequent signal for {friend.name}</Text>
+          <Text style={styles.favoriteTitle}>Latest Blink from {friend.name}</Text>
           <Text style={styles.favoriteSubtitle}>{subtitle}</Text>
         </View>
         <View style={styles.sendBlinkButton}>
@@ -468,6 +467,12 @@ function InboundRow({
 function formatOwnNo(beepId?: string | null) {
   const digits = beepId?.replace(/\D/g, "");
   return digits && digits.length >= 2 ? digits.slice(-2) : "--";
+}
+
+function friendStatusBadge(index: number): string {
+  if (index === 0) return "BEEP";
+  if (index === 1) return "BLINK";
+  return "quiet";
 }
 
 function reportError(err: unknown) {

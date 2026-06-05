@@ -1,22 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors, radius, spacing } from "@/design/tokens";
+import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
-import {
-  KotlinHeader,
-  MockupCard,
-  MockupSection,
-  StatusPill,
-} from "@/components/KotlinMockupUI";
-import { SignalCode } from "@/components/SignalCode";
+import { FriendPulseCard, type FriendPulseItem } from "@/components/FriendPulseCard";
+import { MockupCard } from "@/components/KotlinMockupUI";
 import { SignalSlotRail } from "@/components/SignalSlotRail";
 import { StatusDot } from "@/components/StatusDot";
+import { TodayIncomingCard } from "@/components/TodayIncomingCard";
+import { TodayMockupHeader, TodaySectionHeader } from "@/components/TodayMockupChrome";
+import { WidgetPreviewPanel } from "@/components/WidgetPreviewPanel";
 import {
   FriendsGroupIcon,
   GearLineIcon,
@@ -27,8 +24,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
-import { getAvatarImageSource } from "@/lib/avatarSource";
-import { messageToSlipSignal } from "@/lib/slipUiModels";
+import { messageToSlipSignal, relationshipToSlipFriend } from "@/lib/slipUiModels";
 import {
   DEFAULT_QUICK_REPLY_SLOTS,
   buildQuickReplySlots,
@@ -81,20 +77,40 @@ export function TodayScreen() {
   const latestMessage = received[0];
   const latestSignal = useMemo(
     () => (latestMessage ? messageToSlipSignal(latestMessage, { index: 0 }) : null),
-    [latestMessage]
+    [latestMessage],
   );
-  const latestAvatarSource = getAvatarImageSource(latestSignal?.avatarUri);
   const signalQueue = useMemo(
-    () =>
-      received
-        .slice(0, 3)
-        .map((message, index) => messageToSlipSignal(message, { index })),
-    [received]
+    () => received.slice(0, 3).map((message, index) => messageToSlipSignal(message, { index })),
+    [received],
   );
+  const quickReplySlots = useMemo(
+    () => buildQuickReplySlots(entries, DEFAULT_QUICK_REPLY_SLOTS),
+    [entries],
+  );
+  const friendPulseItems = useMemo<FriendPulseItem[]>(() => {
+    const fallbackCodes = ["OK", "8282", "BLINK"] as const;
 
-  const quickReplySlots = useMemo(() => {
-    return buildQuickReplySlots(entries, DEFAULT_QUICK_REPLY_SLOTS);
-  }, [entries]);
+    return friends.slice(0, 3).map((friend, index) => {
+      const slipFriend = relationshipToSlipFriend(friend, index);
+      const recentSignal = received.find((message) => message.from_user === slipFriend.id);
+      const code = recentSignal?.number_code ?? fallbackCodes[index] ?? "OK";
+      const isBlink = recentSignal?.kind === "blink" || Boolean(recentSignal?.media);
+
+      return {
+        id: slipFriend.id,
+        name: slipFriend.name,
+        status: recentSignal
+          ? `${formatPulseTime(recentSignal.created_at)} - ${isBlink ? "BLINK" : code}`
+          : index === 0
+            ? "quiet"
+            : "waiting",
+        code: isBlink ? "BLINK" : code,
+        ...(slipFriend.avatarUri ? { avatarUri: slipFriend.avatarUri } : {}),
+        accent: index === 0 ? colors.mint : index === 1 ? colors.pink : colors.lavender,
+      };
+    });
+  }, [friends, received]);
+
   const latestMeaning = latestSignal
     ? entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === latestSignal.code)?.meaning ??
       latestSignal.note ??
@@ -142,11 +158,10 @@ export function TodayScreen() {
   };
 
   return (
-    <AppSurface backgroundColor="#F8F6F1">
+    <AppSurface backgroundColor={palette.background} statusBarStyle={palette.statusBar}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader
-          title="Today"
-          showAvatar={false}
+        <TodayMockupHeader
+          title="TODAY"
           actions={[
             {
               label: loading ? "Syncing" : "Refresh",
@@ -155,9 +170,9 @@ export function TodayScreen() {
               onPress: refresh,
             },
             {
-              label: "Friends",
+              label: "People",
               icon: <FriendsGroupIcon />,
-              accessibilityLabel: "Open Friends",
+              accessibilityLabel: "Open People",
               onPress: () => navigation.navigate("Main", { screen: "People" }),
             },
             {
@@ -168,81 +183,59 @@ export function TodayScreen() {
             },
           ]}
         />
-        {latestSignal ? (
-          <View style={styles.latestStack}>
-            <MockupCard style={styles.latestCard}>
-              <View style={styles.latestTopRow}>
-                <View style={styles.senderRow}>
-                  <View style={styles.senderAvatar}>
-                    {latestAvatarSource ? (
-                      <Image
-                        source={latestAvatarSource}
-                        style={styles.senderAvatarImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Text style={[styles.senderInitial, { color: palette.text }]}>
-                        {latestSignal.sender.slice(0, 1)}
-                      </Text>
-                    )}
-                  </View>
-                  <View>
-                    <Text style={[styles.senderName, { color: palette.text }]}>{latestSignal.sender}</Text>
-                    <Text style={[styles.senderTime, { color: palette.muted }]}>{latestSignal.time}</Text>
-                  </View>
-                </View>
-                <StatusPill label="Private" tone="red" />
-              </View>
-              <View style={styles.codeBlock}>
-                <SignalCode code={latestSignal.code} style={styles.todayCode} />
-                <Text style={[styles.meaningText, { color: palette.text }]}>{latestMeaning}</Text>
-              </View>
-              {latestSignal.hasBlink ? (
-                <TodayFrameStrip frameUris={latestMessage.media?.stripFrameUris} />
-              ) : null}
-              <View style={styles.latestActions}>
-                <ActionButton
-                  label="View"
-                  variant="dark"
-                  flex
-                  onPress={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
-                />
-                <ActionButton
-                  label="Done"
-                  variant={doneFeedback ? "success" : "light"}
-                  flex
-                  onPress={handleDone}
-                />
-              </View>
-            </MockupCard>
-          </View>
-        ) : (
-          <MockupCard style={styles.empty}>
-            <Text style={type.metaValue}>WAITING FOR SIGNAL</Text>
-            <Text style={type.bodyMuted}>New Beeps and Blinks land here first.</Text>
-            <ActionButton
-              label={friends.length > 0 ? "SEND FIRST BEEP" : "ADD FRIEND"}
-              variant="dark"
-              onPress={() =>
-                navigation.navigate("Main", { screen: friends.length > 0 ? "Compose" : "People" })
-              }
+        <View style={styles.mockupFlow}>
+          <TodaySectionHeader label="Incoming Now" hint="오늘의 작은 신호" />
+          {latestSignal ? (
+            <TodayIncomingCard
+              sender={latestSignal.sender}
+              time={latestSignal.time}
+              code={latestSignal.code}
+              meaning={latestMeaning}
+              avatarUri={latestSignal.avatarUri}
+              hasBlink={Boolean(latestSignal.hasBlink)}
+              frameUris={latestMessage.media?.stripFrameUris}
+              doneFeedback={doneFeedback}
+              onView={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
+              onDone={handleDone}
             />
-          </MockupCard>
-        )}
+          ) : (
+            <MockupCard style={styles.empty}>
+              <Text style={[type.metaValue, { color: palette.text }]}>WAITING FOR SIGNAL</Text>
+              <Text style={[type.bodyMuted, { color: palette.muted }]}>New Beeps and Blinks land here first.</Text>
+              <ActionButton
+                label={friends.length > 0 ? "SEND FIRST BEEP" : "ADD FRIEND"}
+                variant="dark"
+                onPress={() =>
+                  navigation.navigate("Main", { screen: friends.length > 0 ? "Compose" : "People" })
+                }
+              />
+            </MockupCard>
+          )}
 
-        <MockupSection label="Quick Reply" />
-        <SignalSlotRail
-          slots={quickReplySlots}
-          disabled={!latestMessage}
-          confirmedSlot={quickReplyFeedback}
-          onSelect={handleQuickReply}
-        />
+          <TodaySectionHeader label="Quick Reply" hint="바로 답장" />
+          <SignalSlotRail
+            slots={quickReplySlots}
+            disabled={!latestMessage}
+            confirmedSlot={quickReplyFeedback}
+            compact
+            onSelect={handleQuickReply}
+          />
 
-        <Text style={[styles.queueTitle, { color: palette.muted }]}>Queue</Text>
-        <View style={styles.queue}>
-          {signalQueue.length > 0 ? (
-            <View style={[styles.queueCard, { backgroundColor: palette.card, borderColor: palette.rule }]}>
-              {signalQueue.map((item, index) => {
+          <FriendPulseCard title="Friend Pulse" items={friendPulseItems} />
+          <WidgetPreviewPanel
+            title="Widget Mirror"
+            subtitle="홈 화면 나의 위젯"
+            code={latestSignal?.code ?? "8282"}
+            from={latestSignal?.sender ?? profile?.nickname?.trim() ?? "민아"}
+            tone="lavender"
+            paperMode
+            compact
+          />
+
+          <TodaySectionHeader label="Today Queue" hint="다음 신호" />
+          <MockupCard soft style={styles.queueCard}>
+            {signalQueue.length > 0 ? (
+              signalQueue.map((item, index) => {
                 const meaning =
                   entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === item.code)?.meaning ??
                   item.note ??
@@ -259,44 +252,32 @@ export function TodayScreen() {
                     ]}
                   >
                     <StatusDot
-                      size={9}
-                      color={index === 0 ? colors.red : index === 1 ? "#FF850B" : colors.greenDot}
+                      size={7}
+                      color={index === 0 ? colors.red : index === 1 ? colors.pink : colors.greenDot}
                     />
-                    <View style={styles.queueCopy}>
-                      <Text numberOfLines={1} style={[styles.queueCode, { color: palette.text }]}>
-                        {item.code}
-                        <Text style={[styles.queueMeaning, { color: palette.muted }]}> ({meaning})</Text>
-                      </Text>
-                    </View>
+                    <Text numberOfLines={1} style={[styles.queueCode, { color: palette.text }]}>
+                      {item.code}
+                      <Text style={[styles.queueMeaning, { color: palette.muted }]}> {meaning}</Text>
+                    </Text>
                     <Text style={[styles.queueTime, { color: palette.muted }]}>{item.time}</Text>
                   </View>
                 );
-              })}
-              </View>
-          ) : (
-            <MockupCard soft style={styles.softPanel}>
-              <Text style={type.bodyMuted}>No more signals queued.</Text>
-            </MockupCard>
-          )}
+              })
+            ) : (
+              <Text style={[type.bodyMuted, { color: palette.muted }]}>No more signals queued.</Text>
+            )}
+          </MockupCard>
         </View>
       </ScrollView>
     </AppSurface>
   );
 }
 
-function TodayFrameStrip({ frameUris }: { frameUris?: string[] | null }) {
-  const frames = (frameUris?.length ? frameUris : mockupBlinkFrameUris).slice(0, 3);
-  return (
-    <View style={styles.todayFrameStrip}>
-      {frames.map((uri, index) => (
-        <View key={`${uri}-${index}`} style={styles.todayFrame}>
-          <Image source={{ uri }} style={styles.todayFrameImage} resizeMode="cover" />
-        </View>
-      ))}
-    </View>
-  );
+function formatPulseTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "now";
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
-
 
 function reportError(err: unknown) {
   const message =
@@ -310,123 +291,41 @@ function reportError(err: unknown) {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing[5],
-    paddingBottom: 96,
+    paddingHorizontal: spacing[6],
+    paddingBottom: 110,
+    gap: spacing[5],
+  },
+  mockupFlow: {
     gap: spacing[4],
   },
-  queue: {
-    gap: 0,
-  },
-  queueTitle: {
-    ...type.metaValue,
-    fontSize: 11,
-    lineHeight: 15,
-    color: colors.muted,
+  empty: {
+    minHeight: 132,
+    justifyContent: "center",
+    gap: spacing[2],
+    padding: spacing[5],
   },
   queueCard: {
-    overflow: "hidden",
-    borderWidth: 1,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-  },
-  latestStack: {
-    gap: spacing[3],
-  },
-  latestCard: {
-    minHeight: 374,
-    padding: spacing[5],
-    gap: spacing[4],
-    borderRadius: 17,
-  },
-  latestTopRow: {
-    minHeight: 38,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[4],
-  },
-  senderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-  },
-  senderAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
+    minHeight: 54,
     justifyContent: "center",
-    backgroundColor: colors.redSoft,
+    gap: 0,
+    padding: 0,
     overflow: "hidden",
-  },
-  senderAvatarImage: {
-    width: "100%",
-    height: "100%",
-  },
-  senderInitial: {
-    ...type.metaValue,
-    fontSize: 11,
-  },
-  senderName: {
-    ...type.metaValue,
-    fontSize: 11,
-  },
-  senderTime: {
-    ...type.tinyMono,
-    color: colors.muted,
-  },
-  codeBlock: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: spacing[4],
-    paddingBottom: spacing[3],
-  },
-  todayCode: {
-    fontSize: 64,
-    lineHeight: 70,
-    letterSpacing: 0,
-  },
-  meaningText: {
-    ...type.metaValue,
-    fontSize: 12,
-    marginTop: spacing[2],
-  },
-  latestActions: {
-    flexDirection: "row",
-    gap: spacing[3],
-  },
-  todayFrameStrip: {
-    flexDirection: "row",
-    gap: spacing[3],
-  },
-  todayFrame: {
-    flex: 1,
-    aspectRatio: 0.94,
-    overflow: "hidden",
-    borderRadius: 12,
-    backgroundColor: colors.paperDeep,
-  },
-  todayFrameImage: {
-    width: "100%",
-    height: "100%",
   },
   queueRow: {
-    minHeight: 49,
+    minHeight: 46,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[3],
-    paddingHorizontal: spacing[5],
+    paddingHorizontal: spacing[4],
   },
   queueRowDivider: {
     borderTopWidth: 1,
   },
-  queueCopy: {
-    flex: 1,
-  },
   queueCode: {
     ...type.codeSmall,
-    fontSize: 18,
-    lineHeight: 24,
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 21,
     letterSpacing: 0,
   },
   queueMeaning: {
@@ -438,16 +337,5 @@ const styles = StyleSheet.create({
     ...type.tinyMono,
     fontSize: 10,
     lineHeight: 13,
-  },
-  empty: {
-    minHeight: 180,
-    justifyContent: "center",
-    gap: spacing[2],
-    padding: spacing[5],
-  },
-  softPanel: {
-    minHeight: 48,
-    justifyContent: "center",
-    padding: spacing[4],
   },
 });

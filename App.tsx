@@ -18,6 +18,7 @@ import { getNotificationSignalId, registerPushToken } from "@/services/pushServi
 import { customFonts } from "@/theme/fonts";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { UpdateBannerSlip } from "@/components/UpdateBannerSlip";
+import { isUiPreviewEnabled } from "@/lib/uiPreview";
 import * as Notifications from "expo-notifications";
 import * as Updates from "expo-updates";
 import { useUpdates } from "expo-updates";
@@ -26,6 +27,33 @@ void SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Splash prevent auto-hide failed", err?.message ?? err);
 });
 
+const FORCE_PREVIEW_UPDATE_PARAM = "beepUpdate";
+const initialPreviewUpdateForced =
+  Platform.OS === "web" &&
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).has(FORCE_PREVIEW_UPDATE_PARAM);
+
+function normalizeWebTabPath() {
+  if (Platform.OS !== "web" || typeof window === "undefined") return;
+
+  const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, "");
+  const normalizedTabPath = new Map([
+    ["today", "today"],
+    ["send", "send"],
+    ["people", "people"],
+    ["my", "my"],
+  ]).get(rawPath.toLowerCase());
+
+  if (!normalizedTabPath || rawPath === normalizedTabPath) return;
+  window.history.replaceState(
+    null,
+    "",
+    `/${normalizedTabPath}${window.location.search}${window.location.hash}`,
+  );
+}
+
+normalizeWebTabPath();
+
 const linking = {
   prefixes: [Linking.createURL("/"), "beepget://"],
   config: {
@@ -33,16 +61,12 @@ const linking = {
       Main: {
         screens: {
           Today: "today",
-          People: "people",
           Compose: "send",
-          Studio: "studio",
-          Logs: "logs",
-          Settings: "settings",
+          People: "people",
+          My: "my",
         },
       },
-      FirstRun: "first-run",
       Send: "message/reply/:friendId/:friendName",
-      WidgetStates: "widget-states",
     },
   },
 };
@@ -103,7 +127,7 @@ class OptionalUpdateBoundary extends React.Component<
 }
 
 function AppRuntime() {
-  const { setSession, fetchProfile, session, profile } = useAuthStore();
+  const { setSession, fetchProfile, session, profile, enterPreviewMode } = useAuthStore();
   const { quickReply, read, save } = useMessageStore();
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [fontsLoaded, fontError] = useFonts(customFonts);
@@ -234,6 +258,11 @@ function AppRuntime() {
   }, []);
 
   useEffect(() => {
+    if (isUiPreviewEnabled) {
+      enterPreviewMode();
+      return;
+    }
+
     let subscription: { unsubscribe: () => void } | null = null;
 
     try {
@@ -265,7 +294,7 @@ function AppRuntime() {
     }
 
     return () => subscription?.unsubscribe();
-  }, []);
+  }, [enterPreviewMode, fetchProfile, setSession]);
 
   useEffect(() => {
     useThemeStore.getState().hydrate().catch((err) =>
@@ -320,7 +349,14 @@ function UpdateBannerController() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [updateReloading, setUpdateReloading] = useState(false);
   const updatesState = useUpdates();
-  const showUpdateBanner = Boolean(updatesState.isUpdatePending) && !updateDismissed;
+  const forcePreviewUpdate =
+    isUiPreviewEnabled &&
+    Platform.OS === "web" &&
+    (initialPreviewUpdateForced ||
+      (typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).has(FORCE_PREVIEW_UPDATE_PARAM)));
+  const showUpdateBanner =
+    (Boolean(updatesState.isUpdatePending) || forcePreviewUpdate) && !updateDismissed;
 
   const applyUpdate = useCallback(async () => {
     if (updateReloading) return;

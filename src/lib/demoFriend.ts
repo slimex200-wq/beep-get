@@ -52,7 +52,7 @@ export function buildDemoBlinkMessage(ownerId: string) {
     to_user: ownerId,
     kind: "blink" as const,
     number_code: "8282",
-    memo: "Demo Blink — 2초 영상 시연",
+    memo: "Welcome Blink",
     is_read: false,
     is_saved: false,
     expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),

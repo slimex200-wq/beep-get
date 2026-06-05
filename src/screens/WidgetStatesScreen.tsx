@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, type NavigatorScreenParams, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
 import { ActionButton } from "@/components/ActionButton";
@@ -25,7 +25,7 @@ import {
 } from "@/components/WidgetSkinPackCard";
 import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
-import type { RootStackParamList } from "@/navigation/RootNavigator";
+import type { MainTabParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useSkinStore } from "@/stores/skinStore";
@@ -37,6 +37,12 @@ import { isIdentityPackStoreEnabled } from "@/lib/releaseFlags";
 
 type PreviewState = "empty" | "incoming-beep" | "incoming-blink";
 type WidgetSize = "small" | "medium";
+type WidgetStatesRouteParamList = {
+  WidgetStates: { size?: WidgetSize } | undefined;
+};
+type WidgetStatesNavigationParamList = {
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
+};
 
 const PREVIEW_STATES_BY_SIZE: Record<WidgetSize, readonly PreviewState[]> = {
   small: ["empty", "incoming-beep"],
@@ -54,8 +60,8 @@ function previewStateLabel(state: PreviewState) {
 }
 
 export function WidgetStatesScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, "WidgetStates">>();
+  const navigation = useNavigation<NativeStackNavigationProp<WidgetStatesNavigationParamList>>();
+  const route = useRoute<RouteProp<WidgetStatesRouteParamList, "WidgetStates">>();
   const { profile } = useAuthStore();
   const { entries } = useDictionaryStore();
   const {

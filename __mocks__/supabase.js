@@ -7,6 +7,7 @@ function createMockChain(result = { data: null, error: null }) {
     upsert: jest.fn(() => chain),
     eq: jest.fn(() => chain),
     gt: jest.fn(() => chain),
+    neq: jest.fn(() => chain),
     in: jest.fn(() => chain),
     lte: jest.fn(() => chain),
     gte: jest.fn(() => chain),

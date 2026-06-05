@@ -27,6 +27,7 @@ type Props = {
   onAvatarPress?: () => void;
   headerAvatarUri?: string;
   showBackAction?: boolean;
+  primaryActionLabel?: string;
 };
 
 export function SendBeepScreen({
@@ -46,10 +47,11 @@ export function SendBeepScreen({
   onAvatarPress,
   headerAvatarUri,
   showBackAction = true,
+  primaryActionLabel = "SEND BEEP",
 }: Props) {
   const palette = useAppPalette();
   const cleanCode = code || "____";
-  const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : "Send Beep";
+  const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : primaryActionLabel;
   const shouldRenderStandalonePreview = !deckHeader;
   const shouldRenderInputs = !deckHeader;
 
@@ -127,7 +129,7 @@ export function SendBeepScreen({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: 96,
+    paddingBottom: 160,
     gap: spacing[4],
   },
   beepPreview: {

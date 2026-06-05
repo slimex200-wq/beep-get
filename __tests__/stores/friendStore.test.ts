@@ -27,6 +27,15 @@ beforeEach(() => {
 });
 
 describe("friendStore inbound friends", () => {
+  it("does not inject the Beepy demo friend into real user relationships", async () => {
+    await useFriendStore.getState().fetch(baseProfile.id);
+
+    const friendIds = useFriendStore.getState().friends.map((friend) => friend.friend_id);
+
+    expect(friendIds).not.toContain("beepy-demo-friend");
+    expect(useFriendStore.getState().friends).toEqual([]);
+  });
+
   it("loads the preview inbound mock for the UI preview user", async () => {
     await useFriendStore.getState().fetchInbound(UI_PREVIEW_USER_ID);
 

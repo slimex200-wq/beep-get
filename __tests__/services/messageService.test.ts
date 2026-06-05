@@ -183,6 +183,7 @@ describe("getReceivedMessages", () => {
       "*, from_user_profile:profiles!signals_sender_id_fkey(nickname, beep_id, avatar_url), media:signal_media(*)"
     );
     expect(chain.eq).toHaveBeenCalledWith("receiver_id", "u2");
+    expect(chain.neq).toHaveBeenCalledWith("status", "read");
     expect(result[0]).toEqual(
       expect.objectContaining({
         from_user: "u1",

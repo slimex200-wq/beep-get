@@ -16,7 +16,6 @@ import {
   uiPreviewInboundFriends,
 } from "@/lib/uiPreview";
 import { useAuthStore } from "@/stores/authStore";
-import { buildDemoFriend, DEMO_FRIEND_ID, isDemoFriend } from "@/lib/demoFriend";
 
 interface Friend {
   id: string;
@@ -69,8 +68,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     }
     set({ loading: true });
     const remote = await getFriends(userId);
-    const friends = [buildDemoFriend(userId), ...remote];
-    set({ friends, loading: false });
+    set({ friends: remote, loading: false });
   },
 
   fetchInbound: async (userId) => {
@@ -129,12 +127,6 @@ export const useFriendStore = create<FriendState>((set, get) => ({
   },
 
   remove: async (userId, friendId) => {
-    if (isDemoFriend(friendId)) {
-      set((state) => ({
-        friends: state.friends.filter((f) => f.friend_id !== friendId),
-      }));
-      return;
-    }
     await removeFriend(userId, friendId);
     set((state) => ({
       friends: state.friends.filter((f) => f.friend_id !== friendId),

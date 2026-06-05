@@ -2,37 +2,46 @@ import { readFileSync } from "fs";
 import path from "path";
 
 describe("MyScreen production tools", () => {
-  it("surfaces the Kotlin mockup settings groups first", () => {
+  it("keeps My Beep Room quiet with widget, compact skin, quick reply, and account controls", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/MyScreen.tsx"), "utf8");
 
     [
-      "My Settings",
-      "Profile",
-      "Avatar lives here",
+      "My Beep Room",
+      "Widget Preview",
       "Edit Avatar",
-      "Personalize",
-      "Header opens Skin Packs",
-      "Widget Skins",
-      "Quick Replies",
+      "Skin Pack",
+      "Quick Reply Slots",
+      "Account",
       "Skin Packs",
       "Configure Slots",
-      "+ active preview",
-      "3 queued slots",
       "Signal Directory (On-Demand)",
       "Define New Signal Token",
-      "8282 / 집중중 🔕",
     ].forEach((label) => {
       expect(source).toContain(label);
     });
+
+    [
+      "WidgetCommercePreviewStrip",
+      "Widget Store Preview",
+      "live widget examples",
+      "SkinPackPreviewGrid",
+      "MyBlinkThreeCutCard",
+      "My Blink 3-cut",
+    ].forEach((label) => {
+      expect(source).not.toContain(label);
+    });
+
     expect(source).not.toContain("setDraftCode(value.replace(/[^0-9]/g, \"\"))");
-    expect(source).not.toContain("MY BEEP ROOM");
   });
 
   it("does not expose internal Studio or Collection tools in the user room", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/MyScreen.tsx"), "utf8");
 
-    ["SM Widget", "MD List Widget", "WidgetSkinPackCard"].forEach((label) => {
+    ["WidgetSkinPackCard"].forEach((label) => {
       expect(source).toContain(label);
+    });
+    ["SM Widget", "MD List Widget", "+ active preview", "3 queued slots", "WidgetStates"].forEach((label) => {
+      expect(source).not.toContain(label);
     });
     expect(source).toContain("SkinPackSheet");
     expect(source).toContain("AvatarPickerSheet");
