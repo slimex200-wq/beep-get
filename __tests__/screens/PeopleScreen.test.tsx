@@ -4,6 +4,8 @@ import path from "path";
 describe("PeopleScreen product sections", () => {
   it("keeps People focused on My Beep ID, Close Circuit, and compact friend signals", () => {
     const peopleSource = readFileSync(path.join(process.cwd(), "src/screens/PeopleScreen.tsx"), "utf8");
+    const statusSource = readFileSync(path.join(process.cwd(), "src/screens/people/peopleSignalStatus.ts"), "utf8");
+    const combinedSource = `${peopleSource}\n${statusSource}`;
 
     ["KotlinHeader", "My Beep ID", "Search ID or name", "Invite Friend", "Close Circuit", "Configure Friend Info"].forEach((label) => {
       expect(peopleSource).toContain(label);
@@ -21,13 +23,13 @@ describe("PeopleScreen product sections", () => {
     ].forEach((label) => {
       expect(peopleSource).not.toContain(label);
     });
-    expect(peopleSource).toContain("No signals yet");
+    expect(combinedSource).toContain("No signals yet");
     expect(peopleSource).toContain("Latest Blink from");
     expect(peopleSource).not.toContain('label="Discover"');
     expect(peopleSource).toContain("CloseCircuitMap");
-    expect(peopleSource).toContain("quiet");
-    expect(peopleSource).toContain("BEEP");
-    expect(peopleSource).toContain("BLINK");
+    expect(combinedSource).toContain("quiet");
+    expect(combinedSource).toContain("BEEP");
+    expect(combinedSource).toContain("BLINK");
     expect(peopleSource).not.toContain("WIDGET CIRCLE");
     expect(peopleSource).not.toContain('label="WIDGET"');
     expect(peopleSource).toContain("FriendRow");
@@ -45,5 +47,14 @@ describe("PeopleScreen product sections", () => {
     expect(peopleSource).toContain("friend.avatarUri");
     expect(peopleSource).toContain("friendAvatarUri");
     expect(peopleSource).toContain("Haptics.selectionAsync");
+  });
+
+  it("does not fabricate friend signal status from friend list position", () => {
+    const peopleSource = readFileSync(path.join(process.cwd(), "src/screens/PeopleScreen.tsx"), "utf8");
+
+    expect(peopleSource).toContain("buildFriendSignalSummaries(received)");
+    expect(peopleSource).not.toContain("statusByIndex");
+    expect(peopleSource).not.toContain("friendStatusBadge");
+    expect(peopleSource).not.toContain("index === 0 ? colors.red");
   });
 });

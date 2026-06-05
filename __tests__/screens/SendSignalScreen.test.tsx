@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from "fs";
 import path from "path";
-import { DEFAULT_SLOT_DECK } from "@/screens/send/sendSignalHelpers";
+import {
+  buildSignalSlotDeck,
+  DEFAULT_SLOT_DECK,
+} from "@/screens/send/sendSignalHelpers";
 import { validateMessage } from "@/services/messageService";
 
 describe("SendSignalScreen product sections", () => {
@@ -58,6 +61,20 @@ describe("SendSignalScreen product sections", () => {
 
   it("only shows send slots that the real send service accepts", () => {
     expect(DEFAULT_SLOT_DECK.every((slot) => validateMessage(slot).valid)).toBe(true);
+  });
+
+  it("filters custom dictionary slots through the real send contract", () => {
+    const slots = buildSignalSlotDeck(
+      [
+        { code: "OK" },
+        { code: "OK💘" },
+        { code: "hello\nnow" },
+      ],
+      ["8282"],
+    );
+
+    expect(slots).toEqual(["8282", "OK"]);
+    expect(slots.every((slot) => validateMessage(slot).valid)).toBe(true);
   });
 
   it("does not duplicate capture sections when the mockup deck owns the Send header", () => {
