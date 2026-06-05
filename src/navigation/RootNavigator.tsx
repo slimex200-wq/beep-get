@@ -6,9 +6,10 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { isUiPreviewUser } from "@/lib/uiPreview";
 import { colors } from "@/design/tokens";
 import { font } from "@/design/typography";
-import { useAppPalette } from "@/design/appTheme";
+import { lightPalette, useAppPalette } from "@/design/appTheme";
 import {
   FriendsGroupIcon,
   MyUserIcon,
@@ -52,17 +53,21 @@ export type MainTabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-export const primaryTabLabels = ["TODAY", "SEND", "FRIENDS", "MY"] as const;
+export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
 
 const tabLabels: Record<keyof MainTabParamList, string> = {
-  Today: "Today",
-  Compose: "Send",
-  People: "Friends",
-  My: "My",
+  Today: "TODAY",
+  Compose: "SEND",
+  People: "PEOPLE",
+  My: "MY",
 };
 
 function MainTabs() {
-  const palette = useAppPalette();
+  const themedPalette = useAppPalette();
+  const profileId = useAuthStore((state) => state.profile?.id ?? null);
+  const isPreviewSession = isUiPreviewUser(profileId);
+  const palette = isPreviewSession ? lightPalette : themedPalette;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -146,8 +151,10 @@ function TabLabel({ label, focused, color }: { label: string; focused: boolean; 
 
 export function RootNavigator() {
   const { session, profile } = useAuthStore();
+  const isPreviewSession = isUiPreviewUser(profile?.id);
   const needsOnboarding =
-    !session || !profile || !profile.nickname?.trim() || !profile.avatar_url?.trim();
+    !isPreviewSession &&
+    (!session || !profile || !profile.nickname?.trim() || !profile.avatar_url?.trim());
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

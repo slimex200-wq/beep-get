@@ -18,7 +18,7 @@ describe("UpdateBannerSlip", () => {
     expect(toJSON()).toBeNull();
   });
 
-  it("presents a clear restart action and a later action", () => {
+  it("presents a full-screen updating stage with restart and later actions", () => {
     const onReload = jest.fn();
     const onDismiss = jest.fn();
     const { getByLabelText, toJSON } = render(
@@ -26,8 +26,9 @@ describe("UpdateBannerSlip", () => {
     );
     const output = JSON.stringify(toJSON());
 
-    expect(output).toContain("UPDATE READY");
-    expect(output).toContain("A fresher Beep Get build is ready. Restart to apply it.");
+    expect(output).toContain("FULL SCREEN UPDATE");
+    expect(output).toContain("Update ready to install");
+    expect(output).toContain("The app will restart into the new build.");
 
     fireEvent.press(getByLabelText("Restart to apply update"));
     fireEvent.press(getByLabelText("Dismiss update reminder"));
@@ -44,6 +45,7 @@ describe("UpdateBannerSlip", () => {
     const output = JSON.stringify(toJSON());
 
     expect(output).toContain("Restarting");
+    expect(output).toContain("Applying update");
     expect(queryByLabelText("Dismiss update reminder")).toBeNull();
 
     fireEvent.press(getByLabelText("Restarting update"));

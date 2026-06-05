@@ -22,6 +22,7 @@ import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
+import { CloseCircuitMap, type CircuitFriend } from "@/components/CloseCircuitMap";
 import {
   Avatar,
   KotlinHeader,
@@ -137,6 +138,16 @@ export function PeopleScreen() {
     });
     return map;
   }, [received]);
+  const circuitFriends = useMemo<CircuitFriend[]>(() => {
+    const statusByIndex = ["BEEP", "BLINK", "quiet"] as const;
+
+    return visibleFriends.slice(0, 4).map((friend, index) => ({
+      id: friend.id,
+      name: friend.name,
+      ...(friend.avatarUri ? { avatarUri: friend.avatarUri } : {}),
+      status: statusByIndex[index] ?? "quiet",
+    }));
+  }, [visibleFriends]);
 
   const pulse = () => {
     Haptics.selectionAsync().catch(() => undefined);
@@ -189,7 +200,7 @@ export function PeopleScreen() {
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
-          title="Friends"
+          title="People"
           centered
           avatarLabel={profileAvatarLabel}
           avatarSource={profileAvatarSource}
@@ -197,7 +208,7 @@ export function PeopleScreen() {
             {
               label: "Settings",
               icon: <GearLineIcon />,
-              accessibilityLabel: "Friends settings",
+              accessibilityLabel: "People settings",
               onPress: openSettings,
             },
           ]}
@@ -213,7 +224,7 @@ export function PeopleScreen() {
           />
         </View>
 
-        <MockupSection label="MY ID" hint="SHARE" />
+        <MockupSection label="My Beep ID" hint="SHARE" />
         <MockupCard style={styles.myIdCard}>
           <Avatar label={profileAvatarLabel} source={profileAvatarSource} size={52} />
           <View style={styles.myIdCopy}>
@@ -240,13 +251,14 @@ export function PeopleScreen() {
             <AddPersonLineIcon />
           </View>
           <View style={styles.addCopy}>
-            <Text style={[styles.friendName, { color: palette.text }]}>Add Friend</Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>Connect with an 8-digit Beep ID</Text>
+                <Text style={[styles.friendName, { color: palette.text }]}>Invite Friend</Text>
+                <Text style={[type.bodyMuted, { color: palette.muted }]}>Close Circuit starts with a private Beep ID</Text>
           </View>
           <ChevronRightLineIcon />
         </Pressable>
 
-        <MockupSection label="Close Friends" hint={`${visibleFriends.length} FRIENDS`} />
+        <MockupSection label="Close Circuit" hint={`${visibleFriends.length} PEOPLE`} />
+        <CloseCircuitMap friends={circuitFriends} capacity={4} onInvite={openAddDialog} />
         <View style={styles.friendList}>
           {visibleFriends.length > 0 ? (
             visibleFriends.map((friend, index) => (
@@ -256,7 +268,7 @@ export function PeopleScreen() {
                 status={lastSignalByFriend.get(friend.id) ?? "No signals yet"}
                 accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
                 avatarUri={friend.avatarUri}
-                rightText={friend.no}
+                rightText={friendStatusBadge(index)}
                 onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
               />
             ))
@@ -455,6 +467,12 @@ function InboundRow({
 function formatOwnNo(beepId?: string | null) {
   const digits = beepId?.replace(/\D/g, "");
   return digits && digits.length >= 2 ? digits.slice(-2) : "--";
+}
+
+function friendStatusBadge(index: number): string {
+  if (index === 0) return "BEEP";
+  if (index === 1) return "BLINK";
+  return "quiet";
 }
 
 function reportError(err: unknown) {

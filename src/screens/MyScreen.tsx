@@ -35,6 +35,7 @@ import {
   WidgetSkinPackCard,
   getPackVisual,
 } from "@/components/WidgetSkinPackCard";
+import { WidgetPreviewPanel } from "@/components/WidgetPreviewPanel";
 import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
 import {
   ChevronRightLineIcon,
@@ -246,7 +247,7 @@ export function MyScreen() {
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
-          title="My Settings"
+          title="My Beep Room"
           centered
           avatarLabel={avatarLabel}
           avatarSource={avatarSource}
@@ -262,7 +263,18 @@ export function MyScreen() {
           ]}
         />
 
-        <MockupSection label="Profile" hint="Avatar lives here" style={styles.standaloneSection} />
+        <View style={styles.roomSection}>
+          <WidgetPreviewPanel
+            title="Widget Preview"
+            subtitle="나만의 비프 공간"
+            code={activePack.code}
+            from={skinPackPreviewName}
+            tone="lavender"
+            medium
+          />
+        </View>
+
+        <MockupSection label="Profile" hint="small secondary profile" style={styles.standaloneSection} />
         <Pressable
           accessibilityLabel="Edit Profile Avatar"
           accessibilityRole="button"
@@ -279,7 +291,7 @@ export function MyScreen() {
               {profile?.nickname ?? "Profile Avatar"}
             </Text>
             <Text style={[type.bodyMuted, { color: palette.muted }]}>
-              {profile?.beep_id ? `@${profile.beep_id}` : "Choose the face shown across My, Friends, and Send headers."}
+              {profile?.beep_id ? `@${profile.beep_id}` : "Choose the face shown across My, People, and Send headers."}
             </Text>
           </View>
           <View style={[styles.profileActionPill, { borderColor: palette.rule }]}>
@@ -287,7 +299,7 @@ export function MyScreen() {
           </View>
         </Pressable>
 
-        <MockupSection label="Personalize" hint="Header opens Skin Packs" style={styles.standaloneSection} />
+        <MockupSection label="Skin Pack" hint="widget mood first" style={styles.standaloneSection} />
         <Pressable
           accessibilityLabel="Open Skin Pack picker"
           accessibilityRole="button"
@@ -326,7 +338,7 @@ export function MyScreen() {
         </Pressable>
 
         <View style={styles.sectionActionRow}>
-          <MockupSection label="Quick Replies" />
+          <MockupSection label="Quick Reply Slots" />
           <Pressable
             accessibilityLabel="Configure quick reply slots"
             accessibilityRole="button"
@@ -343,6 +355,24 @@ export function MyScreen() {
             </View>
           ))}
         </MockupCard>
+
+        <MockupSection label="Account" hint="secondary" style={styles.standaloneSection} />
+        <Pressable
+          accessibilityLabel="Open Account"
+          accessibilityRole="button"
+          onPress={() => navigation.navigate("Account")}
+          style={({ pressed }) => [
+            styles.accountRow,
+            { backgroundColor: palette.card, borderColor: palette.rule },
+            pressed && styles.pressed,
+          ]}
+        >
+          <View style={styles.flexCopy}>
+            <Text style={[styles.rowTitle, { color: palette.text }]}>Account</Text>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>privacy, logout, and app settings</Text>
+          </View>
+          <ChevronRightLineIcon color={palette.muted} />
+        </Pressable>
 
         <View style={styles.sectionActionRow}>
           <MockupSection label="Signal Directory (On-Demand)" />
@@ -581,7 +611,7 @@ function AvatarPickerSheet({
             <View>
               <Text style={[styles.sheetTitle, { color: palette.text }]}>Profile Avatar</Text>
               <Text style={[type.bodyMuted, { color: palette.muted }]}>
-                Shown across My, Friends, and Send headers.
+                Shown across My, People, and Send headers.
               </Text>
             </View>
             <Pressable
@@ -680,6 +710,9 @@ const styles = StyleSheet.create({
   rowTitle: {
     ...type.metaValue,
     fontSize: 13,
+  },
+  roomSection: {
+    marginHorizontal: spacing[5],
   },
   standaloneSection: {
     marginHorizontal: spacing[5],
@@ -784,65 +817,6 @@ const styles = StyleSheet.create({
   skinPackGrid: {
     gap: spacing[3],
   },
-  widgetLayoutGrid: {
-    flexDirection: "row",
-    gap: spacing[4],
-    paddingHorizontal: spacing[5],
-  },
-  widgetPreviewCard: {
-    flex: 1,
-    minHeight: 126,
-    justifyContent: "space-between",
-    gap: spacing[3],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  widgetPreviewLabel: {
-    ...type.tinyMono,
-    fontSize: 9,
-    lineHeight: 12,
-  },
-  smallWidgetPreview: {
-    minHeight: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
-  },
-  mediumWidgetPreview: {
-    minHeight: 42,
-    justifyContent: "center",
-    gap: spacing[3],
-  },
-  widgetPreviewFooter: {
-    minHeight: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[2],
-  },
-  activePreviewText: {
-    ...type.tinyMono,
-    color: "#4CAB61",
-  },
-  widgetMetaText: {
-    ...type.tinyMono,
-  },
-  previewCode: {
-    ...type.codeSmall,
-    fontSize: 20,
-    lineHeight: 25,
-  },
-  previewLineLong: {
-    width: "72%",
-    height: 4,
-    borderRadius: 4,
-  },
-  previewLineShort: {
-    width: "56%",
-    height: 4,
-    borderRadius: 4,
-  },
   sectionActionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -882,6 +856,16 @@ const styles = StyleSheet.create({
   codeList: {
     marginHorizontal: spacing[5],
     paddingVertical: spacing[2],
+  },
+  accountRow: {
+    minHeight: 58,
+    marginHorizontal: spacing[5],
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[4],
+    padding: spacing[4],
+    borderWidth: 1,
+    borderRadius: 12,
   },
   codeRow: {
     minHeight: 52,

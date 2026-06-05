@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { ActionButton } from "@/components/ActionButton";
 import { RefreshLineIcon, XLineIcon } from "@/components/MockupLineIcons";
-import { colors, radius, shadow, spacing } from "@/design/tokens";
+import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 
@@ -15,13 +15,13 @@ interface Props {
 
 export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) {
   const palette = useAppPalette();
-  const translateY = useRef(new Animated.Value(visible ? 0 : -28)).current;
+  const translateY = useRef(new Animated.Value(visible ? 0 : 16)).current;
   const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(translateY, {
-        toValue: visible ? 0 : -28,
+        toValue: visible ? 0 : 16,
         duration: 260,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
@@ -50,39 +50,47 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
       <View
         accessibilityRole="alert"
         style={[
-          styles.slip,
-          { backgroundColor: palette.card, borderColor: palette.ruleStrong },
+          styles.stage,
+          { backgroundColor: palette.background, borderColor: palette.ruleStrong },
         ]}
       >
-        <View style={styles.kickerRow}>
-          <View style={[styles.dot, { backgroundColor: colors.greenDot }]} />
-          <Text style={[styles.kicker, { color: palette.text }]}>UPDATE READY</Text>
-          <View style={[styles.kickerRule, { backgroundColor: palette.rule }]} />
-          <Text style={[styles.kicker, { color: palette.text }]}>OTA</Text>
-        </View>
-
-        <Text style={[styles.title, { color: palette.text }]}>New build is ready</Text>
-        <Text style={[styles.body, { color: palette.muted }]}>
-          A fresher Beep Get build is ready. Restart to apply it.
-        </Text>
-
-        <View style={[styles.rule, { backgroundColor: palette.rule }]} />
-
-        <View style={styles.actionRow}>
+        <View style={styles.topRail}>
+          <Text style={[styles.kicker, { color: palette.muted }]}>FULL SCREEN UPDATE</Text>
           {onDismiss && !busy ? (
             <ActionButton
               label="Later"
               variant="ghost"
-              flex
               onPress={onDismiss}
               accessibilityLabel="Dismiss update reminder"
               icon={(iconColor) => <XLineIcon color={iconColor} />}
             />
           ) : null}
+        </View>
+
+        <View style={styles.center}>
+          <View style={[styles.glyph, { backgroundColor: palette.card, borderColor: palette.ruleStrong }]}>
+            <RefreshLineIcon color={palette.text} />
+          </View>
+          <Text style={[styles.title, { color: palette.text }]}>
+            {busy ? "Applying update" : "Update ready to install"}
+          </Text>
+          <Text style={[styles.body, { color: palette.muted }]}>
+            The app will restart into the new build.
+          </Text>
+
+          <View style={[styles.progressTrack, { backgroundColor: palette.rule }]}>
+            <View
+              style={[
+                styles.progressFill,
+                { backgroundColor: busy ? colors.greenDot : palette.primary },
+                busy && styles.progressFillBusy,
+              ]}
+            />
+          </View>
+
           <ActionButton
             label={restartLabel}
             variant="dark"
-            flex
             onPress={handleReload}
             disabled={Boolean(busy)}
             accessibilityLabel={restartAccessibilityLabel}
@@ -97,63 +105,80 @@ export function UpdateBannerSlip({ visible, onReload, onDismiss, busy }: Props) 
 const styles = StyleSheet.create({
   wrap: {
     position: "absolute",
-    top: spacing[12],
-    left: spacing[5],
-    right: spacing[5],
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     zIndex: 999,
   },
-  slip: {
+  stage: {
+    flex: 1,
     backgroundColor: colors.paper,
-    borderRadius: radius.slip,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
-    padding: spacing[5],
+    paddingTop: spacing[12],
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[8],
     overflow: "hidden",
-    ...shadow.slip,
   },
-  kickerRow: {
+  topRail: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing[3],
-    marginBottom: spacing[4],
+    justifyContent: "space-between",
+    gap: spacing[4],
   },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[5],
+    paddingBottom: spacing[12],
+  },
+  glyph: {
+    width: 72,
+    height: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 36,
   },
   kicker: {
     ...type.tinyMono,
-    color: colors.ink,
+    maxWidth: 180,
     letterSpacing: 0,
-    textTransform: "uppercase",
-  },
-  kickerRule: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.rule,
   },
   title: {
     ...type.slipTitle,
+    maxWidth: 300,
     color: colors.ink,
-    fontSize: 15,
-    lineHeight: 20,
+    textAlign: "center",
+    fontSize: 25,
+    lineHeight: 31,
     letterSpacing: 0,
   },
   body: {
     ...type.body,
-    marginTop: spacing[1],
-    fontSize: 12,
-    lineHeight: 18,
+    maxWidth: 270,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 19,
     letterSpacing: 0,
   },
-  rule: {
-    marginTop: spacing[5],
-    height: 1,
+  progressTrack: {
+    width: "100%",
+    maxWidth: 280,
+    height: 7,
+    borderRadius: 4,
+    overflow: "hidden",
   },
-  actionRow: {
-    marginTop: spacing[4],
-    flexDirection: "row",
-    gap: spacing[3],
+  progressFill: {
+    width: "62%",
+    height: "100%",
+    borderRadius: 4,
+  },
+  progressFillBusy: {
+    width: "84%",
   },
 });

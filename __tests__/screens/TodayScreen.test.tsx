@@ -2,26 +2,61 @@ import { readFileSync } from "fs";
 import path from "path";
 
 describe("TodayScreen product sections", () => {
-  it("keeps Today focused on latest signal, quick reply, and queue", () => {
+  it("keeps Today widget-first while preserving quick reply, queue, and widget mirror", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
-    ["Today", "Quick Reply", "Queue", "Done", "View", "TodayFrameStrip"].forEach((label) => {
+
+    [
+      "Today",
+      "Incoming Now",
+      "Friend Pulse",
+      "Widget Mirror",
+      "Quick Reply",
+      "Today Queue",
+      "Done",
+      "View",
+      "TodayIncomingCard",
+      "TodayMockupHeader",
+      "TodaySectionHeader",
+      "WidgetPreviewPanel",
+      "FriendPulseCard",
+      "SignalSlotRail",
+      "buildQuickReplySlots",
+      "quickReply",
+    ].forEach((label) => {
       expect(source).toContain(label);
     });
-    expect(source).toContain("showAvatar={false}");
-    expect(source).not.toContain("INCOMING NOW");
-    expect(source).not.toContain("TODAY QUEUE");
-    expect(source).not.toContain("FRIEND PULSE");
-    expect(source).not.toContain("WIDGET MIRROR");
+
+    expect(source).toContain("useAppPalette");
+    expect(source).toContain("backgroundColor={palette.background}");
+    expect(source).toContain("statusBarStyle={palette.statusBar}");
+    expect(source).toContain("paperMode");
+    expect(source).toContain("compact");
+    expect(source).toContain("오늘의 작은 신호");
+    expect(source).toContain("홈 화면 나의 위젯");
+    expect(source).not.toContain("TodaySupportDock");
     expect(source).not.toContain("widgetActionChip");
   });
 
-  it("puts the received Blink frames on the main Today card", () => {
+  it("keeps received Blink frames in the compact Today card with theme-aware components", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
+    const incomingCardSource = readFileSync(path.join(process.cwd(), "src/components/TodayIncomingCard.tsx"), "utf8");
+    const pulseSource = readFileSync(path.join(process.cwd(), "src/components/FriendPulseCard.tsx"), "utf8");
 
-    expect(source).toContain("TodayFrameStrip");
     expect(source).toContain("frameUris={latestMessage.media?.stripFrameUris}");
-    expect(source).toContain("latestMessage.media?.stripFrameUris?.length");
-    expect(source).not.toContain("mockupBlinkFrameUris");
-    expect(source).not.toContain("playbackUri={latestMessage.media?.playbackUri}");
+    expect(source).toContain("hasBlink={Boolean(latestSignal.hasBlink)}");
+    expect(incomingCardSource).toContain("incomingRow");
+    expect(incomingCardSource).toContain("replyRow");
+    expect(incomingCardSource).toContain("MiniFrameStrip");
+    expect(incomingCardSource).toContain("frameUris?.length");
+    expect(incomingCardSource).toContain("useAppPalette");
+    expect(pulseSource).toContain("useAppPalette");
+    expect(incomingCardSource).toContain('accessibilityLabel="Open signal"');
+    expect(incomingCardSource).toContain('accessibilityLabel="Mark signal done"');
+    expect(incomingCardSource).not.toContain("ActionButton");
+    expect(incomingCardSource).not.toContain("SignalCode");
+    expect(incomingCardSource).not.toContain("StatusPill");
+    expect(incomingCardSource).not.toContain("TodayFrameStrip");
+    expect(incomingCardSource).not.toContain("mockupBlinkFrameUris");
+    expect(incomingCardSource).not.toContain("playbackUri");
   });
 });

@@ -2,6 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import type { LegacyMessage } from "@/services/messageService";
 import { AVATAR_PRESETS, DEFAULT_AVATAR_URI } from "@/design/avatarPresets";
 import { mockupBlinkFrameUris } from "@/design/mockupPhotos";
+import { buildDemoFriend } from "@/lib/demoFriend";
 
 export const UI_PREVIEW_USER_ID = "ui-preview-user";
 export const isUiPreviewEnabled =
@@ -85,6 +86,7 @@ export const uiPreviewMessages: LegacyMessage[] = [
 ];
 
 export const uiPreviewFriends = [
+  buildDemoFriend(UI_PREVIEW_USER_ID),
   {
     id: "preview-friendship-1",
     user_id: UI_PREVIEW_USER_ID,

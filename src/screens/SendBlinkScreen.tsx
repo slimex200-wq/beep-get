@@ -196,7 +196,7 @@ export function SendBlinkScreen({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: 96,
+    paddingBottom: 160,
     gap: spacing[4],
   },
   cameraCard: {

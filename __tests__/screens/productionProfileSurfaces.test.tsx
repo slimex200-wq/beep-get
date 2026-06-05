@@ -26,13 +26,15 @@ describe("production profile surfaces", () => {
   it("renders Friends and Send recipients from relationship avatar_url instead of synthesized mock photos", () => {
     const peopleSource = readSource("src/screens/PeopleScreen.tsx");
     const sendSource = readSource("src/screens/SendSignalScreen.tsx");
+    const sendControllerSource = readSource("src/screens/send/useSendSignalController.ts");
     const friendPickerSource = readSource("src/components/FriendPickerStrip.tsx");
 
     expect(peopleSource).not.toContain("getMockupFriendPhotoUri");
     expect(sendSource).not.toContain("getMockupFriendPhotoUri");
+    expect(sendControllerSource).not.toContain("getMockupFriendPhotoUri");
     expect(peopleSource).not.toContain('profile?.nickname ?? "Alex"');
     expect(peopleSource).not.toContain('profile?.beep_id ?? "alexb"');
-    expect(sendSource).toContain("avatarUri: friend.friend.avatar_url");
+    expect(sendControllerSource).toContain("avatarUri: friend.friend.avatar_url");
     expect(peopleSource).toContain("avatarUri={friend.avatarUri}");
     expect(peopleSource).toContain("getAvatarImageSource");
     expect(friendPickerSource).toContain("getAvatarImageSource");
@@ -40,11 +42,17 @@ describe("production profile surfaces", () => {
 
   it("resolves avatar preset IDs on signal detail surfaces instead of passing raw uri strings", () => {
     const todaySource = readSource("src/screens/TodayScreen.tsx");
+    const todayIncomingCardSource = readSource(
+      "src/components/TodayIncomingCard.tsx",
+    );
     const replySource = readSource("src/screens/SlipReplyRoomScreen.tsx");
 
-    expect(todaySource).toContain("getAvatarImageSource");
+    expect(todaySource).toContain("TodayIncomingCard");
+    expect(todayIncomingCardSource).toContain("getAvatarImageSource");
     expect(replySource).toContain("getAvatarImageSource");
-    expect(todaySource).not.toContain("source={{ uri: latestSignal.avatarUri }}");
+    expect(todayIncomingCardSource).not.toContain(
+      "source={{ uri: latestSignal.avatarUri }}",
+    );
     expect(replySource).not.toContain("source={{ uri: senderAvatarUri }}");
   });
 
