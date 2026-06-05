@@ -5,9 +5,9 @@ import { BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import type { BlinkDraft } from "@/lib/blinkDraft";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 
-export const DEFAULT_SLOT_DECK = ["8282", "486", "0707", "1313", "9999", "응원해 💘", "보고싶어", "잘자 🌙"] as const;
+export const DEFAULT_SLOT_DECK = ["8282", "486", "0707", "1313", "9999", "응원해", "보고싶어", "잘자"] as const;
 export const RECENT_COMBO_SLOTS = ["8282", "486", "0707"] as const;
-export const RECENT_COMBO_LABELS = ["8282 + 보고싶어", "486 + 잘자 🌙", "0707 + 응원해"] as const;
+export const RECENT_COMBO_LABELS = ["8282 + 보고싶어", "486 + 잘자", "0707 + 응원해"] as const;
 
 export function createPreviewBlinkDraft(frameUris: readonly string[] = DEMO_BLINK_FRAME_DATA_URIS): BlinkDraft {
   const previewFrameUris = [...frameUris].slice(0, 3);

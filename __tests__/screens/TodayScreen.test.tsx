@@ -59,4 +59,18 @@ describe("TodayScreen product sections", () => {
     expect(incomingCardSource).not.toContain("mockupBlinkFrameUris");
     expect(incomingCardSource).not.toContain("playbackUri");
   });
+
+  it("does not synthesize fake Today widget or friend pulse values without real signals", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
+    const widgetSource = readFileSync(path.join(process.cwd(), "src/components/WidgetPreviewPanel.tsx"), "utf8");
+
+    expect(source).not.toContain('const fallbackCodes = ["OK", "8282", "BLINK"]');
+    expect(source).not.toContain('latestSignal?.code ?? "8282"');
+    expect(source).not.toContain('profile?.nickname?.trim() ?? "민아"');
+    expect(source).toContain("if (!recentSignal) return []");
+    expect(source).toContain('latestSignal?.code ?? "----"');
+    expect(source).toContain('latestSignal?.sender ?? "No signal yet"');
+    expect(widgetSource).not.toContain('{code || "8282"}');
+    expect(widgetSource).not.toContain('{from || "민아"}');
+  });
 });

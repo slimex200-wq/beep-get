@@ -86,11 +86,11 @@ export function WidgetPreviewPanel({
           minimumFontScale={0.64}
           style={[styles.code, medium && styles.codeMedium, compact && styles.codeCompact]}
         >
-          {code || "8282"}
+          {code || "----"}
         </Text>
         <View style={styles.widgetFooter}>
           <Text numberOfLines={1} style={styles.fromText}>
-            FROM. {from || "민아"}
+            FROM. {from || "No signal yet"}
           </Text>
           {medium ? (
             <View style={styles.actionRow}>
