@@ -11,12 +11,11 @@ import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import {
+  buildRecentCombos,
   createPreviewBlinkDraft,
   DEFAULT_SLOT_DECK,
   friendNo,
   getErrorMessage,
-  RECENT_COMBO_LABELS,
-  RECENT_COMBO_SLOTS,
   reportError,
 } from "@/screens/send/sendSignalHelpers";
 import { sendBlinkVideo } from "@/services/blinkSendService";
@@ -29,7 +28,8 @@ export type SendMode = "beep" | "blink";
 type SendRouteParams = Partial<RootStackParamList["Send"]>;
 
 export function useSendSignalController() {
-  const route = useRoute(), navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const params = (route.params ?? {}) as SendRouteParams;
   const isModalFlow = route.name === "Send";
   const { profile } = useAuthStore();
@@ -100,21 +100,7 @@ export function useSendSignalController() {
     const userSlots = entries.map((entry) => entry.code).filter(Boolean);
     return Array.from(new Set([...DEFAULT_SLOT_DECK, ...userSlots])).slice(0, 8);
   }, [entries]);
-  const recentCombos = useMemo<RecentSignalCombo[]>(
-    () => RECENT_COMBO_SLOTS.flatMap((slot, index) => {
-      const friend = friendOptions[index % Math.max(friendOptions.length, 1)];
-      if (!friend) return [];
-      return [{
-        id: `${friend.id}-${slot}`,
-        friendId: friend.id,
-        friendName: friend.name,
-        friendNo: friend.no,
-        slot,
-        label: RECENT_COMBO_LABELS[index] ?? `${slot} + ${friend.name}`,
-      }];
-    }),
-    [friendOptions],
-  );
+  const recentCombos = useMemo(() => buildRecentCombos(friendOptions), [friendOptions]);
   const visibleFrameUris = useMemo(
     () => blinkDraft?.previewFrameUris?.slice(0, 3) ?? [],
     [blinkDraft?.previewFrameUris],
@@ -165,7 +151,7 @@ export function useSendSignalController() {
     }
   };
 
-  const sendCapturedBlink = async (profileIdArg: string, recipientId: string, recipientName: string) => {
+  const sendCapturedBlink = async (profileIdArg: string, recipientId: string) => {
     if (!blinkDraft) return;
     setSending(true);
     try {
@@ -199,7 +185,7 @@ export function useSendSignalController() {
       return;
     }
     if (blinkDraft) {
-      await sendCapturedBlink(profile.id, recipient.id, recipient.name);
+      await sendCapturedBlink(profile.id, recipient.id);
       return;
     }
     const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();

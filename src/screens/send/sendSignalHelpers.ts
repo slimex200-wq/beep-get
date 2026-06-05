@@ -1,4 +1,6 @@
 import { Alert } from "react-native";
+import type { PickableFriend } from "@/components/FriendPickerStrip";
+import type { RecentSignalCombo } from "@/components/RecentSignalCombos";
 import { BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
 import type { BlinkDraft } from "@/lib/blinkDraft";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
@@ -28,6 +30,21 @@ export function createPreviewBlinkDraft(frameUris: readonly string[] = DEMO_BLIN
 export function friendNo(label?: string) {
   const digits = label?.replace(/\D/g, "");
   return digits?.slice(-2) || "01";
+}
+
+export function buildRecentCombos(friendOptions: readonly PickableFriend[]): RecentSignalCombo[] {
+  return RECENT_COMBO_SLOTS.flatMap((slot, index) => {
+    const friend = friendOptions[index % Math.max(friendOptions.length, 1)];
+    if (!friend) return [];
+    return [{
+      id: `${friend.id}-${slot}`,
+      friendId: friend.id,
+      friendName: friend.name,
+      friendNo: friend.no,
+      slot,
+      label: RECENT_COMBO_LABELS[index] ?? `${slot} + ${friend.name}`,
+    }];
+  });
 }
 
 export function getErrorMessage(error: unknown) {
