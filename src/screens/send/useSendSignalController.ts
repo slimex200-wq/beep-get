@@ -12,8 +12,8 @@ import { isUiPreviewUser } from "@/lib/uiPreview";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import {
   buildRecentCombos,
+  buildSignalSlotDeck,
   createPreviewBlinkDraft,
-  DEFAULT_SLOT_DECK,
   friendNo,
   getErrorMessage,
   reportError,
@@ -96,10 +96,7 @@ export function useSendSignalController() {
   }, [params.friendId, selectedRecipientId, friendOptions]);
 
   const recipient = friendOptions.find((friend) => friend.id === selectedRecipientId) ?? friendOptions[0] ?? null;
-  const slotDeck = useMemo(() => {
-    const userSlots = entries.map((entry) => entry.code).filter(Boolean);
-    return Array.from(new Set([...DEFAULT_SLOT_DECK, ...userSlots])).slice(0, 8);
-  }, [entries]);
+  const slotDeck = useMemo(() => buildSignalSlotDeck(entries), [entries]);
   const recentCombos = useMemo(() => buildRecentCombos(friendOptions), [friendOptions]);
   const visibleFrameUris = useMemo(
     () => blinkDraft?.previewFrameUris?.slice(0, 3) ?? [],

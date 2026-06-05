@@ -21,7 +21,6 @@ type Props = {
 
 export function FriendPulseCard({ title, items }: Props) {
   const palette = useAppPalette();
-  const visibleItems = items.length > 0 ? items : fallbackPulseItems;
 
   return (
     <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.rule }]}>
@@ -29,7 +28,9 @@ export function FriendPulseCard({ title, items }: Props) {
         <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
         <Text style={[styles.hint, { color: palette.muted }]}>close only</Text>
       </View>
-      {visibleItems.slice(0, 3).map((item) => {
+      {items.length === 0 ? (
+        <Text style={[styles.emptyText, { color: palette.muted }]}>No close-friend pulses yet</Text>
+      ) : items.slice(0, 3).map((item) => {
         const avatarSource = getAvatarImageSource(item.avatarUri);
         return (
           <View key={item.id} style={[styles.row, { borderTopColor: palette.rule }]}>
@@ -53,12 +54,6 @@ export function FriendPulseCard({ title, items }: Props) {
   );
 }
 
-const fallbackPulseItems: readonly FriendPulseItem[] = [
-  { id: "fallback-yuna", name: "유나", status: "quiet", code: "OK", accent: "#8BCB8E" },
-  { id: "fallback-mina", name: "민아", status: "now - 8282", code: "8282", accent: "#FF7FA3" },
-  { id: "fallback-harin", name: "하린", status: "2m - BLINK", code: "BLINK", accent: "#A06DD8" },
-];
-
 const styles = StyleSheet.create({
   card: {
     gap: spacing[1],
@@ -79,6 +74,10 @@ const styles = StyleSheet.create({
   },
   hint: {
     ...type.tinyMono,
+  },
+  emptyText: {
+    ...type.bodyMuted,
+    paddingTop: spacing[2],
   },
   row: {
     minHeight: 43,

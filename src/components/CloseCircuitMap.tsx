@@ -26,16 +26,19 @@ const statusColors: Record<CircuitFriend["status"], string> = {
 
 export function CloseCircuitMap({ friends, capacity, onInvite }: Props) {
   const palette = useAppPalette();
-  const visibleFriends = friends.length > 0 ? friends : fallbackCircuitFriends;
 
   return (
     <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.rule }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: palette.text }]}>Close Circuit</Text>
-        <Text style={[styles.count, { color: palette.muted }]}>{visibleFriends.length}/{capacity}</Text>
+        <Text style={[styles.count, { color: palette.muted }]}>{friends.length}/{capacity}</Text>
       </View>
       <View style={styles.nodes}>
-        {visibleFriends.slice(0, capacity).map((friend) => (
+        {friends.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyText, { color: palette.muted }]}>No close friends yet</Text>
+          </View>
+        ) : friends.slice(0, capacity).map((friend) => (
           <View key={friend.id} style={styles.node}>
             <View style={[styles.signalPin, { backgroundColor: statusColors[friend.status] }]} />
             <AvatarDot name={friend.name} avatarUri={friend.avatarUri} />
@@ -76,12 +79,6 @@ function AvatarDot({ name, avatarUri }: { readonly name: string; readonly avatar
   );
 }
 
-const fallbackCircuitFriends: readonly CircuitFriend[] = [
-  { id: "fallback-mina", name: "민아", status: "BEEP" },
-  { id: "fallback-yuna", name: "유나", status: "BLINK" },
-  { id: "fallback-harin", name: "하린", status: "quiet" },
-];
-
 const styles = StyleSheet.create({
   card: {
     gap: spacing[4],
@@ -111,6 +108,13 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: "center",
     gap: spacing[1],
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  emptyText: {
+    ...type.bodyMuted,
   },
   signalPin: {
     width: 6,

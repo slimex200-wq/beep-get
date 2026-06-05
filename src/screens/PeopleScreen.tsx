@@ -47,12 +47,22 @@ import {
 import { getAvatarImageSource, getAvatarLabel } from "@/lib/avatarSource";
 import { generateShareText } from "@/services/contactService";
 import { isValidBeepId } from "@/services/authService";
+import {
+  buildFriendSignalSummaries,
+  getFriendSignalSummary,
+  type FriendCircuitStatus,
+} from "@/screens/people/peopleSignalStatus";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 
 const relationshipPresets = ["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"] as const;
 const blinkHeroImage = require("../../assets/brand/blink/blink-person-model-strip.png");
+const signalAccentByStatus: Record<FriendCircuitStatus, string> = {
+  BEEP: "#A56AD8",
+  BLINK: "#FF7FA3",
+  quiet: colors.greenDot,
+};
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
 export function PeopleScreen() {
@@ -128,26 +138,15 @@ export function PeopleScreen() {
       time: formatSlipTime(message.created_at),
     };
   }, [received, visibleFriends]);
-  const lastSignalByFriend = useMemo(() => {
-    const map = new Map<string, string>();
-    received.forEach((message) => {
-      if (map.has(message.from_user)) return;
-      const time = formatSlipTime(message.created_at);
-      const kind = message.kind === "blink" || message.media ? "Received Blink" : "Last Beep";
-      map.set(message.from_user, `${kind} ${message.number_code} - ${time}`);
-    });
-    return map;
-  }, [received]);
+  const signalSummaries = useMemo(() => buildFriendSignalSummaries(received), [received]);
   const circuitFriends = useMemo<CircuitFriend[]>(() => {
-    const statusByIndex = ["BEEP", "BLINK", "quiet"] as const;
-
-    return visibleFriends.slice(0, 4).map((friend, index) => ({
+    return visibleFriends.slice(0, 4).map((friend) => ({
       id: friend.id,
       name: friend.name,
       ...(friend.avatarUri ? { avatarUri: friend.avatarUri } : {}),
-      status: statusByIndex[index] ?? "quiet",
+      status: getFriendSignalSummary(signalSummaries, friend.id).circuitStatus,
     }));
-  }, [visibleFriends]);
+  }, [signalSummaries, visibleFriends]);
 
   const pulse = () => {
     Haptics.selectionAsync().catch(() => undefined);
@@ -261,17 +260,21 @@ export function PeopleScreen() {
         <CloseCircuitMap friends={circuitFriends} capacity={4} onInvite={openAddDialog} />
         <View style={styles.friendList}>
           {visibleFriends.length > 0 ? (
-            visibleFriends.map((friend, index) => (
-              <FriendRow
-                key={friend.id}
-                friend={friend}
-                status={lastSignalByFriend.get(friend.id) ?? "No signals yet"}
-                accent={index === 0 ? colors.red : index === 1 ? "#F27F0C" : colors.greenDot}
-                avatarUri={friend.avatarUri}
-                rightText={friendStatusBadge(index)}
-                onPress={() => navigateSend(friend, index % 2 === 0 ? "blink" : "beep")}
-              />
-            ))
+            visibleFriends.map((friend) => {
+              const summary = getFriendSignalSummary(signalSummaries, friend.id);
+              const sendMode = summary.circuitStatus === "BLINK" ? "blink" : "beep";
+              return (
+                <FriendRow
+                  key={friend.id}
+                  friend={friend}
+                  status={summary.rowStatus}
+                  accent={signalAccentByStatus[summary.circuitStatus]}
+                  avatarUri={friend.avatarUri}
+                  rightText={summary.badgeText}
+                  onPress={() => navigateSend(friend, sendMode)}
+                />
+              );
+            })
           ) : (
             <MockupCard soft style={styles.empty}>
               <Text style={[type.metaValue, { color: palette.text }]}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
@@ -467,12 +470,6 @@ function InboundRow({
 function formatOwnNo(beepId?: string | null) {
   const digits = beepId?.replace(/\D/g, "");
   return digits && digits.length >= 2 ? digits.slice(-2) : "--";
-}
-
-function friendStatusBadge(index: number): string {
-  if (index === 0) return "BEEP";
-  if (index === 1) return "BLINK";
-  return "quiet";
 }
 
 function reportError(err: unknown) {

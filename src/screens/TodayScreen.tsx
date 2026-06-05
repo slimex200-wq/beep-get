@@ -88,26 +88,22 @@ export function TodayScreen() {
     [entries],
   );
   const friendPulseItems = useMemo<FriendPulseItem[]>(() => {
-    const fallbackCodes = ["OK", "8282", "BLINK"] as const;
-
-    return friends.slice(0, 3).map((friend, index) => {
+    return friends.slice(0, 3).flatMap((friend, index) => {
       const slipFriend = relationshipToSlipFriend(friend, index);
       const recentSignal = received.find((message) => message.from_user === slipFriend.id);
-      const code = recentSignal?.number_code ?? fallbackCodes[index] ?? "OK";
-      const isBlink = recentSignal?.kind === "blink" || Boolean(recentSignal?.media);
+      if (!recentSignal) return [];
 
-      return {
+      const code = recentSignal.number_code;
+      const isBlink = recentSignal.kind === "blink" || Boolean(recentSignal.media);
+
+      return [{
         id: slipFriend.id,
         name: slipFriend.name,
-        status: recentSignal
-          ? `${formatPulseTime(recentSignal.created_at)} - ${isBlink ? "BLINK" : code}`
-          : index === 0
-            ? "quiet"
-            : "waiting",
+        status: `${formatPulseTime(recentSignal.created_at)} - ${isBlink ? "BLINK" : code}`,
         code: isBlink ? "BLINK" : code,
         ...(slipFriend.avatarUri ? { avatarUri: slipFriend.avatarUri } : {}),
         accent: index === 0 ? colors.mint : index === 1 ? colors.pink : colors.lavender,
-      };
+      }];
     });
   }, [friends, received]);
 
@@ -225,8 +221,8 @@ export function TodayScreen() {
           <WidgetPreviewPanel
             title="Widget Mirror"
             subtitle="홈 화면 나의 위젯"
-            code={latestSignal?.code ?? "8282"}
-            from={latestSignal?.sender ?? profile?.nickname?.trim() ?? "민아"}
+            code={latestSignal?.code ?? "----"}
+            from={latestSignal?.sender ?? "No signal yet"}
             tone="lavender"
             paperMode
             compact

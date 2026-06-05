@@ -110,24 +110,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   quickReply: async (messageId, code) => {
-    let sourceMessage =
+    const localMessage =
       get().received.find((m) => m.id === messageId) ??
       uiPreviewMessages.find((m) => m.id === messageId);
-    if (!sourceMessage) {
-      sourceMessage = await getMessageById(messageId);
+    const sourceMessage = localMessage ?? await getMessageById(messageId);
+    if (!localMessage) {
       set((state) => ({
-        received: state.received.some((m) => m.id === sourceMessage!.id)
+        received: state.received.some((m) => m.id === sourceMessage.id)
           ? state.received
-          : [sourceMessage!, ...state.received],
+          : [sourceMessage, ...state.received],
       }));
     }
-    if (!sourceMessage) throw new Error("Signal is not available for quick reply");
 
     if (isDemoSignal(messageId)) {
       set((state) => ({
-        received: state.received.map((m) =>
-          m.id === messageId ? { ...m, is_read: true } : m
-        ),
+        received: state.received.filter((m) => m.id !== messageId),
       }));
       syncWidgetData(get().received, useFriendStore.getState().friends);
       return;
@@ -156,23 +153,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
           from_user_profile: { nickname: "YOU", beep_id: "48624862" },
         };
         set((state) => ({
-          received: state.received.map((m) =>
-            m.id === messageId ? { ...m, is_read: true } : m
-          ),
+          received: state.received.filter((m) => m.id !== messageId),
           saved: state.saved.some((m) => m.id === previewReply.id)
             ? state.saved
             : [previewReply, ...state.saved],
         }));
+        syncWidgetData(get().received, useFriendStore.getState().friends);
         return;
       }
 
       await sendQuickReplyToMessage(sourceMessage.to_user, sourceMessage, code);
       await markAsRead(messageId);
       set((state) => ({
-        received: state.received.map((m) =>
-          m.id === messageId ? { ...m, is_read: true } : m
-        ),
+        received: state.received.filter((m) => m.id !== messageId),
       }));
+      syncWidgetData(get().received, useFriendStore.getState().friends);
     } catch (error) {
       set((state) => ({
         quickReplyActionKeys: state.quickReplyActionKeys.filter((key) => key !== actionKey),

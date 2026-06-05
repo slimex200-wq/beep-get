@@ -1,6 +1,10 @@
-import { readFileSync } from "fs";
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
+import {
+  buildSignalSlotDeck,
+  DEFAULT_SLOT_DECK,
+} from "@/screens/send/sendSignalHelpers";
+import { validateMessage } from "@/services/messageService";
 
 describe("SendSignalScreen product sections", () => {
   it("renders the image mockup Send tab layout", () => {
@@ -53,6 +57,24 @@ describe("SendSignalScreen product sections", () => {
 
   it("does not keep the obsolete card-based Send mode surface", () => {
     expect(existsSync(path.join(process.cwd(), "src/components/SendModeCards.tsx"))).toBe(false);
+  });
+
+  it("only shows send slots that the real send service accepts", () => {
+    expect(DEFAULT_SLOT_DECK.every((slot) => validateMessage(slot).valid)).toBe(true);
+  });
+
+  it("filters custom dictionary slots through the real send contract", () => {
+    const slots = buildSignalSlotDeck(
+      [
+        { code: "OK" },
+        { code: "OK💘" },
+        { code: "hello\nnow" },
+      ],
+      ["8282"],
+    );
+
+    expect(slots).toEqual(["8282", "OK"]);
+    expect(slots.every((slot) => validateMessage(slot).valid)).toBe(true);
   });
 
   it("does not duplicate capture sections when the mockup deck owns the Send header", () => {

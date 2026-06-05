@@ -2,6 +2,7 @@ import type { LegacyMessage } from "@/services/messageService";
 import {
   getReceivedMessages,
   markAsRead,
+  sendQuickReplyToMessage,
 } from "@/services/messageService";
 import { useMessageStore } from "@/stores/messageStore";
 
@@ -69,6 +70,19 @@ describe("messageStore Today queue behavior", () => {
 
     await useMessageStore.getState().read("real-signal-1");
 
+    expect(markAsRead).toHaveBeenCalledWith("real-signal-1");
+    expect(useMessageStore.getState().received.map((message) => message.id)).toEqual([
+      "real-signal-2",
+    ]);
+  });
+
+  it("retires a quick-replied signal from the local Today queue", async () => {
+    (sendQuickReplyToMessage as jest.Mock).mockResolvedValue(nextSignal);
+    useMessageStore.setState({ received: [receivedSignal, nextSignal] });
+
+    await useMessageStore.getState().quickReply("real-signal-1", "OK");
+
+    expect(sendQuickReplyToMessage).toHaveBeenCalledWith("real-user", receivedSignal, "OK");
     expect(markAsRead).toHaveBeenCalledWith("real-signal-1");
     expect(useMessageStore.getState().received.map((message) => message.id)).toEqual([
       "real-signal-2",
