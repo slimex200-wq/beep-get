@@ -8,6 +8,7 @@ import { AppSurface } from "@/components/AppSurface";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
 import { BackLineIcon, GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 import { SignalCode } from "@/components/SignalCode";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 
 type Props = {
   modeSwitch?: React.ReactNode;
@@ -20,7 +21,6 @@ type Props = {
   sentFeedback?: boolean;
   onCodeChange: (code: string) => void;
   onMemoChange: (memo: string) => void;
-  onPreset: (code: string) => void;
   onSend: () => void;
   onBack: () => void;
   onOpenSettings: () => void;
@@ -54,6 +54,7 @@ export function SendBeepScreen({
   const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : primaryActionLabel;
   const shouldRenderStandalonePreview = !deckHeader;
   const shouldRenderInputs = !deckHeader;
+  const headerAvatarSource = getAvatarImageSource(headerAvatarUri);
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -62,7 +63,7 @@ export function SendBeepScreen({
           title="Send"
           centered
           avatarLabel={recipientName}
-          avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
+          avatarSource={headerAvatarSource}
           onAvatarPress={onAvatarPress}
           actions={[
             ...(showBackAction ? [{ label: "Back", icon: <BackLineIcon />, accessibilityLabel: "Back", onPress: onBack }] : []),

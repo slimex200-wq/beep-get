@@ -175,4 +175,25 @@ describe("SendSignalScreen Blink camera runtime", () => {
       "Check the 3 frames, then send or retake.",
     );
   });
+
+  it("opens the primary Send tab settings sheet from the header action", async () => {
+    const screen = render(
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { x: 0, y: 0, width: 390, height: 844 },
+          insets: { top: 0, left: 0, right: 0, bottom: 0 },
+        }}
+      >
+        <SendSignalScreen />
+      </SafeAreaProvider>,
+    );
+
+    fireEvent.press(screen.getByLabelText("Send settings"));
+
+    await waitFor(() => {
+      const tree = JSON.stringify(screen.toJSON());
+      expect(tree).toContain("Send Settings");
+      expect(tree).toContain("Default Send");
+    });
+  });
 });

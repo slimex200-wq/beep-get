@@ -10,6 +10,7 @@ import { BlinkStrip } from "@/components/BlinkStrip";
 import { CameraLensPanel } from "@/components/CameraLensPanel";
 import { KotlinHeader, MockupCard } from "@/components/KotlinMockupUI";
 import { BackLineIcon, GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 
 type Props = {
   modeSwitch?: React.ReactNode;
@@ -27,7 +28,6 @@ type Props = {
   cameraRef: React.RefObject<CameraView | null>;
   onCodeChange: (code: string) => void;
   onMemoChange: (memo: string) => void;
-  onPreset: (code: string) => void;
   onRequestPermission: () => void;
   onRetake: () => void;
   onSend: () => void;
@@ -79,6 +79,7 @@ export function SendBlinkScreen({
   const shouldRenderCaptureFrames = !deckHeader;
   const shouldRenderInputs = !deckHeader;
   const hasRetakeState = hasCapturedBlink;
+  const headerAvatarSource = getAvatarImageSource(headerAvatarUri);
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
@@ -87,7 +88,7 @@ export function SendBlinkScreen({
           title="Send"
           centered
           avatarLabel={recipientName}
-          avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}
+          avatarSource={headerAvatarSource}
           onAvatarPress={onAvatarPress}
           actions={[
             ...(showBackAction ? [{ label: "Back", icon: <BackLineIcon />, accessibilityLabel: "Back", onPress: onBack }] : []),

@@ -9,7 +9,7 @@ import {
   SendRecipientStrip,
   type SendMockupMode,
 } from "@/components/SendMockupControls";
-import { SendPlaneIcon } from "@/components/MockupLineIcons";
+import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 import { TodayMockupHeader, TodaySectionHeader } from "@/components/TodayMockupChrome";
 import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
@@ -38,6 +38,7 @@ type Props = {
   readonly onSelectCombo: (combo: RecentSignalCombo) => void;
   readonly onSend: () => void;
   readonly onRetake: () => void;
+  readonly onOpenSettings: () => void;
 };
 
 export function SendMockupPrimaryScreen({
@@ -62,6 +63,7 @@ export function SendMockupPrimaryScreen({
   onSelectCombo,
   onSend,
   onRetake,
+  onOpenSettings,
 }: Props) {
   const primaryLabel = getPrimaryLabel(mode, sentFeedback, sending, recording, hasCapturedBlink);
   const disabled = !code || sending || recording || friends.length === 0;
@@ -69,7 +71,17 @@ export function SendMockupPrimaryScreen({
   return (
     <AppSurface backgroundColor={colors.ivory} statusBarStyle="dark">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TodayMockupHeader title="SEND" actions={[]} />
+        <TodayMockupHeader
+          title="SEND"
+          actions={[
+            {
+              label: "Settings",
+              accessibilityLabel: "Send settings",
+              icon: <GearLineIcon color={colors.ink} />,
+              onPress: onOpenSettings,
+            },
+          ]}
+        />
         <View style={styles.section}>
           <TodaySectionHeader label="To" hint="신호를 보낼 친구" />
           <SendRecipientStrip
