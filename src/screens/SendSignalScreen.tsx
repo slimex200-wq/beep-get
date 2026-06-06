@@ -31,6 +31,7 @@ export function SendSignalScreen() {
       onSelectCombo={controller.selectRecentCombo}
       onSend={controller.mode === "beep" ? controller.sendBeep : controller.sendBlink}
       onRetake={controller.clearBlinkDraft}
+      onOpenSettings={controller.openSendSettings}
     />
   );
 
@@ -46,7 +47,6 @@ export function SendSignalScreen() {
       sentFeedback={controller.sentFeedback}
       onCodeChange={controller.setCode}
       onMemoChange={controller.setMemo}
-      onPreset={controller.setCode}
       onSend={controller.sendBeep}
       onBack={controller.goBackToFlow}
       onOpenSettings={controller.openSendSettings}
@@ -69,7 +69,6 @@ export function SendSignalScreen() {
       cameraRef={controller.cameraRef}
       onCodeChange={controller.setCode}
       onMemoChange={controller.setMemo}
-      onPreset={controller.setCode}
       onRequestPermission={() => controller.requestCameraPermission()}
       onSend={controller.sendBlink}
       onRetake={controller.clearBlinkDraft}

@@ -17,9 +17,16 @@ export function buildSignalSlotDeck(
   entries: readonly SlotEntry[],
   baseSlots: readonly string[] = DEFAULT_SLOT_DECK,
 ): string[] {
-  const slots = [...baseSlots, ...entries.map((entry) => entry.code)]
-    .map((slot) => slot.trim())
-    .filter((slot) => validateMessage(slot).valid);
+  const [primarySlot, ...remainingBaseSlots] = baseSlots;
+  const slots = [
+    primarySlot,
+    ...entries.map((entry) => entry.code),
+    ...remainingBaseSlots,
+  ].flatMap((slot) => {
+    if (!slot) return [];
+    const trimmed = slot.trim();
+    return validateMessage(trimmed).valid ? [trimmed] : [];
+  });
   return Array.from(new Set(slots)).slice(0, 8);
 }
 

@@ -46,14 +46,24 @@ describe("production profile surfaces", () => {
       "src/components/TodayIncomingCard.tsx",
     );
     const replySource = readSource("src/screens/SlipReplyRoomScreen.tsx");
+    const sendBeepSource = readSource("src/screens/SendBeepScreen.tsx");
+    const sendBlinkSource = readSource("src/screens/SendBlinkScreen.tsx");
 
     expect(todaySource).toContain("TodayIncomingCard");
     expect(todayIncomingCardSource).toContain("getAvatarImageSource");
     expect(replySource).toContain("getAvatarImageSource");
+    expect(sendBeepSource).toContain("getAvatarImageSource");
+    expect(sendBlinkSource).toContain("getAvatarImageSource");
     expect(todayIncomingCardSource).not.toContain(
       "source={{ uri: latestSignal.avatarUri }}",
     );
     expect(replySource).not.toContain("source={{ uri: senderAvatarUri }}");
+    expect(sendBeepSource).not.toContain(
+      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
+    );
+    expect(sendBlinkSource).not.toContain(
+      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
+    );
   });
 
   it("keeps UI Preview friend avatars on app preset IDs instead of hardcoded human mock photos", () => {

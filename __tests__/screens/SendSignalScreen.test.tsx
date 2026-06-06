@@ -7,6 +7,23 @@ import {
 import { validateMessage } from "@/services/messageService";
 
 describe("SendSignalScreen product sections", () => {
+  it("keeps valid user dictionary slots immediately after the core 8282 slot", () => {
+    const deck = buildSignalSlotDeck(
+      [
+        { code: "1212" },
+        { code: "486" },
+        { code: "3434" },
+        { code: "hello\nnow" },
+      ],
+      DEFAULT_SLOT_DECK,
+    );
+
+    expect(deck.slice(0, 4)).toEqual(["8282", "1212", "486", "3434"]);
+    expect(deck).toHaveLength(8);
+    expect(new Set(deck).size).toBe(deck.length);
+    expect(deck.every((slot) => validateMessage(slot).valid)).toBe(true);
+  });
+
   it("renders the image mockup Send tab layout", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
     const controllerSource = readFileSync(path.join(process.cwd(), "src/screens/send/useSendSignalController.ts"), "utf8");
@@ -120,10 +137,14 @@ describe("SendSignalScreen product sections", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/SendSignalScreen.tsx"), "utf8");
     const controllerSource = readFileSync(path.join(process.cwd(), "src/screens/send/useSendSignalController.ts"), "utf8");
     const settingsSource = readFileSync(path.join(process.cwd(), "src/components/SendSettingsSheet.tsx"), "utf8");
+    const mockupSource = readFileSync(path.join(process.cwd(), "src/components/SendMockupPrimaryScreen.tsx"), "utf8");
     const beepSource = readFileSync(path.join(process.cwd(), "src/screens/SendBeepScreen.tsx"), "utf8");
     const blinkSource = readFileSync(path.join(process.cwd(), "src/screens/SendBlinkScreen.tsx"), "utf8");
 
     expect(source).toContain("SendSettingsSheet");
+    expect(source).toContain("onOpenSettings={controller.openSendSettings}");
+    expect(mockupSource).toContain('accessibilityLabel: "Send settings"');
+    expect(mockupSource).toContain("GearLineIcon");
     expect(controllerSource).toContain("flashSentFeedback");
     expect(source).toContain("sentFeedback={controller.sentFeedback}");
     expect(controllerSource).toContain("await send(profile.id, recipient.id, code, memo || undefined)");
