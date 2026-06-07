@@ -59,6 +59,16 @@ struct RecentSender: Codable {
     let statusIcon: String
 }
 
+struct WidgetSkin: Codable {
+    let slug: String
+    let paper: String
+    let paperWarm: String
+    let ink: String
+    let muted: String
+    let rule: String
+    let accent: String
+}
+
 struct WidgetData: Codable {
     let latestMessage: WidgetMessage?
     let recentSenders: [RecentSender]
@@ -66,6 +76,7 @@ struct WidgetData: Codable {
     // (pre-build-24) still decode without crashing.
     let totalReceived: Int?
     let newCount: Int?
+    let activeSkin: WidgetSkin?
 
     // Explicit init with defaults so existing callers that pre-date v7.A
     // (e.g. WidgetData(latestMessage: nil, recentSenders: [])) keep
@@ -74,12 +85,14 @@ struct WidgetData: Codable {
         latestMessage: WidgetMessage?,
         recentSenders: [RecentSender],
         totalReceived: Int? = nil,
-        newCount: Int? = nil
+        newCount: Int? = nil,
+        activeSkin: WidgetSkin? = nil
     ) {
         self.latestMessage = latestMessage
         self.recentSenders = recentSenders
         self.totalReceived = totalReceived
         self.newCount = newCount
+        self.activeSkin = activeSkin
     }
 }
 
@@ -119,7 +132,10 @@ class BeepWidgetDataManager {
             )
             widgetData = WidgetData(
                 latestMessage: message,
-                recentSenders: widgetData.recentSenders
+                recentSenders: widgetData.recentSenders,
+                totalReceived: widgetData.totalReceived,
+                newCount: widgetData.newCount,
+                activeSkin: widgetData.activeSkin
             )
         }
 

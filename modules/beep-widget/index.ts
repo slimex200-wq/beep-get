@@ -37,6 +37,16 @@ export interface RecentSender {
   statusIcon: string;
 }
 
+export interface WidgetSkinPayload {
+  readonly slug: string;
+  readonly paper: string;
+  readonly paperWarm: string;
+  readonly ink: string;
+  readonly muted: string;
+  readonly rule: string;
+  readonly accent: string;
+}
+
 export interface WidgetData {
   latestMessage: WidgetMessage | null;
   recentSenders: RecentSender[];
@@ -44,6 +54,7 @@ export interface WidgetData {
   totalReceived?: number;
   /** Unread signals (capped at 99). v7.A stack meta. */
   newCount?: number;
+  activeSkin?: WidgetSkinPayload;
 }
 
 export function updateWidgetData(data: WidgetData): void {

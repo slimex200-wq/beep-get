@@ -1,11 +1,16 @@
 const beepWidget = require("../../modules/beep-widget");
 import {
   buildWidgetData,
+  setWidgetSkinSlug,
+  syncWidgetSkin,
   syncWidgetData,
   triggerWidgetReload,
 } from "@/services/widgetService";
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.resetAllMocks();
+  setWidgetSkinSlug("classic-paper");
+});
 
 const mockMessages = [
   {
@@ -66,6 +71,21 @@ describe("buildWidgetData", () => {
     const data = buildWidgetData([], []);
     expect(data.latestMessage).toBeNull();
     expect(data.recentSenders).toEqual([]);
+  });
+
+  it("includes the active identity pack skin tokens for native widget rendering", () => {
+    setWidgetSkinSlug("school-desk");
+    const data = buildWidgetData([], []);
+
+    expect(data.activeSkin).toEqual({
+      slug: "school-desk",
+      paper: "#FFF8E8",
+      paperWarm: "#FFFFFF",
+      ink: "#13110D",
+      muted: "#70695D",
+      rule: "#B8AD9C",
+      accent: "#35724D",
+    });
   });
 
   it("returns latest message correctly", () => {
@@ -199,12 +219,12 @@ describe("syncWidgetData", () => {
     );
   });
 
-  it("does not throw when native module fails", () => {
+  it("surfaces unexpected native widget bridge failures", () => {
     beepWidget.updateWidgetData.mockImplementation(() => {
       throw new Error("native module not available");
     });
 
-    expect(() => syncWidgetData(mockMessages, mockFriends)).not.toThrow();
+    expect(() => syncWidgetData(mockMessages, mockFriends)).toThrow("native module not available");
   });
 
   it("calls updateWidgetData with empty data for no messages", () => {
@@ -214,7 +234,38 @@ describe("syncWidgetData", () => {
       recentSenders: [],
       totalReceived: 0,
       newCount: 0,
+      activeSkin: expect.objectContaining({ slug: "classic-paper" }),
     });
+  });
+
+  it("updates only the widget skin tokens when a skin pack is applied", async () => {
+    beepWidget.getWidgetData.mockResolvedValueOnce({
+      latestMessage: null,
+      recentSenders: [],
+      totalReceived: 0,
+      newCount: 0,
+    });
+
+    await syncWidgetSkin("night-signal");
+
+    expect(beepWidget.updateWidgetData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latestMessage: null,
+        recentSenders: [],
+        activeSkin: expect.objectContaining({
+          slug: "night-signal",
+          paper: "#0A0A0A",
+          accent: "#92D66D",
+        }),
+      }),
+    );
+    expect(beepWidget.reloadWidgets).toHaveBeenCalled();
+  });
+
+  it("surfaces unexpected widget skin bridge failures", async () => {
+    beepWidget.getWidgetData.mockRejectedValueOnce(new Error("native read failed"));
+
+    await expect(syncWidgetSkin("night-signal")).rejects.toThrow("native read failed");
   });
 });
 
@@ -224,11 +275,11 @@ describe("triggerWidgetReload", () => {
     expect(beepWidget.reloadWidgets).toHaveBeenCalled();
   });
 
-  it("does not throw when native module fails", () => {
+  it("surfaces unexpected widget reload failures", () => {
     beepWidget.reloadWidgets.mockImplementation(() => {
       throw new Error("native module not available");
     });
 
-    expect(() => triggerWidgetReload()).not.toThrow();
+    expect(() => triggerWidgetReload()).toThrow("native module not available");
   });
 });

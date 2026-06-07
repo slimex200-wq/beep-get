@@ -43,6 +43,6 @@ export function generateShareText(beepId: string, nickname: string): string {
     `${nickname} invited you to BEEP-GET.`,
     `Beep ID: ${beepId}`,
     "",
-    `Open in app: ${generateInviteLink(beepId)}`,
+    "Open People and add this Beep ID.",
   ].join("\n");
 }

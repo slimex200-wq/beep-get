@@ -23,6 +23,8 @@ module.exports = {
     "<rootDir>/.worktrees/",
     "<rootDir>/qa-capture/",
   ],
+  modulePathIgnorePatterns: ["<rootDir>/.worktrees/"],
+  watchPathIgnorePatterns: ["<rootDir>/.worktrees/"],
   transformIgnorePatterns: [
     "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@supabase/.*|zustand)",
   ],

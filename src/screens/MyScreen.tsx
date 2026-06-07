@@ -12,15 +12,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
-import {
-  Avatar,
-  KotlinHeader,
-  MockupCard,
-  MockupSection,
-} from "@/components/KotlinMockupUI";
+import { KotlinHeader, MockupSection } from "@/components/KotlinMockupUI";
 import { colors, radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -36,16 +29,13 @@ import {
   getPackVisual,
 } from "@/components/WidgetSkinPackCard";
 import { WidgetPreviewPanel } from "@/components/WidgetPreviewPanel";
+import { PhotoAvatarCard } from "@/components/my/PhotoAvatarCard";
+import { RoomStyleCard } from "@/components/my/RoomStyleCard";
+import { MyRoomToolsCard } from "@/components/my/MyRoomToolsCard";
 import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
-import {
-  ChevronRightLineIcon,
-  GearLineIcon,
-} from "@/components/MockupLineIcons";
-import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useSkinStore } from "@/stores/skinStore";
-import { MAX_CODE_LENGTH } from "@/lib/constants";
 import { isIdentityPackStoreEnabled } from "@/lib/releaseFlags";
 import { purchaseIdentityPack } from "@/services/purchaseService";
 import {
@@ -54,19 +44,9 @@ import {
   getConfiguredQuickReplyEntries,
   getQuickReplySlotLabel,
   getQuickReplySlotOrder,
-  isQuickReplySlotEntry,
 } from "@/lib/quickReplySlots";
 
-const DEFAULT_CODES = [
-  { code: "8282", meaning: "빨리 와줘" },
-  { code: "486", meaning: "보고 싶어" },
-  { code: "1004", meaning: "집 도착" },
-  { code: "7942", meaning: "친구사이" },
-  { code: "0404", meaning: "영원히 사랑해" },
-];
-
 export function MyScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, updateAvatar } = useAuthStore();
   const { entries, fetch: fetchDictionary, add, update } = useDictionaryStore();
   const palette = useAppPalette();
@@ -84,9 +64,6 @@ export function MyScreen() {
   const [skinSheetVisible, setSkinSheetVisible] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [quickReplyDrafts, setQuickReplyDrafts] = useState(DEFAULT_QUICK_REPLY_SLOTS);
-  const [addCodeDialogVisible, setAddCodeDialogVisible] = useState(false);
-  const [draftCode, setDraftCode] = useState("");
-  const [draftMeaning, setDraftMeaning] = useState("");
 
   useEffect(() => {
     if (!profile) return;
@@ -113,19 +90,14 @@ export function MyScreen() {
     [entries],
   );
 
-  const signalCodes = useMemo(() => {
-    const saved = entries
-      .filter((entry) => !isQuickReplySlotEntry(entry))
-      .map((entry) => ({ code: entry.code, meaning: entry.meaning }));
-    const byCode = new Map([...DEFAULT_CODES, ...saved].map((entry) => [entry.code, entry]));
-    return Array.from(byCode.values()).slice(0, 6);
-  }, [entries]);
-
   const activePack = getIdentityPack(activeIdentityPackSlug);
   const avatarUri = normalizeAvatarUri(profile?.avatar_url) ?? "";
   const avatarSource = getAvatarImageSource(avatarUri);
   const avatarLabel = getAvatarLabel(profile, "ME");
+  const displayName = profile?.nickname?.trim() || "Photo Avatar";
+  const handle = profile?.beep_id?.trim() ?? "";
   const skinPackPreviewName = profile?.nickname?.trim() || profile?.beep_id?.trim() || "You";
+  const skinPackPriorityCopy = "widget mood first, then avatar frame and emotes.";
 
   const chooseSkinPack = async (pack: IdentityPack) => {
     const isOwned = ownedPackSlugs.has(pack.slug);
@@ -159,8 +131,12 @@ export function MyScreen() {
       }
       await applyIdentityPack(profile.id, pack.slug);
       setSkinSheetVisible(false);
-    } catch (err: any) {
-      Alert.alert("Skin pack failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Skin pack failed", err.message);
+        return;
+      }
+      throw err;
     }
   };
 
@@ -172,20 +148,12 @@ export function MyScreen() {
       }
       await updateAvatar(uri);
       setAvatarSheetVisible(false);
-    } catch (err: any) {
-      Alert.alert("Avatar failed", err?.message ?? "Try again.");
-    }
-  };
-
-  const registerCode = async () => {
-    if (!profile || !draftCode.trim() || !draftMeaning.trim()) return;
-    try {
-      await add(profile.id, draftCode.trim(), draftMeaning.trim());
-      setDraftCode("");
-      setDraftMeaning("");
-      setAddCodeDialogVisible(false);
-    } catch (err: any) {
-      Alert.alert("Code failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Avatar failed", err.message);
+        return;
+      }
+      throw err;
     }
   };
 
@@ -206,7 +174,7 @@ export function MyScreen() {
     if (!profile) return;
     const cleanedSlots = quickReplyDrafts.map((slot) => slot.trim()).slice(0, 3);
     if (cleanedSlots.some((slot) => !slot)) {
-      Alert.alert("Slots need text", "Each quick reply slot needs a short code or word.");
+      Alert.alert("Replies need text", "Each widget quick reply needs a short code or word.");
       return;
     }
 
@@ -238,29 +206,25 @@ export function MyScreen() {
       }
       setQuickReplyDrafts(cleanedSlots);
       setQuickReplyDialogVisible(false);
-    } catch (err: any) {
-      Alert.alert("Slots failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Slots failed", err.message);
+        return;
+      }
+      throw err;
     }
   };
 
   return (
-    <AppSurface backgroundColor="#F8F6F1">
+    <AppSurface backgroundColor={palette.background}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
           title="My Beep Room"
           centered
           avatarLabel={avatarLabel}
           avatarSource={avatarSource}
-          avatarAccessibilityLabel="Open skin packs"
-          onAvatarPress={() => setSkinSheetVisible(true)}
-          actions={[
-            {
-              label: "Settings",
-              icon: <GearLineIcon />,
-              accessibilityLabel: "Account settings",
-              onPress: () => navigation.navigate("Account"),
-            },
-          ]}
+          avatarAccessibilityLabel="Decorate Photo Avatar"
+          onAvatarPress={() => setAvatarSheetVisible(true)}
         />
 
         <View style={styles.roomSection}>
@@ -269,138 +233,26 @@ export function MyScreen() {
             subtitle="나만의 비프 공간"
             code={activePack.code}
             from={skinPackPreviewName}
-            tone="lavender"
             medium
+            skin={activePack}
           />
         </View>
 
-        <MockupSection label="Profile" hint="small secondary profile" style={styles.standaloneSection} />
-        <Pressable
-          accessibilityLabel="Edit Profile Avatar"
-          accessibilityRole="button"
+        <MockupSection label="Photo Avatar" hint="personal room face" style={styles.standaloneSection} />
+        <PhotoAvatarCard
+          avatarLabel={avatarLabel}
+          avatarSource={avatarSource}
+          displayName={displayName}
+          handle={handle}
+          activePackName={activePack.name}
           onPress={() => setAvatarSheetVisible(true)}
-          style={({ pressed }) => [
-            styles.profileCard,
-            { backgroundColor: palette.card, borderColor: palette.rule },
-            pressed && styles.pressed,
-          ]}
-        >
-          <Avatar label={avatarLabel} source={avatarSource} size={54} />
-          <View style={styles.flexCopy}>
-            <Text style={[styles.rowTitle, { color: palette.text }]}>
-              {profile?.nickname ?? "Profile Avatar"}
-            </Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>
-              {profile?.beep_id ? `@${profile.beep_id}` : "Choose the face shown across My, People, and Send headers."}
-            </Text>
-          </View>
-          <View style={[styles.profileActionPill, { borderColor: palette.rule }]}>
-            <Text style={[styles.profileActionText, { color: palette.text }]}>Edit Avatar</Text>
-          </View>
-        </Pressable>
+        />
 
-        <MockupSection label="Skin Pack" hint="widget mood first" style={styles.standaloneSection} />
-        <Pressable
-          accessibilityLabel="Open Skin Pack picker"
-          accessibilityRole="button"
-          onPress={() => setSkinSheetVisible(true)}
-          style={({ pressed }) => [
-            styles.currentPackCard,
-            { backgroundColor: palette.card, borderColor: palette.rule },
-            pressed && styles.pressed,
-          ]}
-        >
-          <View
-            style={[
-              styles.currentPackPreview,
-              { backgroundColor: getPackVisual(activePack).surface },
-            ]}
-          >
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-              style={[styles.currentPackCode, { color: getPackVisual(activePack).text }]}
-            >
-              {activePack.code}
-            </Text>
-            <View style={[styles.currentPackAccent, { backgroundColor: getPackVisual(activePack).accent }]} />
-          </View>
-          <View style={styles.flexCopy}>
-            <Text style={[styles.rowTitle, { color: palette.text }]}>{activePack.name}</Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>
-              Widget skin, avatar frame, and emote pack.
-            </Text>
-          </View>
-          <View style={[styles.packBadge, { borderColor: palette.rule }]}>
-            <Text style={[styles.packBadgeText, { color: palette.muted }]}>OPEN</Text>
-          </View>
-        </Pressable>
+        <MockupSection label="Room Style" hint="skin pack" style={styles.standaloneSection} />
+        <RoomStyleCard activePack={activePack} onPress={() => setSkinSheetVisible(true)} />
 
-        <View style={styles.sectionActionRow}>
-          <MockupSection label="Quick Reply Slots" />
-          <Pressable
-            accessibilityLabel="Configure quick reply slots"
-            accessibilityRole="button"
-            onPress={openQuickReplyDialog}
-            style={[styles.blackPill, { backgroundColor: palette.primary }]}
-          >
-            <Text style={[styles.blackPillText, { color: palette.primaryText }]}>Configure Slots</Text>
-          </Pressable>
-        </View>
-        <MockupCard style={styles.replyCard}>
-          {replySlots.map((slot) => (
-            <View key={slot} style={[styles.replySlot, { borderColor: palette.rule, backgroundColor: palette.card }]}>
-              <Text style={[styles.replyText, { color: palette.text }]}>{slot}</Text>
-            </View>
-          ))}
-        </MockupCard>
-
-        <MockupSection label="Account" hint="secondary" style={styles.standaloneSection} />
-        <Pressable
-          accessibilityLabel="Open Account"
-          accessibilityRole="button"
-          onPress={() => navigation.navigate("Account")}
-          style={({ pressed }) => [
-            styles.accountRow,
-            { backgroundColor: palette.card, borderColor: palette.rule },
-            pressed && styles.pressed,
-          ]}
-        >
-          <View style={styles.flexCopy}>
-            <Text style={[styles.rowTitle, { color: palette.text }]}>Account</Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>privacy, logout, and app settings</Text>
-          </View>
-          <ChevronRightLineIcon color={palette.muted} />
-        </Pressable>
-
-        <View style={styles.sectionActionRow}>
-          <MockupSection label="Signal Directory (On-Demand)" />
-          <Pressable
-            accessibilityLabel="Add new signal token"
-            accessibilityRole="button"
-            onPress={() => setAddCodeDialogVisible(true)}
-            style={[styles.blackPill, { backgroundColor: palette.primary }]}
-          >
-            <Text style={[styles.blackPillText, { color: palette.primaryText }]}>+ Add New</Text>
-          </Pressable>
-        </View>
-        <MockupCard style={styles.codeList}>
-          {signalCodes.map((entry) => (
-            <Pressable
-              key={entry.code}
-              accessibilityRole="button"
-              onPress={() => navigation.navigate("Dictionary")}
-              style={({ pressed }) => [styles.codeRow, pressed && styles.pressed]}
-            >
-              <View style={[styles.codeBadge, { backgroundColor: palette.input }]}>
-                <Text numberOfLines={1} style={[styles.codeBadgeText, { color: palette.text }]}>{entry.code}</Text>
-              </View>
-              <Text numberOfLines={1} style={[styles.codeMeaning, { color: palette.text }]}>{entry.meaning}</Text>
-              <ChevronRightLineIcon color={palette.muted} />
-            </Pressable>
-          ))}
-        </MockupCard>
+        <MockupSection label="Room Tools" hint="widget replies" style={styles.standaloneSection} />
+        <MyRoomToolsCard replySlots={replySlots} onEditReplies={openQuickReplyDialog} />
       </ScrollView>
 
       <Modal transparent visible={quickReplyDialogVisible} animationType="fade" onRequestClose={() => setQuickReplyDialogVisible(false)}>
@@ -409,10 +261,10 @@ export function MyScreen() {
           style={styles.dialogOverlay}
         >
           <View style={[styles.dialog, { backgroundColor: palette.card }]}>
-            <Text style={[styles.dialogTitle, { color: palette.text }]}>Configure Quick Replies</Text>
+            <Text style={[styles.dialogTitle, { color: palette.text }]}>Configure Widget Quick Replies</Text>
             {quickReplyDrafts.map((slot, index) => (
               <View key={`${slot}-${index}`} style={styles.slotEditBlock}>
-                <Text style={[type.tinyMono, { color: palette.muted }]}>Reply Slot {index + 1}</Text>
+                <Text style={[type.tinyMono, { color: palette.muted }]}>Widget Reply {index + 1}</Text>
                 <TextInput
                   value={slot}
                   onChangeText={(value) => updateQuickReplyDraft(index, value)}
@@ -431,43 +283,12 @@ export function MyScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      <Modal transparent visible={addCodeDialogVisible} animationType="fade" onRequestClose={() => setAddCodeDialogVisible(false)}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.dialogOverlay}
-        >
-          <View style={[styles.dialog, { backgroundColor: palette.card }]}>
-            <Text style={[styles.dialogTitle, { color: palette.text }]}>Define New Signal Token</Text>
-            <TextInput
-              value={draftCode}
-              onChangeText={setDraftCode}
-              autoCapitalize="none"
-              maxLength={MAX_CODE_LENGTH}
-              placeholder="8282 / 집중중 🔕"
-              placeholderTextColor={palette.muted2}
-              style={[styles.dialogInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-            />
-            <TextInput
-              value={draftMeaning}
-              onChangeText={setDraftMeaning}
-              placeholder="Interpretation / Message Meaning"
-              placeholderTextColor={palette.muted2}
-              maxLength={50}
-              style={[styles.dialogInput, styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-            />
-            <View style={styles.dialogActions}>
-              <ActionPill label="Cancel" onPress={() => setAddCodeDialogVisible(false)} />
-              <ActionPill label="Register" dark onPress={registerCode} disabled={!draftCode || !draftMeaning} />
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
       <SkinPackSheet
         visible={skinSheetVisible}
         activePackSlug={activeIdentityPackSlug}
         ownedPackSlugs={ownedPackSlugs}
         previewFrom={skinPackPreviewName}
+        priorityCopy={skinPackPriorityCopy}
         onClose={() => setSkinSheetVisible(false)}
         onSelect={chooseSkinPack}
       />
@@ -487,6 +308,7 @@ function SkinPackSheet({
   activePackSlug,
   ownedPackSlugs,
   previewFrom,
+  priorityCopy,
   onClose,
   onSelect,
 }: {
@@ -494,6 +316,7 @@ function SkinPackSheet({
   activePackSlug: string;
   ownedPackSlugs: ReadonlySet<string>;
   previewFrom: string;
+  priorityCopy: string;
   onClose: () => void;
   onSelect: (pack: IdentityPack) => void;
 }) {
@@ -511,7 +334,7 @@ function SkinPackSheet({
             <View>
               <Text style={[styles.sheetTitle, { color: activeVisual.text }]}>Skin Packs</Text>
               <Text style={[type.bodyMuted, { color: activeVisual.muted }]}>
-                Widget skin, avatar frame, and emote pack as one set.
+                {priorityCopy}
               </Text>
             </View>
             <Pressable
@@ -609,7 +432,7 @@ function AvatarPickerSheet({
         <View style={[styles.sheetPanel, Platform.OS === "web" && styles.webSheetPanel, { backgroundColor: palette.card, borderColor: palette.rule }]}>
           <View style={styles.sheetHeader}>
             <View>
-              <Text style={[styles.sheetTitle, { color: palette.text }]}>Profile Avatar</Text>
+              <Text style={[styles.sheetTitle, { color: palette.text }]}>Photo Avatar</Text>
               <Text style={[type.bodyMuted, { color: palette.muted }]}>
                 Shown across My, People, and Send headers.
               </Text>
@@ -703,10 +526,6 @@ const styles = StyleSheet.create({
     paddingBottom: 96,
     gap: spacing[4],
   },
-  flexCopy: {
-    flex: 1,
-    gap: spacing[1],
-  },
   rowTitle: {
     ...type.metaValue,
     fontSize: 13,
@@ -716,69 +535,6 @@ const styles = StyleSheet.create({
   },
   standaloneSection: {
     marginHorizontal: spacing[5],
-  },
-  profileCard: {
-    minHeight: 78,
-    marginHorizontal: spacing[5],
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  profileActionPill: {
-    minHeight: 30,
-    justifyContent: "center",
-    paddingHorizontal: spacing[3],
-    borderWidth: 1,
-    borderRadius: radius.pill,
-  },
-  profileActionText: {
-    ...type.tinyMono,
-    fontSize: 8,
-  },
-  currentPackCard: {
-    minHeight: 86,
-    marginHorizontal: spacing[5],
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  currentPackPreview: {
-    width: 66,
-    height: 54,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  currentPackCode: {
-    ...type.codeSmall,
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  currentPackAccent: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  packBadge: {
-    minHeight: 28,
-    justifyContent: "center",
-    paddingHorizontal: spacing[3],
-    borderWidth: 1,
-    borderRadius: radius.pill,
-  },
-  packBadgeText: {
-    ...type.tinyMono,
-    fontSize: 8,
   },
   skinSheetScroll: {
     gap: spacing[4],
@@ -816,80 +572,6 @@ const styles = StyleSheet.create({
   },
   skinPackGrid: {
     gap: spacing[3],
-  },
-  sectionActionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[3],
-    paddingHorizontal: spacing[5],
-  },
-  blackPill: {
-    minHeight: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing[4],
-    borderRadius: 10,
-  },
-  blackPillText: {
-    ...type.tinyMono,
-  },
-  replyCard: {
-    minHeight: 72,
-    flexDirection: "row",
-    gap: spacing[3],
-    marginHorizontal: spacing[5],
-    padding: spacing[4],
-    borderRadius: 12,
-  },
-  replySlot: {
-    flex: 1,
-    minHeight: 46,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.control,
-  },
-  replyText: {
-    ...type.button,
-  },
-  codeList: {
-    marginHorizontal: spacing[5],
-    paddingVertical: spacing[2],
-  },
-  accountRow: {
-    minHeight: 58,
-    marginHorizontal: spacing[5],
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderRadius: 12,
-  },
-  codeRow: {
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    paddingHorizontal: spacing[4],
-  },
-  codeBadge: {
-    minWidth: 38,
-    maxWidth: 116,
-    minHeight: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.control,
-    paddingHorizontal: spacing[3],
-  },
-  codeBadgeText: {
-    ...type.buttonMono,
-    fontSize: 10,
-  },
-  codeMeaning: {
-    flex: 1,
-    ...type.body,
   },
   dialogOverlay: {
     flex: 1,
@@ -988,11 +670,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     ...type.body,
   },
-  meaningInput: {
-    minHeight: 70,
-    textAlignVertical: "top",
-    paddingTop: spacing[4],
-  },
   dialogActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -1013,29 +690,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.82,
     transform: [{ translateY: 1 }],
-  },
-  miniToggle: {
-    width: 46,
-    height: 27,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    padding: 2,
-    borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.20)",
-    borderRadius: 13,
-    backgroundColor: "rgba(10,10,10,0.10)",
-  },
-  miniToggleActive: {
-    backgroundColor: colors.ink,
-    borderColor: "rgba(10,10,10,0.24)",
-  },
-  miniToggleKnob: {
-    width: 21,
-    height: 21,
-    borderRadius: 11,
-    backgroundColor: "#FFFFFF",
-  },
-  miniToggleKnobActive: {
-    transform: [{ translateX: 19 }],
   },
 });

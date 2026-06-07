@@ -17,10 +17,11 @@ struct BeepWidgetMediumView: View {
                 stripFrameUris: msg.teaser?.stripFrameUris ?? [],
                 openUrl: msg.actions?.openReplyRoomUrl,
                 totalReceived: entry.totalReceived,
-                newCount: entry.newCount
+                newCount: entry.newCount,
+                activeSkin: entry.activeSkin
             )
         } else {
-            PlaceholderMediumView()
+            PlaceholderMediumView(activeSkin: entry.activeSkin)
         }
     }
 
@@ -54,7 +55,9 @@ struct BeepWidgetMediumView: View {
 }
 
 struct PlaceholderMediumView: View {
-    private let skin = BeepSkin.swissPaper
+    let activeSkin: WidgetSkin?
+
+    private var skin: BeepSkin { BeepSkin.from(activeSkin) }
 
     var body: some View {
         GeometryReader { proxy in

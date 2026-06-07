@@ -115,6 +115,7 @@ export function useSendSignalController() {
     setCode(combo.slot);
   };
   const openPeople = () => navigation.navigate("Main", { screen: "People" });
+  const openDictionary = () => navigation.navigate("Dictionary");
   const openSendSettings = () => setSendSettingsVisible(true);
   const closeSendSettings = () => setSendSettingsVisible(false);
   const clearBlinkDraft = () => {
@@ -237,6 +238,7 @@ export function useSendSignalController() {
     selectSlot,
     selectRecentCombo,
     openPeople,
+    openDictionary,
     openSendSettings,
     closeSendSettings,
     clearBlinkDraft,

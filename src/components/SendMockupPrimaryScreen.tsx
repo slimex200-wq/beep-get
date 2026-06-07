@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CameraView } from "expo-camera";
 import { AppSurface } from "@/components/AppSurface";
 import { BlinkCapturePanel } from "@/components/SendBlinkCapturePanel";
@@ -9,10 +9,11 @@ import {
   SendRecipientStrip,
   type SendMockupMode,
 } from "@/components/SendMockupControls";
-import { GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
+import { BackLineIcon, GearLineIcon, SendPlaneIcon } from "@/components/MockupLineIcons";
 import { TodayMockupHeader, TodaySectionHeader } from "@/components/TodayMockupChrome";
-import { colors, spacing } from "@/design/tokens";
+import { spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
+import { useAppPalette } from "@/design/appTheme";
 import type { PickableFriend } from "@/components/FriendPickerStrip";
 import type { RecentSignalCombo } from "@/components/RecentSignalCombos";
 
@@ -35,10 +36,13 @@ type Props = {
   readonly onSelect: (friend: PickableFriend) => void;
   readonly onAddFriend: () => void;
   readonly onSelectSlot: (slot: string) => void;
+  readonly onAddSlot: () => void;
   readonly onSelectCombo: (combo: RecentSignalCombo) => void;
   readonly onSend: () => void;
   readonly onRetake: () => void;
+  readonly onBack: () => void;
   readonly onOpenSettings: () => void;
+  readonly showBackAction?: boolean;
 };
 
 export function SendMockupPrimaryScreen({
@@ -60,30 +64,54 @@ export function SendMockupPrimaryScreen({
   onSelect,
   onAddFriend,
   onSelectSlot,
+  onAddSlot,
   onSelectCombo,
   onSend,
   onRetake,
+  onBack,
   onOpenSettings,
+  showBackAction = false,
 }: Props) {
+  const palette = useAppPalette();
+  const iconFlight = React.useRef(new Animated.Value(0)).current;
   const primaryLabel = getPrimaryLabel(mode, sentFeedback, sending, recording, hasCapturedBlink);
   const disabled = !code || sending || recording || friends.length === 0;
 
+  const handleSendPress = () => {
+    iconFlight.setValue(0);
+    Animated.timing(iconFlight, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      iconFlight.setValue(0);
+      onSend();
+    });
+  };
+
+  const headerActions = [
+    ...(showBackAction
+      ? [{
+          label: "Back",
+          icon: <BackLineIcon color={palette.text} />,
+          accessibilityLabel: "Back",
+          onPress: onBack,
+        }]
+      : []),
+    {
+      label: "Settings",
+      icon: <GearLineIcon color={palette.text} />,
+      accessibilityLabel: "Send settings",
+      onPress: onOpenSettings,
+    },
+  ];
+
   return (
-    <AppSurface backgroundColor={colors.ivory} statusBarStyle="dark">
+    <AppSurface backgroundColor={palette.background} statusBarStyle={palette.statusBar}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TodayMockupHeader
-          title="SEND"
-          actions={[
-            {
-              label: "Settings",
-              accessibilityLabel: "Send settings",
-              icon: <GearLineIcon color={colors.ink} />,
-              onPress: onOpenSettings,
-            },
-          ]}
-        />
+        <TodayMockupHeader title="SEND" actions={headerActions} />
         <View style={styles.section}>
-          <TodaySectionHeader label="To" hint="신호를 보낼 친구" />
+          <TodaySectionHeader label="To" hint="Choose a friend" />
           <SendRecipientStrip
             friends={friends}
             selectedId={selectedId}
@@ -106,21 +134,25 @@ export function SendMockupPrimaryScreen({
         ) : null}
 
         <View style={styles.section}>
-          <TodaySectionHeader label="Signal Slot Deck" hint="작은 숫자와 말" />
-          <SendMockupSlotGrid slots={slots} selected={code} onSelectSlot={onSelectSlot} />
+          <TodaySectionHeader label="Signal Slot Deck" hint="Small codes and notes" />
+          <SendMockupSlotGrid slots={slots} selected={code} onSelectSlot={onSelectSlot} onAddSlot={onAddSlot} />
         </View>
 
         <View style={styles.section}>
-          <TodaySectionHeader label="Recent Combos" hint="방금 쓴 조합" />
+          <TodaySectionHeader label="Recent Combos" hint="Recent pairings" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.comboRow}>
             {recentCombos.map((combo) => (
               <Pressable
                 key={combo.id}
                 accessibilityRole="button"
                 onPress={() => onSelectCombo(combo)}
-                style={({ pressed }) => [styles.comboChip, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.comboChip,
+                  { backgroundColor: palette.card, borderColor: palette.rule },
+                  pressed && styles.pressed,
+                ]}
               >
-                <Text numberOfLines={1} style={styles.comboText}>{combo.label}</Text>
+                <Text numberOfLines={1} style={[styles.comboText, { color: palette.text }]}>{combo.label}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -130,11 +162,24 @@ export function SendMockupPrimaryScreen({
           accessibilityLabel={primaryLabel}
           accessibilityRole="button"
           disabled={disabled}
-          onPress={onSend}
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, disabled && styles.disabled]}
+          onPress={handleSendPress}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { backgroundColor: palette.primary },
+            pressed && styles.pressed,
+            disabled && styles.disabled,
+          ]}
         >
-          <SendPlaneIcon color={colors.white} />
-          <Text style={styles.primaryText}>{primaryLabel}</Text>
+          <Animated.View
+            style={{
+              transform: [{
+                translateX: iconFlight.interpolate({ inputRange: [0, 1], outputRange: [0, 8] }),
+              }],
+            }}
+          >
+            <SendPlaneIcon color={palette.primaryText} />
+          </Animated.View>
+          <Text style={[styles.primaryText, { color: palette.primaryText }]}>{primaryLabel}</Text>
         </Pressable>
       </ScrollView>
     </AppSurface>
@@ -156,13 +201,47 @@ function getPrimaryLabel(
 }
 
 const styles = StyleSheet.create({
-  content: { width: "100%", maxWidth: 332, alignSelf: "center", gap: spacing[5], paddingHorizontal: spacing[5], paddingBottom: 110 },
-  section: { gap: spacing[2] },
-  comboRow: { gap: spacing[2], paddingVertical: spacing[1] },
-  comboChip: { minHeight: 30, justifyContent: "center", paddingHorizontal: spacing[4], borderWidth: 1, borderColor: "rgba(10,10,10,0.14)", borderRadius: 8, backgroundColor: "#FFFDF9" },
-  comboText: { ...type.tinyMono, color: colors.ink },
-  primaryButton: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing[3], borderRadius: 11, backgroundColor: colors.lavender },
-  primaryText: { ...type.buttonMono, color: colors.white },
-  pressed: { opacity: 0.82, transform: [{ translateY: 1 }] },
-  disabled: { opacity: 0.48 },
+  content: {
+    width: "100%",
+    maxWidth: 332,
+    alignSelf: "center",
+    gap: spacing[5],
+    paddingHorizontal: spacing[5],
+    paddingBottom: 110,
+  },
+  section: {
+    gap: spacing[2],
+  },
+  comboRow: {
+    gap: spacing[2],
+    paddingVertical: spacing[1],
+  },
+  comboChip: {
+    minHeight: 30,
+    justifyContent: "center",
+    paddingHorizontal: spacing[4],
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  comboText: {
+    ...type.tinyMono,
+  },
+  primaryButton: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[3],
+    borderRadius: 11,
+  },
+  primaryText: {
+    ...type.buttonMono,
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
+  },
+  disabled: {
+    opacity: 0.48,
+  },
 });

@@ -12,6 +12,16 @@ type Props = {
   statusBarStyle?: StatusBarStyle;
 };
 
+export function shouldUseThemeBackground(backgroundColor?: string): boolean {
+  return (
+    !backgroundColor ||
+    backgroundColor === colors.paper ||
+    backgroundColor === colors.ivory ||
+    backgroundColor === "#F8F6F1" ||
+    backgroundColor === "#FBF7EF"
+  );
+}
+
 export function AppSurface({
   children,
   style,
@@ -19,10 +29,9 @@ export function AppSurface({
   statusBarStyle,
 }: Props) {
   const palette = useAppPalette();
-  const usesThemeBackground =
-    !backgroundColor || backgroundColor === colors.paper || backgroundColor === "#F8F6F1";
+  const usesThemeBackground = shouldUseThemeBackground(backgroundColor);
   const resolvedBackground = usesThemeBackground ? palette.background : backgroundColor;
-  const resolvedStatusBarStyle = statusBarStyle ?? palette.statusBar;
+  const resolvedStatusBarStyle = usesThemeBackground ? palette.statusBar : statusBarStyle ?? palette.statusBar;
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safe, { backgroundColor: resolvedBackground }]}>

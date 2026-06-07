@@ -40,10 +40,10 @@ describe("PeopleScreen product sections", () => {
     expect(peopleSource).toContain("copyFeedback");
     expect(peopleSource).toContain("AddPersonLineIcon");
     expect(peopleSource).toContain("ChevronRightLineIcon");
-    expect(peopleSource).toContain("GearLineIcon");
     expect(peopleSource).toContain("SearchLineIcon");
-    expect(peopleSource).toContain("People settings");
-    expect(peopleSource).toContain('navigation.navigate("Account")');
+    expect(peopleSource).not.toContain("GearLineIcon");
+    expect(peopleSource).not.toContain("People settings");
+    expect(peopleSource).not.toContain('navigation.navigate("Account")');
     expect(peopleSource).toContain("friend.avatarUri");
     expect(peopleSource).toContain("friendAvatarUri");
     expect(peopleSource).toContain("Haptics.selectionAsync");
@@ -56,5 +56,26 @@ describe("PeopleScreen product sections", () => {
     expect(peopleSource).not.toContain("statusByIndex");
     expect(peopleSource).not.toContain("friendStatusBadge");
     expect(peopleSource).not.toContain("index === 0 ? colors.red");
+  });
+
+  it("reserves tab-aware bottom space so the liquid tab does not cover People content", () => {
+    const peopleSource = readFileSync(path.join(process.cwd(), "src/screens/PeopleScreen.tsx"), "utf8");
+    const contentBlock = peopleSource.slice(
+      peopleSource.indexOf("content: {"),
+      peopleSource.indexOf("searchPanel: {"),
+    );
+    const scrollerFrameBlock = peopleSource.slice(
+      peopleSource.indexOf("scrollerFrame: {"),
+      peopleSource.indexOf("scroller: {"),
+    );
+
+    expect(peopleSource).toContain("LIQUID_TAB_SAFE_BOTTOM");
+    expect(peopleSource).toContain("LIQUID_TAB_VIEWPORT_BOTTOM_INSET");
+    expect(peopleSource).toContain("style={styles.scrollerFrame}");
+    expect(peopleSource).toContain("style={styles.scroller}");
+    expect(scrollerFrameBlock).toContain("marginBottom: LIQUID_TAB_VIEWPORT_BOTTOM_INSET");
+    expect(scrollerFrameBlock).toContain('overflow: "hidden"');
+    expect(contentBlock).toContain("paddingBottom: LIQUID_TAB_SAFE_BOTTOM");
+    expect(contentBlock).not.toContain("paddingBottom: 96");
   });
 });

@@ -5,6 +5,10 @@ const source = readFileSync(
   path.join(process.cwd(), "src/components/WidgetSkinPackCard.tsx"),
   "utf8"
 );
+const visualSource = readFileSync(
+  path.join(process.cwd(), "src/design/widgetSkinVisuals.ts"),
+  "utf8"
+);
 
 describe("WidgetSkinPackCard shared identity-pack preview", () => {
   it("hosts the small/medium widget previews extracted from WidgetStates", () => {
@@ -14,8 +18,8 @@ describe("WidgetSkinPackCard shared identity-pack preview", () => {
       "MediumSkinPackWidgetPreview",
       "SignalPayloadPreview",
       "VideoSlotPreviewStrip",
-      "PACK_VISUALS",
-      "export function getPackVisual",
+      'from "@/design/widgetSkinVisuals"',
+      "export { getPackVisual }",
       "skinPackWidgetSmall",
       "skinPackWidgetMedium",
       "skinPackVideoMeta",
@@ -24,6 +28,7 @@ describe("WidgetSkinPackCard shared identity-pack preview", () => {
     ].forEach((token) => {
       expect(source).toContain(token);
     });
+    expect(visualSource).toContain("PACK_VISUALS");
   });
 
   it("renders against the identity pack model, not the palette skin model", () => {

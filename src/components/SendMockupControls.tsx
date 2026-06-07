@@ -75,10 +75,12 @@ export function SendMockupSlotGrid({
   slots,
   selected,
   onSelectSlot,
+  onAddSlot,
 }: {
   readonly slots: readonly string[];
   readonly selected: string;
   readonly onSelectSlot: (slot: string) => void;
+  readonly onAddSlot: () => void;
 }) {
   return (
     <View style={styles.slotGrid}>
@@ -92,9 +94,14 @@ export function SendMockupSlotGrid({
           </Pressable>
         );
       })}
-      <View style={[styles.slotButton, styles.slotButtonEmpty]}>
+      <Pressable
+        accessibilityLabel="Add signal slot"
+        accessibilityRole="button"
+        onPress={onAddSlot}
+        style={({ pressed }) => [styles.slotButton, styles.slotButtonEmpty, pressed && styles.pressed]}
+      >
         <Text style={styles.slotPlus}>+</Text>
-      </View>
+      </Pressable>
     </View>
   );
 }

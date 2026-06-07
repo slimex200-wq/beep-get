@@ -67,6 +67,27 @@ struct BeepSkin: Sendable {
         innerRadius: 14,
         decoration: .dotCircle
     )
+
+    static func from(_ payload: WidgetSkin?) -> BeepSkin {
+        guard let payload else { return swissPaper }
+
+        return BeepSkin(
+            id: .swissPaper,
+            paper: Color(hex: payload.paper),
+            ink: Color(hex: payload.ink),
+            mute: Color(hex: payload.muted),
+            accent: Color(hex: payload.accent),
+            displayFont: swissPaper.displayFont,
+            displayItalicFont: swissPaper.displayItalicFont,
+            monoFont: swissPaper.monoFont,
+            monoMediumFont: swissPaper.monoMediumFont,
+            monoBoldFont: swissPaper.monoBoldFont,
+            ruleWidth: swissPaper.ruleWidth,
+            outerRadius: swissPaper.outerRadius,
+            innerRadius: swissPaper.innerRadius,
+            decoration: swissPaper.decoration
+        )
+    }
 }
 
 extension View {

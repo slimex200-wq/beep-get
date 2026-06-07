@@ -7,8 +7,14 @@ describe("iOS widget source", () => {
     path.join(process.cwd(), "modules/beep-widget/ios/BeepWidgetData.swift"),
     "utf8"
   );
+  const notificationDataSource = readFileSync(
+    path.join(process.cwd(), "targets/BeepNotificationService/BeepWidgetData.swift"),
+    "utf8"
+  );
   const mediumSource = readFileSync(path.join(widgetDir, "SwissPaperMediumView.swift"), "utf8");
   const smallSource = readFileSync(path.join(widgetDir, "SwissPaperSmallView.swift"), "utf8");
+  const mediumEntrySource = readFileSync(path.join(widgetDir, "BeepWidgetMedium.swift"), "utf8");
+  const smallEntrySource = readFileSync(path.join(widgetDir, "BeepWidgetSmall.swift"), "utf8");
   const skinSource = readFileSync(path.join(widgetDir, "SkinTokens.swift"), "utf8");
   const widgetSource = readFileSync(path.join(widgetDir, "BeepWidget.swift"), "utf8");
   const pluginSource = readFileSync(
@@ -28,9 +34,23 @@ describe("iOS widget source", () => {
   const packageJson = readFileSync(path.join(process.cwd(), "package.json"), "utf8");
 
   it("keeps parity with the app and Android widget payload", () => {
-    ["kind", "WidgetSignalTeaser", "WidgetActions", "quickReplyUrls"].forEach((token) => {
+    ["kind", "WidgetSignalTeaser", "WidgetActions", "quickReplyUrls", "WidgetSkin", "activeSkin"].forEach((token) => {
       expect(dataSource).toContain(token);
+      expect(notificationDataSource).toContain(token);
     });
+    expect(notificationDataSource).toContain("totalReceived: widgetData.totalReceived");
+    expect(notificationDataSource).toContain("newCount: widgetData.newCount");
+    expect(notificationDataSource).toContain("activeSkin: widgetData.activeSkin");
+  });
+
+  it("applies active skin tokens from WidgetData to WidgetKit views", () => {
+    expect(skinSource).toContain("static func from(_ payload: WidgetSkin?) -> BeepSkin");
+    expect(widgetSource).toContain("activeSkin: data?.activeSkin");
+    expect(widgetSource).toContain("let activeSkin: WidgetSkin?");
+    expect(smallEntrySource).toContain("activeSkin: entry.activeSkin");
+    expect(mediumEntrySource).toContain("activeSkin: entry.activeSkin");
+    expect(smallSource).toContain("private var skin: BeepSkin { BeepSkin.from(activeSkin) }");
+    expect(mediumSource).toContain("private var skin: BeepSkin { BeepSkin.from(activeSkin) }");
   });
 
   it("routes widget taps through app-owned deep links", () => {
