@@ -9,53 +9,44 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { FriendPulseCard, type FriendPulseItem } from "@/components/FriendPulseCard";
 import { MockupCard } from "@/components/KotlinMockupUI";
-import { SignalSlotRail } from "@/components/SignalSlotRail";
-import { StatusDot } from "@/components/StatusDot";
 import { TodayIncomingCard } from "@/components/TodayIncomingCard";
 import { TodayMockupHeader, TodaySectionHeader } from "@/components/TodayMockupChrome";
 import { WidgetPreviewPanel } from "@/components/WidgetPreviewPanel";
-import {
-  FriendsGroupIcon,
-  GearLineIcon,
-  RefreshLineIcon,
-} from "@/components/MockupLineIcons";
+import { FriendsGroupIcon, RefreshLineIcon } from "@/components/MockupLineIcons";
+import { getIdentityPack } from "@/design/identityPacks";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
+import { useSkinStore } from "@/stores/skinStore";
 import { messageToSlipSignal, relationshipToSlipFriend } from "@/lib/slipUiModels";
-import {
-  DEFAULT_QUICK_REPLY_SLOTS,
-  buildQuickReplySlots,
-  isQuickReplySlotEntry,
-} from "@/lib/quickReplySlots";
+import { isQuickReplySlotEntry } from "@/lib/quickReplySlots";
 
 const FALLBACK_MEANINGS: Record<string, string> = {
-  "8282": "빨리 와줘",
-  "486": "보고 싶어",
-  "1004": "집 도착",
-  "7942": "친구사이",
-  "0404": "영원히 사랑해",
+  "8282": "Hurry up",
+  "486": "Miss you",
+  "1004": "Angel",
+  "7942": "Between friends",
+  "0404": "Forever",
 };
 
 export function TodayScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const palette = useAppPalette();
   const { profile } = useAuthStore();
+  const { activeIdentityPackSlug } = useSkinStore();
   const { entries, fetch: fetchDictionary } = useDictionaryStore();
   const { friends, fetch: fetchFriends } = useFriendStore();
   const {
     received,
     loading,
     fetchReceived,
-    quickReply,
     read,
     subscribeRealtime,
     unsubscribeRealtime,
   } = useMessageStore();
   const [doneFeedback, setDoneFeedback] = useState(false);
-  const [quickReplyFeedback, setQuickReplyFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -75,17 +66,13 @@ export function TodayScreen() {
   }, [profile?.id, subscribeRealtime, unsubscribeRealtime]);
 
   const latestMessage = received[0];
+  const activePack = getIdentityPack(activeIdentityPackSlug);
+  const latestWidgetKind =
+    latestMessage?.kind === "blink" || Boolean(latestMessage?.media) ? "blink" : "beep";
+  const latestFrameUris = latestMessage?.media?.stripFrameUris ?? undefined;
   const latestSignal = useMemo(
     () => (latestMessage ? messageToSlipSignal(latestMessage, { index: 0 }) : null),
     [latestMessage],
-  );
-  const signalQueue = useMemo(
-    () => received.slice(0, 3).map((message, index) => messageToSlipSignal(message, { index })),
-    [received],
-  );
-  const quickReplySlots = useMemo(
-    () => buildQuickReplySlots(entries, DEFAULT_QUICK_REPLY_SLOTS),
-    [entries],
   );
   const friendPulseItems = useMemo<FriendPulseItem[]>(() => {
     return friends.slice(0, 3).flatMap((friend, index) => {
@@ -111,7 +98,7 @@ export function TodayScreen() {
     ? entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === latestSignal.code)?.meaning ??
       latestSignal.note ??
       FALLBACK_MEANINGS[latestSignal.code] ??
-      "빨리 와줘"
+      "Hurry up"
     : null;
 
   const refresh = () => {
@@ -119,38 +106,11 @@ export function TodayScreen() {
     fetchReceived(profile.id, friends).catch(reportError);
   };
 
-  const flashQuickReply = (slot: string) => {
-    setQuickReplyFeedback(slot);
-    setTimeout(() => setQuickReplyFeedback(null), 1200);
-  };
-
   const handleDone = async () => {
     if (!latestMessage) return;
     setDoneFeedback(true);
     setTimeout(() => setDoneFeedback(false), 1200);
     await read(latestMessage.id).catch(reportError);
-  };
-
-  const handleQuickReply = async (slot: string) => {
-    if (!latestMessage) return;
-    flashQuickReply(slot);
-
-    if (slot === "Done") {
-      await read(latestMessage.id).catch(reportError);
-      return;
-    }
-
-    if (slot === "View") {
-      navigation.navigate("ReplyRoom", { signalId: latestMessage.id });
-      return;
-    }
-
-    try {
-      await quickReply(latestMessage.id, slot);
-      Alert.alert("Reply sent", `${slot} Beep sent back.`);
-    } catch (err: any) {
-      Alert.alert("Reply failed", err?.message ?? "Try again.");
-    }
   };
 
   return (
@@ -171,16 +131,10 @@ export function TodayScreen() {
               accessibilityLabel: "Open People",
               onPress: () => navigation.navigate("Main", { screen: "People" }),
             },
-            {
-              label: "Settings",
-              icon: <GearLineIcon />,
-              accessibilityLabel: "Account settings",
-              onPress: () => navigation.navigate("Account"),
-            },
           ]}
         />
         <View style={styles.mockupFlow}>
-          <TodaySectionHeader label="Incoming Now" hint="오늘의 작은 신호" />
+          <TodaySectionHeader label="Incoming Now" hint="Latest signal" />
           {latestSignal ? (
             <TodayIncomingCard
               sender={latestSignal.sender}
@@ -188,8 +142,6 @@ export function TodayScreen() {
               code={latestSignal.code}
               meaning={latestMeaning}
               avatarUri={latestSignal.avatarUri}
-              hasBlink={Boolean(latestSignal.hasBlink)}
-              frameUris={latestMessage.media?.stripFrameUris}
               doneFeedback={doneFeedback}
               onView={() => navigation.navigate("ReplyRoom", { signalId: latestMessage.id })}
               onDone={handleDone}
@@ -208,61 +160,18 @@ export function TodayScreen() {
             </MockupCard>
           )}
 
-          <TodaySectionHeader label="Quick Reply" hint="바로 답장" />
-          <SignalSlotRail
-            slots={quickReplySlots}
-            disabled={!latestMessage}
-            confirmedSlot={quickReplyFeedback}
-            compact
-            onSelect={handleQuickReply}
-          />
-
           <FriendPulseCard title="Friend Pulse" items={friendPulseItems} />
           <WidgetPreviewPanel
             title="Widget Mirror"
-            subtitle="홈 화면 나의 위젯"
+            subtitle="Home screen preview"
             code={latestSignal?.code ?? "----"}
             from={latestSignal?.sender ?? "No signal yet"}
-            tone="lavender"
             paperMode
             compact
+            kind={latestWidgetKind}
+            skin={activePack}
+            frameUris={latestFrameUris}
           />
-
-          <TodaySectionHeader label="Today Queue" hint="다음 신호" />
-          <MockupCard soft style={styles.queueCard}>
-            {signalQueue.length > 0 ? (
-              signalQueue.map((item, index) => {
-                const meaning =
-                  entries.find((entry) => !isQuickReplySlotEntry(entry) && entry.code === item.code)?.meaning ??
-                  item.note ??
-                  FALLBACK_MEANINGS[item.code] ??
-                  "signal";
-
-                return (
-                  <View
-                    key={item.id}
-                    style={[
-                      styles.queueRow,
-                      index > 0 && styles.queueRowDivider,
-                      { borderTopColor: palette.rule },
-                    ]}
-                  >
-                    <StatusDot
-                      size={7}
-                      color={index === 0 ? colors.red : index === 1 ? colors.pink : colors.greenDot}
-                    />
-                    <Text numberOfLines={1} style={[styles.queueCode, { color: palette.text }]}>
-                      {item.code}
-                      <Text style={[styles.queueMeaning, { color: palette.muted }]}> {meaning}</Text>
-                    </Text>
-                    <Text style={[styles.queueTime, { color: palette.muted }]}>{item.time}</Text>
-                  </View>
-                );
-              })
-            ) : (
-              <Text style={[type.bodyMuted, { color: palette.muted }]}>No more signals queued.</Text>
-            )}
-          </MockupCard>
         </View>
       </ScrollView>
     </AppSurface>
@@ -299,39 +208,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing[2],
     padding: spacing[5],
-  },
-  queueCard: {
-    minHeight: 54,
-    justifyContent: "center",
-    gap: 0,
-    padding: 0,
-    overflow: "hidden",
-  },
-  queueRow: {
-    minHeight: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-  },
-  queueRowDivider: {
-    borderTopWidth: 1,
-  },
-  queueCode: {
-    ...type.codeSmall,
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 21,
-    letterSpacing: 0,
-  },
-  queueMeaning: {
-    ...type.bodyMuted,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  queueTime: {
-    ...type.tinyMono,
-    fontSize: 10,
-    lineHeight: 13,
   },
 });

@@ -52,9 +52,9 @@ export function SendBeepScreen({
   const palette = useAppPalette();
   const cleanCode = code || "____";
   const primaryLabel = sentFeedback ? "Sent" : sending ? "Sending" : primaryActionLabel;
+  const headerAvatarSource = getAvatarImageSource(headerAvatarUri);
   const shouldRenderStandalonePreview = !deckHeader;
   const shouldRenderInputs = !deckHeader;
-  const headerAvatarSource = getAvatarImageSource(headerAvatarUri);
 
   return (
     <AppSurface backgroundColor="#F8F6F1">

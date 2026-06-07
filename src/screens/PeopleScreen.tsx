@@ -35,7 +35,6 @@ import {
   ChevronRightLineIcon,
   CheckCircleLineIcon,
   CopyLineIcon,
-  GearLineIcon,
   SearchLineIcon,
 } from "@/components/MockupLineIcons";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
@@ -63,6 +62,8 @@ const signalAccentByStatus: Record<FriendCircuitStatus, string> = {
   BLINK: "#FF7FA3",
   quiet: colors.greenDot,
 };
+const LIQUID_TAB_SAFE_BOTTOM = 176;
+const LIQUID_TAB_VIEWPORT_BOTTOM_INSET = 96;
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
 export function PeopleScreen() {
@@ -160,14 +161,13 @@ export function PeopleScreen() {
       setDisplayName("");
       setAddDialogVisible(false);
       Alert.alert("Friend added", "Close friend is ready.");
-    } catch (err: any) {
-      Alert.alert("Add failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Add failed", err.message);
+        return;
+      }
+      throw err;
     }
-  };
-
-  const openSettings = () => {
-    pulse();
-    navigation.navigate("Account");
   };
 
   const shareMyBeepId = async () => {
@@ -197,31 +197,28 @@ export function PeopleScreen() {
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader
-          title="People"
-          centered
-          avatarLabel={profileAvatarLabel}
-          avatarSource={profileAvatarSource}
-          actions={[
-            {
-              label: "Settings",
-              icon: <GearLineIcon />,
-              accessibilityLabel: "People settings",
-              onPress: openSettings,
-            },
-          ]}
-        />
-        <View style={[styles.searchPanel, { backgroundColor: palette.input }]}>
-          <SearchLineIcon color={palette.muted2} style={styles.searchIcon} />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search ID or name"
-            placeholderTextColor={palette.muted2}
-            style={[styles.searchInput, { color: palette.text }]}
+      <View style={styles.scrollerFrame}>
+        <ScrollView
+          style={styles.scroller}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <KotlinHeader
+            title="People"
+            centered
+            avatarLabel={profileAvatarLabel}
+            avatarSource={profileAvatarSource}
           />
-        </View>
+          <View style={[styles.searchPanel, { backgroundColor: palette.input }]}>
+            <SearchLineIcon color={palette.muted2} style={styles.searchIcon} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search ID or name"
+              placeholderTextColor={palette.muted2}
+              style={[styles.searchInput, { color: palette.text }]}
+            />
+          </View>
 
         <MockupSection label="My Beep ID" hint="SHARE" />
         <MockupCard style={styles.myIdCard}>
@@ -309,7 +306,8 @@ export function PeopleScreen() {
             onSend={() => navigateSend(featuredBlink.friend, "blink", featuredBlink.code)}
           />
         ) : null}
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       <Modal transparent visible={addDialogVisible} animationType="fade" onRequestClose={() => setAddDialogVisible(false)}>
         <KeyboardAvoidingView
@@ -478,9 +476,17 @@ function reportError(err: unknown) {
 }
 
 const styles = StyleSheet.create({
+  scrollerFrame: {
+    flex: 1,
+    marginBottom: LIQUID_TAB_VIEWPORT_BOTTOM_INSET,
+    overflow: "hidden",
+  },
+  scroller: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: spacing[5],
-    paddingBottom: 96,
+    paddingBottom: LIQUID_TAB_SAFE_BOTTOM,
     gap: spacing[4],
   },
   searchPanel: {

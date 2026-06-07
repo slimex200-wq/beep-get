@@ -1,6 +1,7 @@
 import {
   buildQuickReplySlots,
   getConfiguredQuickReplyEntries,
+  getQuickReplySlotLabel,
   isQuickReplySlotEntry,
 } from "@/lib/quickReplySlots";
 
@@ -48,5 +49,11 @@ describe("quickReplySlots", () => {
 
     expect(isQuickReplySlotEntry(entries[0])).toBe(true);
     expect(getConfiguredQuickReplyEntries(entries).map((entry) => entry.code)).toEqual(["486"]);
+  });
+
+  it("labels newly saved slots as widget quick replies while keeping legacy labels readable", () => {
+    expect(getQuickReplySlotLabel(0)).toBe("Widget quick reply slot 1");
+    expect(isQuickReplySlotEntry({ code: "Done", meaning: "Widget quick reply slot 1" })).toBe(true);
+    expect(isQuickReplySlotEntry({ code: "Done", meaning: "Quick reply slot 1" })).toBe(true);
   });
 });

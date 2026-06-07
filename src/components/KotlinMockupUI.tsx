@@ -12,6 +12,9 @@ import { colors, radius, spacing } from "@/design/tokens";
 import { font, type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
+import { IconButton } from "@/components/KotlinIconButton";
+
+export { IconButton } from "@/components/KotlinIconButton";
 
 type HeaderAction = {
   label: string;
@@ -103,41 +106,6 @@ export function Avatar({
         <Text style={[styles.avatarLabel, { color: palette.text }]}>{label.slice(0, 2)}</Text>
       )}
     </View>
-  );
-}
-
-export function IconButton({
-  label,
-  icon,
-  accessibilityLabel,
-  onPress,
-  dark = false,
-  size = 34,
-}: {
-  label: string;
-  icon?: React.ReactNode;
-  accessibilityLabel?: string;
-  onPress?: () => void;
-  dark?: boolean;
-  size?: number;
-}) {
-  const palette = useAppPalette();
-
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityRole={onPress ? "button" : undefined}
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => [
-        styles.iconButton,
-        { width: size, height: size, borderRadius: size / 2 },
-        dark && { backgroundColor: palette.primary },
-        pressed && styles.pressed,
-      ]}
-    >
-      {icon ?? <Text style={[styles.iconText, { color: dark ? palette.primaryText : palette.text }]}>{label}</Text>}
-    </Pressable>
   );
 }
 
@@ -289,23 +257,6 @@ const styles = StyleSheet.create({
   avatarLabel: {
     ...type.metaValue,
     fontSize: 11,
-  },
-  iconButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.transparent,
-  },
-  iconButtonDark: {
-    backgroundColor: colors.ink,
-  },
-  iconText: {
-    fontFamily: font.sansBold,
-    fontSize: 17,
-    lineHeight: 20,
-    color: colors.ink,
-  },
-  iconTextDark: {
-    color: colors.paperWarm,
   },
   pressed: {
     opacity: 0.72,

@@ -34,10 +34,12 @@ class BeepWidgetSmall : GlanceAppWidget() {
 
 @Composable
 private fun SmallWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?) {
+    val palette = BeepWidgetPalette.from(data?.activeSkin)
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(BeepWidgetColors.paper)
+            .background(palette.paper)
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -52,6 +54,7 @@ private fun SmallWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?
                 teaser = msg.teaser,
                 thumbnailImage = thumbnailImage,
                 actions = msg.actions,
+                palette = palette,
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .clickable(openWidgetUrlAction(msg.actions?.openReplyRoomUrl ?: "beepget://today")),
@@ -60,7 +63,7 @@ private fun SmallWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .background(BeepWidgetColors.paperWarm)
+                    .background(palette.paperWarm)
                     .padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically,
@@ -68,13 +71,13 @@ private fun SmallWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?
                 Text(
                     text = "BEEP-GET",
                     style = TextStyle(
-                        color = BeepWidgetColors.muted,
+                        color = palette.muted,
                         fontSize = TextUnit.Unspecified,
                     ),
                 )
                 Text(
                     text = "WAITING",
-                    style = TextStyle(color = BeepWidgetColors.muted),
+                    style = TextStyle(color = palette.muted),
                 )
             }
         }

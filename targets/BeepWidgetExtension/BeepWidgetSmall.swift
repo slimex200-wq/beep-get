@@ -16,10 +16,11 @@ struct BeepWidgetSmallView: View {
                 hasBlinkPreview: msg.teaser != nil,
                 stripFrameUris: msg.teaser?.stripFrameUris ?? [],
                 openUrl: msg.actions?.openReplyRoomUrl,
-                newCount: entry.newCount
+                newCount: entry.newCount,
+                activeSkin: entry.activeSkin
             )
         } else {
-            PlaceholderSmallView()
+            PlaceholderSmallView(activeSkin: entry.activeSkin)
         }
     }
 
@@ -55,7 +56,9 @@ struct BeepWidgetSmallView: View {
 }
 
 struct PlaceholderSmallView: View {
-    private let skin = BeepSkin.swissPaper
+    let activeSkin: WidgetSkin?
+
+    private var skin: BeepSkin { BeepSkin.from(activeSkin) }
 
     var body: some View {
         GeometryReader { proxy in

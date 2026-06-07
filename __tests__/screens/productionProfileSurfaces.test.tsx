@@ -66,6 +66,20 @@ describe("production profile surfaces", () => {
     );
   });
 
+  it("resolves avatar preset IDs in modal Send headers instead of passing raw uri strings", () => {
+    const sendBeepSource = readSource("src/screens/SendBeepScreen.tsx");
+    const sendBlinkSource = readSource("src/screens/SendBlinkScreen.tsx");
+
+    expect(sendBeepSource).toContain("getAvatarImageSource");
+    expect(sendBlinkSource).toContain("getAvatarImageSource");
+    expect(sendBeepSource).not.toContain(
+      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
+    );
+    expect(sendBlinkSource).not.toContain(
+      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
+    );
+  });
+
   it("keeps UI Preview friend avatars on app preset IDs instead of hardcoded human mock photos", () => {
     const uiPreviewSource = readSource("src/lib/uiPreview.ts");
 

@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import path from "path";
 
 describe("TodayScreen product sections", () => {
-  it("keeps Today widget-first while preserving quick reply, queue, and widget mirror", () => {
+  it("keeps Today widget-first with incoming now, friend pulse, and widget mirror", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
 
     [
@@ -10,8 +10,6 @@ describe("TodayScreen product sections", () => {
       "Incoming Now",
       "Friend Pulse",
       "Widget Mirror",
-      "Quick Reply",
-      "Today Queue",
       "Done",
       "View",
       "TodayIncomingCard",
@@ -19,9 +17,6 @@ describe("TodayScreen product sections", () => {
       "TodaySectionHeader",
       "WidgetPreviewPanel",
       "FriendPulseCard",
-      "SignalSlotRail",
-      "buildQuickReplySlots",
-      "quickReply",
     ].forEach((label) => {
       expect(source).toContain(label);
     });
@@ -31,19 +26,29 @@ describe("TodayScreen product sections", () => {
     expect(source).toContain("statusBarStyle={palette.statusBar}");
     expect(source).toContain("paperMode");
     expect(source).toContain("compact");
-    expect(source).toContain("오늘의 작은 신호");
-    expect(source).toContain("홈 화면 나의 위젯");
+    expect(source).toContain("Latest signal");
+    expect(source).toContain("Home screen preview");
+    expect(source).not.toContain('<MockupSection label="Quick Reply"');
     expect(source).not.toContain("TodaySupportDock");
+    expect(source).not.toContain("Quick Reply");
+    expect(source).not.toContain("TODAY QUEUE");
     expect(source).not.toContain("widgetActionChip");
+    expect(source).not.toContain('label: "Settings"');
+    expect(source).not.toContain('accessibilityLabel: "Account settings"');
+    expect(source).not.toContain('navigation.navigate("Account")');
+    expect(source).not.toContain("GearLineIcon");
   });
 
-  it("keeps received Blink frames in the compact Today card with theme-aware components", () => {
+  it("keeps received Blink frames in the widget mirror instead of the compact Today card", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/TodayScreen.tsx"), "utf8");
     const incomingCardSource = readFileSync(path.join(process.cwd(), "src/components/TodayIncomingCard.tsx"), "utf8");
     const pulseSource = readFileSync(path.join(process.cwd(), "src/components/FriendPulseCard.tsx"), "utf8");
 
-    expect(source).toContain("frameUris={latestMessage.media?.stripFrameUris}");
-    expect(source).toContain("hasBlink={Boolean(latestSignal.hasBlink)}");
+    expect(source).not.toContain("frameUris={latestMessage.media?.stripFrameUris}");
+    expect(source).not.toContain("hasBlink={Boolean(latestSignal.hasBlink)}");
+    expect(source).toContain("const latestFrameUris = latestMessage?.media?.stripFrameUris ?? undefined");
+    expect(source).toContain("frameUris={latestFrameUris}");
+    expect(source).toContain("skin={activePack}");
     expect(incomingCardSource).toContain("incomingRow");
     expect(incomingCardSource).toContain("replyRow");
     expect(incomingCardSource).toContain("MiniFrameStrip");

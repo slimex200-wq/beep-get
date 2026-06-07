@@ -41,9 +41,22 @@ data class RecentSender(
     @SerializedName("statusIcon") val statusIcon: String
 )
 
+data class WidgetSkin(
+    val slug: String,
+    val paper: String,
+    val paperWarm: String,
+    val ink: String,
+    val muted: String,
+    val rule: String,
+    val accent: String
+)
+
 data class WidgetData(
     @SerializedName("latestMessage") val latestMessage: WidgetMessage?,
-    @SerializedName("recentSenders") val recentSenders: List<RecentSender>
+    @SerializedName("recentSenders") val recentSenders: List<RecentSender>,
+    @SerializedName("totalReceived") val totalReceived: Int? = null,
+    @SerializedName("newCount") val newCount: Int? = null,
+    @SerializedName("activeSkin") val activeSkin: WidgetSkin? = null
 )
 
 object BeepWidgetData {

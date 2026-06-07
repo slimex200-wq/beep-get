@@ -1,22 +1,12 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/stores/authStore";
-import { useFriendStore } from "@/stores/friendStore";
-import { useMessageStore } from "@/stores/messageStore";
 import { isUiPreviewUser } from "@/lib/uiPreview";
-import { colors } from "@/design/tokens";
-import { font } from "@/design/typography";
-import { lightPalette, useAppPalette } from "@/design/appTheme";
-import {
-  FriendsGroupIcon,
-  MyUserIcon,
-  SendPlaneIcon,
-  TodayCalendarIcon,
-} from "@/components/MockupLineIcons";
+import { useAppPalette } from "@/design/appTheme";
 import { AuthScreen } from "@/screens/AuthScreen";
+import { LiquidExpandableTabBar } from "@/components/LiquidExpandableTabBar";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -55,97 +45,21 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
 
-const tabLabels: Record<keyof MainTabParamList, string> = {
-  Today: "TODAY",
-  Compose: "SEND",
-  People: "PEOPLE",
-  My: "MY",
-};
-
 function MainTabs() {
   const themedPalette = useAppPalette();
-  const profileId = useAuthStore((state) => state.profile?.id ?? null);
-  const isPreviewSession = isUiPreviewUser(profileId);
-  const palette = isPreviewSession ? lightPalette : themedPalette;
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      tabBar={(props) => <LiquidExpandableTabBar {...props} palette={themedPalette} />}
+      screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          position: "absolute",
-          left: 14,
-          right: 14,
-          bottom: 9,
-          minHeight: 52,
-          paddingTop: 4,
-          paddingBottom: 4,
-          borderTopWidth: 0,
-          borderWidth: 1,
-          borderColor: palette.rule,
-          borderRadius: 15,
-          backgroundColor: palette.cardSoft,
-          shadowColor: colors.ink,
-          shadowOpacity: 0.04,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 1 },
-          elevation: 2,
-        },
-        tabBarActiveTintColor: palette.text,
-        tabBarInactiveTintColor: palette.muted,
-        tabBarIcon: ({ focused, color }) => (
-          <TabIcon routeName={route.name} focused={focused} color={color} />
-        ),
-        tabBarIconStyle: { marginTop: 0 },
-        tabBarItemStyle: { paddingBottom: 0 },
-        tabBarLabel: ({ focused, color }) => (
-          <TabLabel label={tabLabels[route.name]} focused={focused} color={color} />
-        ),
-        tabBarShowLabel: true,
-      })}
+      }}
     >
       <Tab.Screen name="Today" component={TodayScreen} />
       <Tab.Screen name="Compose" component={SendSignalScreen} />
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="My" component={MyScreen} />
     </Tab.Navigator>
-  );
-}
-
-function TabIcon({ routeName, focused, color }: { routeName: keyof MainTabParamList; focused: boolean; color: string }) {
-  const tint = color;
-  const hasUnreadSignals = useMessageStore((state) =>
-    state.received.some((message) => !message.is_read),
-  );
-  const inboundSeenAt = useAuthStore((state) => state.profile?.inbound_seen_at ?? null);
-  const inboundFriends = useFriendStore((state) => state.inboundFriends);
-  const unseenInboundCount = useFriendStore((state) => state.unseenInboundCount);
-  const hasUnseenInbound =
-    routeName === "People" && inboundFriends.length > 0 && unseenInboundCount(inboundSeenAt) > 0;
-
-  return (
-    <View style={styles.tabIconWrap}>
-      {routeName === "Today" ? (
-        <>
-          <TodayCalendarIcon color={tint} />
-          {hasUnreadSignals ? <View style={styles.tabUnreadDot} /> : null}
-        </>
-      ) : null}
-      {routeName === "Compose" ? <SendPlaneIcon color={tint} /> : null}
-      {routeName === "People" ? (
-        <>
-          <FriendsGroupIcon color={tint} />
-          {hasUnseenInbound ? <View style={styles.tabUnreadDot} /> : null}
-        </>
-      ) : null}
-      {routeName === "My" ? <MyUserIcon color={tint} /> : null}
-    </View>
-  );
-}
-
-function TabLabel({ label, focused, color }: { label: string; focused: boolean; color: string }) {
-  return (
-    <Text style={[styles.tabLabel, { color }, focused && styles.tabLabelActive]}>{label}</Text>
   );
 }
 
@@ -192,31 +106,3 @@ export function RootNavigator() {
     </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  tabIconWrap: {
-    width: 24,
-    height: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabUnreadDot: {
-    position: "absolute",
-    top: -1,
-    right: 1,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.red,
-  },
-  tabLabel: {
-    fontFamily: font.sansBold,
-    fontSize: 9,
-    lineHeight: 11,
-    letterSpacing: 0,
-    fontWeight: "700",
-  },
-  tabLabelActive: {
-    opacity: 1,
-  },
-});

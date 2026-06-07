@@ -1,4 +1,4 @@
-import { updateWidgetData, reloadWidgets } from "../../modules/beep-widget";
+import { updateWidgetData, reloadWidgets, getWidgetData } from "../../modules/beep-widget";
 import type {
   WidgetData,
   WidgetMessage,
@@ -7,7 +7,9 @@ import type {
 } from "../../modules/beep-widget";
 import { WIDGET_MAX_RECENT_SENDERS } from "@/lib/constants";
 import { BLINK_MAX_DURATION_MS } from "@/lib/beepBlinkLimits";
+import { DEFAULT_IDENTITY_PACK_SLUG } from "@/design/identityPacks";
 import { buildWidgetActionUrls } from "@/lib/widgetActions";
+import { buildWidgetSkinPayload } from "@/lib/widgetSkinPayload";
 
 interface Message {
   id: string;
@@ -33,6 +35,12 @@ interface Friend {
     nickname: string;
     status_icon: string;
   };
+}
+
+let activeWidgetSkinSlug = DEFAULT_IDENTITY_PACK_SLUG;
+
+export function setWidgetSkinSlug(packSlug: string): void {
+  activeWidgetSkinSlug = packSlug || DEFAULT_IDENTITY_PACK_SLUG;
 }
 
 export function buildWidgetData(
@@ -80,7 +88,13 @@ export function buildWidgetData(
   const totalReceived = Math.min(received.length, 999);
   const newCount = Math.min(received.filter((m) => !m.is_read).length, 99);
 
-  return { latestMessage, recentSenders, totalReceived, newCount };
+  return {
+    latestMessage,
+    recentSenders,
+    totalReceived,
+    newCount,
+    activeSkin: buildWidgetSkinPayload(activeWidgetSkinSlug),
+  };
 }
 
 function buildWidgetTeaser(message: Message): WidgetSignalTeaser | undefined {
@@ -107,19 +121,25 @@ function buildWidgetTeaser(message: Message): WidgetSignalTeaser | undefined {
 }
 
 export function syncWidgetData(received: Message[], friends: Friend[]): void {
-  try {
-    const data = buildWidgetData(received, friends);
-    updateWidgetData(data);
-    reloadWidgets();
-  } catch {
-    // Native module not available (e.g. web, test)
-  }
+  const data = buildWidgetData(received, friends);
+  updateWidgetData(data);
+  reloadWidgets();
+}
+
+export async function syncWidgetSkin(packSlug: string): Promise<void> {
+  setWidgetSkinSlug(packSlug);
+
+  const current = await getWidgetData();
+  updateWidgetData({
+    latestMessage: current?.latestMessage ?? null,
+    recentSenders: current?.recentSenders ?? [],
+    totalReceived: current?.totalReceived ?? 0,
+    newCount: current?.newCount ?? 0,
+    activeSkin: buildWidgetSkinPayload(activeWidgetSkinSlug),
+  });
+  reloadWidgets();
 }
 
 export function triggerWidgetReload(): void {
-  try {
-    reloadWidgets();
-  } catch {
-    // Native module not available
-  }
+  reloadWidgets();
 }

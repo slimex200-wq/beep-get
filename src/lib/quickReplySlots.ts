@@ -6,7 +6,9 @@ export type QuickReplySlotEntry = {
 };
 
 export const DEFAULT_QUICK_REPLY_SLOTS = ["Done", "8282", "View"];
-export const QUICK_REPLY_SLOT_LABEL_PREFIX = "Quick reply slot ";
+export const WIDGET_QUICK_REPLY_SLOT_LABEL_PREFIX = "Widget quick reply slot ";
+export const LEGACY_QUICK_REPLY_SLOT_LABEL_PREFIX = "Quick reply slot ";
+export const QUICK_REPLY_SLOT_LABEL_PREFIX = WIDGET_QUICK_REPLY_SLOT_LABEL_PREFIX;
 
 export function getQuickReplySlotLabel(index: number) {
   return `${QUICK_REPLY_SLOT_LABEL_PREFIX}${index + 1}`;
@@ -14,8 +16,9 @@ export function getQuickReplySlotLabel(index: number) {
 
 export function isQuickReplySlotEntry(entry: QuickReplySlotEntry) {
   return Boolean(
-    entry.is_widget_slot ||
-      entry.meaning.startsWith(QUICK_REPLY_SLOT_LABEL_PREFIX)
+      entry.is_widget_slot ||
+      entry.meaning.startsWith(WIDGET_QUICK_REPLY_SLOT_LABEL_PREFIX) ||
+      entry.meaning.startsWith(LEGACY_QUICK_REPLY_SLOT_LABEL_PREFIX)
   );
 }
 

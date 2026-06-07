@@ -4,65 +4,16 @@ import { colors, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import type { IdentityPack } from "@/design/identityPacks";
+import {
+  getPackVisual,
+  type IdentityPackVisual,
+} from "@/design/widgetSkinVisuals";
 import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 
 export type WidgetPreviewSize = "small" | "medium";
 
-export type IdentityPackVisual = {
-  surface: string;
-  chip: string;
-  text: string;
-  muted: string;
-  border: string;
-  accent: string;
-};
-
-const PACK_VISUALS: Record<IdentityPack["tone"], IdentityPackVisual> = {
-  paper: {
-    surface: "#F0EEE9",
-    chip: "#FFFFFF",
-    text: "#0A0A0A",
-    muted: "#6B655C",
-    border: "#9C958B",
-    accent: "#D8361E",
-  },
-  school: {
-    surface: "#FFF8E8",
-    chip: "#FFFFFF",
-    text: "#13110D",
-    muted: "#70695D",
-    border: "#B8AD9C",
-    accent: "#35724D",
-  },
-  cherry: {
-    surface: "#FFECEF",
-    chip: "#FFFFFF",
-    text: "#1B1114",
-    muted: "#7A6268",
-    border: "#E6BAC2",
-    accent: "#D84B62",
-  },
-  photo: {
-    surface: "#F8FCFD",
-    chip: "#FFFFFF",
-    text: "#0E171A",
-    muted: "#65767B",
-    border: "#AFC9D0",
-    accent: "#166F83",
-  },
-  night: {
-    surface: "#0A0A0A",
-    chip: "#20231F",
-    text: "#F8F2E8",
-    muted: "#B9B0A3",
-    border: "rgba(248,242,232,0.36)",
-    accent: "#92D66D",
-  },
-};
-
-export function getPackVisual(pack: IdentityPack): IdentityPackVisual {
-  return PACK_VISUALS[pack.tone];
-}
+export { getPackVisual };
+export type { IdentityPackVisual };
 
 function getPrimarySignalExpression(pack: IdentityPack) {
   return pack.expressions.find((expression) => expression.asset) ?? pack.expressions[0];

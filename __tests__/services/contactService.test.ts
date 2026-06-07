@@ -10,17 +10,20 @@ import {
 beforeEach(() => jest.clearAllMocks());
 
 describe("generateInviteLink", () => {
-  it("generates deeplink with beep_id", () => {
+  it("keeps QR/parser invite deeplink generation available", () => {
     expect(generateInviteLink("12345678")).toBe("beepget://add/12345678");
   });
 });
 
 describe("generateShareText", () => {
-  it("includes nickname and beep_id", () => {
-    const text = generateShareText("12345678", "테스터");
-    expect(text).toContain("테스터");
+  it("includes nickname and beep_id without advertising an unhandled add deeplink", () => {
+    const text = generateShareText("12345678", "Tester");
+
+    expect(text).toContain("Tester");
     expect(text).toContain("12345678");
-    expect(text).toContain("beepget://add/12345678");
+    expect(text).toContain("People");
+    expect(text).not.toContain("beepget://add/12345678");
+    expect(text).not.toContain("Open in app:");
   });
 });
 
@@ -93,19 +96,18 @@ describe("findRegisteredContacts", () => {
       data: [
         {
           id: "c1",
-          name: "엄마",
+          name: "Family",
           phoneNumbers: [{ number: "010-1234-5678", label: "mobile" }],
         },
         {
           id: "c2",
-          name: "친구",
+          name: "Friend",
           phoneNumbers: [{ number: "+82 10-9876-5432", label: "mobile" }],
         },
       ],
     });
 
     const result = await findRegisteredContacts();
-    // Current implementation always returns [] after normalization
     expect(result).toEqual([]);
     expect(Contacts.getContactsAsync).toHaveBeenCalledWith({
       fields: [Contacts.Fields.PhoneNumbers],

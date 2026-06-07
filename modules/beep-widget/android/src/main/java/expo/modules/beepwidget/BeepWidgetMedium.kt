@@ -40,10 +40,12 @@ class BeepWidgetMedium : GlanceAppWidget() {
 
 @Composable
 private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?) {
+    val palette = BeepWidgetPalette.from(data?.activeSkin)
+
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(BeepWidgetColors.paper)
+            .background(palette.paper)
             .padding(4.dp),
     ) {
         Column(
@@ -63,10 +65,11 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
                     thumbnailImage = thumbnailImage,
                     actions = msg.actions,
                     showActions = true,
+                    palette = palette,
                     modifier = GlanceModifier.fillMaxSize(),
                 )
             } else {
-                EmptyWidgetContent()
+                EmptyWidgetContent(palette)
             }
         }
 
@@ -76,13 +79,13 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
             modifier = GlanceModifier
                 .width(100.dp)
                 .fillMaxHeight()
-                .background(BeepWidgetColors.paperWarm)
+                .background(palette.paperWarm)
                 .padding(8.dp),
         ) {
             Text(
                 text = "RECENT",
                 style = TextStyle(
-                    color = BeepWidgetColors.muted,
+                    color = palette.muted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 ),
@@ -93,7 +96,7 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
             if (senders.isEmpty()) {
                 Text(
                     text = "-",
-                    style = TextStyle(color = BeepWidgetColors.muted),
+                    style = TextStyle(color = palette.muted),
                 )
             } else {
                 senders.forEach { sender ->
@@ -105,7 +108,7 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
                         Text(
                             text = sender.nickname,
                             style = TextStyle(
-                                color = BeepWidgetColors.ink,
+                                color = palette.ink,
                                 fontSize = 12.sp,
                             ),
                             maxLines = 1,
@@ -113,7 +116,7 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
                         Text(
                             text = sender.lastCode,
                             style = TextStyle(
-                                color = BeepWidgetColors.muted,
+                                color = palette.muted,
                                 fontSize = 10.sp,
                             ),
                             maxLines = 1,
@@ -127,22 +130,22 @@ private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider
 }
 
 @Composable
-private fun EmptyWidgetContent() {
+private fun EmptyWidgetContent(palette: BeepWidgetPalette) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(BeepWidgetColors.paperWarm)
+            .background(palette.paperWarm)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = "BEEP-GET",
-            style = TextStyle(color = BeepWidgetColors.muted),
+            style = TextStyle(color = palette.muted),
         )
         Text(
             text = "WAITING",
-            style = TextStyle(color = BeepWidgetColors.muted),
+            style = TextStyle(color = palette.muted),
         )
     }
 }

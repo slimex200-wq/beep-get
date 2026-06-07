@@ -10,6 +10,7 @@ describe("Android widget source", () => {
   const smallSource = readFileSync(path.join(widgetDir, "BeepWidgetSmall.kt"), "utf8");
   const actionsSource = readFileSync(path.join(widgetDir, "WidgetActions.kt"), "utf8");
   const displaySource = readFileSync(path.join(widgetDir, "LcdComposable.kt"), "utf8");
+  const dataSource = readFileSync(path.join(widgetDir, "BeepWidgetData.kt"), "utf8");
 
   it("routes widget taps through app-owned deep links", () => {
     expect(actionsSource).toContain("Intent.ACTION_VIEW");
@@ -24,5 +25,15 @@ describe("Android widget source", () => {
     ["OK", "OPEN", "quickReplyUrls"].forEach((token) => {
       expect(displaySource).toContain(token);
     });
+  });
+
+  it("applies active skin tokens from the app widget payload", () => {
+    expect(dataSource).toContain("data class WidgetSkin");
+    expect(dataSource).toContain('@SerializedName("activeSkin") val activeSkin: WidgetSkin?');
+    expect(displaySource).toContain("data class BeepWidgetPalette");
+    expect(displaySource).toContain("palette.paper");
+    expect(displaySource).toContain("palette.accent");
+    expect(smallSource).toContain("val palette = BeepWidgetPalette.from(data?.activeSkin)");
+    expect(mediumSource).toContain("val palette = BeepWidgetPalette.from(data?.activeSkin)");
   });
 });

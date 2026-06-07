@@ -2,11 +2,13 @@ import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import {
   ArrowLeft,
+  Bookmark,
   CalendarDays,
   Camera,
   ChevronRight,
   CircleCheck,
   Copy,
+  Hash,
   Pencil,
   RefreshCw,
   Search,
@@ -53,6 +55,10 @@ export function TodayCalendarIcon({ color = colors.ink, style }: IconProps) {
   return <LucideLineIcon icon={CalendarDays} color={color} style={style} />;
 }
 
+export function BookmarkLineIcon({ color = colors.ink, style }: IconProps) {
+  return <LucideLineIcon icon={Bookmark} color={color} style={style} />;
+}
+
 export function SendPlaneIcon({ color = colors.ink, style }: IconProps) {
   return <LucideLineIcon icon={SendHorizontal} color={color} style={style} strokeWidth={2.15} />;
 }
@@ -83,6 +89,10 @@ export function CameraLineIcon({ color = colors.ink, style }: IconProps) {
 
 export function GearLineIcon({ color = colors.ink, style }: IconProps) {
   return <LucideLineIcon icon={Settings} color={color} style={style} />;
+}
+
+export function HashLineIcon({ color = colors.ink, style }: IconProps) {
+  return <LucideLineIcon icon={Hash} color={color} style={style} strokeWidth={2.15} />;
 }
 
 export function SearchLineIcon({ color = colors.muted2, style }: IconProps) {

@@ -18,6 +18,7 @@ type Props = {
   iconPosition?: 'left' | 'right';
   animateIconOnPress?: boolean;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 export function ActionButton({
@@ -32,6 +33,7 @@ export function ActionButton({
   iconPosition = 'left',
   animateIconOnPress = false,
   accessibilityLabel,
+  accessibilityHint,
 }: Props) {
   const palette = useAppPalette();
   const iconFlight = useRef(new Animated.Value(0)).current;
@@ -95,6 +97,7 @@ export function ActionButton({
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
       onPress={handlePress}

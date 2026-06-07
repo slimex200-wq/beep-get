@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ActionButton } from "@/components/ActionButton";
 import { AppSurface } from "@/components/AppSurface";
 import { Avatar, KotlinHeader, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
 import { XLineIcon } from "@/components/MockupLineIcons";
-import { colors, radius, spacing } from "@/design/tokens";
-import { font, type } from "@/design/typography";
+import { AppearancePreferenceCard } from "@/components/settings/AppearancePreferenceCard";
+import { SettingsActionRow } from "@/components/settings/SettingsActionRow";
+import { spacing } from "@/design/tokens";
+import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
+import { useThemeStore } from "@/stores/themeStore";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
@@ -30,12 +31,6 @@ function resetUserStores() {
   useCollectionStore.getState().reset();
   useSkinStore.getState().reset();
 }
-
-const APPEARANCE_OPTIONS: ReadonlyArray<{ value: ThemePreference; label: string }> = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -70,7 +65,8 @@ export function SettingsScreen() {
 
     try {
       await Linking.openURL(url);
-    } catch {
+    } catch (err: unknown) {
+      if (!(err instanceof Error)) throw err;
       Alert.alert("BEEP-GET", "Could not open this link.");
     }
   };
@@ -81,8 +77,8 @@ export function SettingsScreen() {
       await signOut();
       resetUserStores();
       setSession(null);
-    } catch (err: any) {
-      Alert.alert("Logout failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      Alert.alert("Logout failed", getErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -110,18 +106,18 @@ export function SettingsScreen() {
       resetUserStores();
       setSession(null);
       Alert.alert("Account deleted", "Your BEEP-GET account deletion has been completed.");
-    } catch (err: any) {
-      Alert.alert("Delete failed", err?.message ?? "Try again or use the web request link.");
+    } catch (err: unknown) {
+      Alert.alert("Delete failed", getErrorMessage(err, "Try again or use the web request link."));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <AppSurface backgroundColor="#F8F6F1">
+    <AppSurface backgroundColor={palette.background}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
-          title="Account"
+          title="Settings"
           centered
           avatarLabel={avatarLabel}
           avatarSource={avatarSource}
@@ -141,81 +137,65 @@ export function SettingsScreen() {
         </MockupCard>
 
         <MockupSection label="Account Actions" style={styles.sectionInset} />
-        <MockupCard style={styles.actionCard}>
-          <ActionButton label="Share Beep ID" onPress={shareBeepId} disabled={!profile || busy} />
-          <ActionButton label="Log Out" variant="ghost" onPress={logout} disabled={busy} />
+        <MockupCard style={styles.listCard}>
+          <SettingsActionRow
+            label="Share Beep ID"
+            detail={beepHandle}
+            onPress={shareBeepId}
+            disabled={!profile || busy}
+          />
+          <SettingsActionRow
+            label="Log Out"
+            detail="Leave this device"
+            onPress={logout}
+            disabled={busy}
+            isLast
+          />
         </MockupCard>
 
         <MockupSection label="Appearance" hint="System / Light / Dark" style={styles.sectionInset} />
-        <MockupCard style={styles.actionCard}>
-          <Text style={[type.bodyMuted, { color: palette.muted }]}>
-            Choose the app theme. System follows your device light or dark setting.
-          </Text>
-          <View
-            accessibilityRole="radiogroup"
-            style={[styles.appearanceRow, { backgroundColor: palette.input, borderColor: palette.rule }]}
-          >
-            {APPEARANCE_OPTIONS.map((option) => {
-              const selected = themePreference === option.value;
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`${option.label} theme`}
-                  onPress={() => void setThemePreference(option.value)}
-                  style={[
-                    styles.appearanceOption,
-                    selected && { backgroundColor: palette.card, borderColor: palette.ruleStrong },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.appearanceOptionText,
-                      { color: selected ? palette.text : palette.muted },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </MockupCard>
+        <AppearancePreferenceCard
+          value={themePreference}
+          onChange={(preference) => void setThemePreference(preference)}
+          style={styles.cardInset}
+        />
 
         <MockupSection label="Privacy & Data" style={styles.sectionInset} />
-        <MockupCard style={styles.actionCard}>
-          <Text style={[type.bodyMuted, { color: palette.muted }]}>
-            Account deletion removes your profile, relationships, Beeps, Blinks, and private Blink media.
-          </Text>
-          <ActionButton
+        <MockupCard style={styles.listCard}>
+          <SettingsActionRow
             label="Privacy Policy"
-            variant="ghost"
+            detail="Data handling"
             onPress={() => openUrl(privacyPolicyUrl, "Privacy policy")}
             disabled={busy}
           />
-          <ActionButton
+          <SettingsActionRow
             label="Support"
-            variant="ghost"
+            detail="Help and contact"
             onPress={() => openUrl(supportUrl, "Support")}
             disabled={busy}
           />
-          <ActionButton
+          <SettingsActionRow
             label="Web Delete Request"
-            variant="ghost"
+            detail="Fallback form"
             onPress={() => openUrl(accountDeletionUrl, "Account deletion")}
             disabled={busy}
           />
-          <ActionButton
+          <SettingsActionRow
             label={busy ? "Deleting" : "Delete Account"}
-            variant="danger"
+            detail="Remove profile and private data"
+            tone="danger"
             onPress={confirmDeleteAccount}
             disabled={busy}
+            isLast
           />
         </MockupCard>
       </ScrollView>
     </AppSurface>
   );
+}
+
+function getErrorMessage(err: unknown, fallback = "Try again.") {
+  return err instanceof Error ? err.message : fallback;
 }
 
 const styles = StyleSheet.create({
@@ -245,31 +225,11 @@ const styles = StyleSheet.create({
   handle: {
     ...type.bodyMuted,
   },
-  actionCard: {
-    gap: spacing[3],
+  listCard: {
     marginHorizontal: spacing[5],
-    padding: spacing[4],
-    borderRadius: radius.slipSmall,
+    paddingVertical: spacing[2],
   },
-  appearanceRow: {
-    flexDirection: "row",
-    gap: spacing[2],
-    padding: spacing[2],
-    borderWidth: 1,
-    borderRadius: radius.control,
-  },
-  appearanceOption: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing[4],
-    borderRadius: radius.button,
-    borderWidth: 1,
-    borderColor: colors.transparent,
-  },
-  appearanceOptionText: {
-    fontFamily: font.sansSemiBold,
-    fontSize: 12,
-    letterSpacing: 0.4,
+  cardInset: {
+    marginHorizontal: spacing[5],
   },
 });

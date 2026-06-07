@@ -6,7 +6,7 @@ import {
   setActiveIdentityPack,
   getActiveIdentityPackSlug,
 } from "@/services/skinService";
-import { triggerWidgetReload } from "@/services/widgetService";
+import { syncWidgetSkin } from "@/services/widgetService";
 import {
   isUiPreviewUser,
   uiPreviewOwnedSkins,
@@ -77,7 +77,7 @@ export const useSkinStore = create<SkinState>((set, get) => ({
 
   setLocalActiveIdentityPack: (packSlug) => {
     set({ activeIdentityPackSlug: packSlug });
-    triggerWidgetReload();
+    void syncWidgetSkin(packSlug);
   },
 
   fetchOwned: async (userId) => {
@@ -92,10 +92,12 @@ export const useSkinStore = create<SkinState>((set, get) => ({
   fetchActiveIdentityPack: async (userId) => {
     if (isUiPreviewUser(userId)) {
       set({ activeIdentityPackSlug: DEFAULT_IDENTITY_PACK_SLUG });
+      void syncWidgetSkin(DEFAULT_IDENTITY_PACK_SLUG);
       return;
     }
     const packSlug = await getActiveIdentityPackSlug(userId);
     set({ activeIdentityPackSlug: packSlug });
+    void syncWidgetSkin(packSlug);
   },
 
   purchase: async (userId, skinId) => {
@@ -124,11 +126,11 @@ export const useSkinStore = create<SkinState>((set, get) => ({
   applyIdentityPack: async (userId, packSlug) => {
     if (isUiPreviewUser(userId)) {
       set({ activeIdentityPackSlug: packSlug });
-      triggerWidgetReload();
+      await syncWidgetSkin(packSlug);
       return;
     }
     await setActiveIdentityPack(packSlug);
     set({ activeIdentityPackSlug: packSlug });
-    triggerWidgetReload();
+    await syncWidgetSkin(packSlug);
   },
 }));

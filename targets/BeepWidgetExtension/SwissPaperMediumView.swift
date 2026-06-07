@@ -14,8 +14,9 @@ struct SwissPaperMediumView: View {
     let openUrl: String?
     var totalReceived: Int = 0
     var newCount: Int = 0
+    var activeSkin: WidgetSkin? = nil
 
-    private let skin = BeepSkin.swissPaper
+    private var skin: BeepSkin { BeepSkin.from(activeSkin) }
 
     var body: some View {
         GeometryReader { proxy in
@@ -292,7 +293,8 @@ struct SwissPaperMediumView_Previews: PreviewProvider {
             stripFrameUris: [],
             openUrl: nil,
             totalReceived: 2,
-            newCount: 2
+            newCount: 2,
+            activeSkin: nil
         )
         .previewContext(WidgetPreviewContext(family: .systemMedium))
         .previewDisplayName("Beep Get Medium")

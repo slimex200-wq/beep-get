@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -6,12 +6,13 @@ import { AppSurface } from "@/components/AppSurface";
 import { ActionButton } from "@/components/ActionButton";
 import { KotlinHeader, MockupCard, MockupSection } from "@/components/KotlinMockupUI";
 import { XLineIcon } from "@/components/MockupLineIcons";
-import { colors, radius, spacing } from "@/design/tokens";
+import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
+import { isQuickReplySlotEntry } from "@/lib/quickReplySlots";
 import { MAX_CODE_LENGTH } from "@/lib/constants";
 
 export function DictionaryScreen() {
@@ -35,16 +36,24 @@ export function DictionaryScreen() {
       await add(profile.id, trimmedCode, trimmedMeaning);
       setCode("");
       setMeaning("");
-    } catch (err: any) {
-      Alert.alert("Code failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Code failed", err.message);
+        return;
+      }
+      throw err;
     }
   };
 
   const handleRemove = async (id: string) => {
     try {
       await remove(id);
-    } catch (err: any) {
-      Alert.alert("Delete failed", err?.message ?? "Try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        Alert.alert("Delete failed", err.message);
+        return;
+      }
+      throw err;
     }
   };
 
@@ -55,48 +64,67 @@ export function DictionaryScreen() {
     }
     navigation.navigate("Main", { screen: "My" });
   };
+  const visibleEntries = useMemo(
+    () => entries.filter((entry) => !isQuickReplySlotEntry(entry)),
+    [entries],
+  );
+  const canRegister = Boolean(code.trim() && meaning.trim());
+  const registerRequirementCopy = canRegister
+    ? "Ready to register."
+    : "Enter both a signal code and private meaning to register.";
 
   return (
     <AppSurface backgroundColor="#F8F6F1">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <KotlinHeader
-          title="Signal Tokens"
+          title="Signal Codes"
           centered
           showAvatar={false}
           actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close dictionary", onPress: close }]}
         />
 
-        <MockupSection label="Add Signal Token" hint="Numbers, short words, and emoji work here" />
+        <MockupSection label="Signal Code Dictionary" hint="Private meanings" style={styles.sectionInset} />
         <MockupCard style={styles.formCard}>
-          <TextInput
-            style={[styles.codeInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-            value={code}
-            onChangeText={setCode}
-            placeholder="집중중 🔕"
-            placeholderTextColor={palette.muted2}
-            autoCapitalize="none"
-            maxLength={MAX_CODE_LENGTH}
-          />
-          <TextInput
-            style={[styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-            value={meaning}
-            onChangeText={setMeaning}
-            placeholder="Meaning, e.g. Focus mode"
-            placeholderTextColor={palette.muted2}
-            maxLength={50}
-          />
+          <Text style={[styles.formHeading, { color: palette.muted }]}>Add Signal Code</Text>
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.fieldLabel, { color: palette.muted }]}>SIGNAL CODE</Text>
+            <TextInput
+              style={[styles.codeInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
+              value={code}
+              onChangeText={setCode}
+              placeholder="8282 / OK"
+              placeholderTextColor={palette.muted2}
+              autoCapitalize="none"
+              maxLength={MAX_CODE_LENGTH}
+            />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.fieldLabel, { color: palette.muted }]}>PRIVATE MEANING</Text>
+            <TextInput
+              style={[styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
+              value={meaning}
+              onChangeText={setMeaning}
+              placeholder="Meaning, e.g. Focus mode"
+              placeholderTextColor={palette.muted2}
+              maxLength={50}
+            />
+          </View>
+          <Text style={[styles.requirementText, { color: canRegister ? palette.muted : palette.muted2 }]}>
+            {registerRequirementCopy}
+          </Text>
           <ActionButton
-            label={loading ? "Saving" : "Register Signal"}
+            label={loading ? "Saving" : "Register Signal Code"}
             variant="dark"
             onPress={handleAdd}
-            disabled={!code.trim() || !meaning.trim() || loading}
+            accessibilityHint={registerRequirementCopy}
+            disabled={!canRegister || loading}
           />
         </MockupCard>
 
-        <MockupSection label="My Signal Dictionary" hint={`${entries.length} saved`} />
+        <MockupSection label="My Signal Codes" hint={`${visibleEntries.length} saved`} style={styles.sectionInset} />
         <MockupCard style={styles.codeList}>
-          {entries.length ? (
-            entries.map((item) => (
+          {visibleEntries.length ? (
+            visibleEntries.map((item) => (
               <View key={item.id} style={[styles.codeRow, { borderBottomColor: palette.rule }]}>
                 <View style={[styles.codeBadge, { backgroundColor: palette.input }]}>
                   <Text numberOfLines={1} style={[styles.codeBadgeText, { color: palette.text }]}>{item.code}</Text>
@@ -106,9 +134,13 @@ export function DictionaryScreen() {
                   accessibilityLabel={`Delete ${item.code}`}
                   accessibilityRole="button"
                   onPress={() => handleRemove(item.id)}
-                  style={({ pressed }) => [styles.deletePill, pressed && styles.pressed]}
+                  style={({ pressed }) => [
+                    styles.deletePill,
+                    { backgroundColor: palette.chip, borderColor: palette.rule },
+                    pressed && styles.pressed,
+                  ]}
                 >
-                  <Text style={styles.deletePillText}>Delete</Text>
+                  <Text style={[styles.deletePillText, { color: palette.muted }]}>Delete</Text>
                 </Pressable>
               </View>
             ))
@@ -135,10 +167,26 @@ const styles = StyleSheet.create({
     paddingBottom: 96,
     gap: spacing[4],
   },
+  sectionInset: {
+    marginHorizontal: spacing[5],
+  },
   formCard: {
     gap: spacing[3],
     marginHorizontal: spacing[5],
     padding: spacing[4],
+  },
+  formHeading: {
+    ...type.tinyMono,
+  },
+  fieldGroup: {
+    gap: spacing[2],
+  },
+  fieldLabel: {
+    ...type.tinyMono,
+  },
+  requirementText: {
+    ...type.bodyMuted,
+    marginTop: -spacing[1],
   },
   codeInput: {
     minHeight: 52,
@@ -190,12 +238,11 @@ const styles = StyleSheet.create({
     minHeight: 30,
     justifyContent: "center",
     paddingHorizontal: spacing[3],
+    borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.ink,
   },
   deletePillText: {
     ...type.tinyMono,
-    color: "#FFFFFF",
   },
   emptyState: {
     minHeight: 92,

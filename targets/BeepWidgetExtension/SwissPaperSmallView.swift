@@ -12,8 +12,9 @@ struct SwissPaperSmallView: View {
     let stripFrameUris: [String]
     let openUrl: String?
     let newCount: Int
+    let activeSkin: WidgetSkin?
 
-    private let skin = BeepSkin.swissPaper
+    private var skin: BeepSkin { BeepSkin.from(activeSkin) }
 
     var body: some View {
         GeometryReader { proxy in
@@ -142,7 +143,8 @@ struct SwissPaperSmallView_Previews: PreviewProvider {
             hasBlinkPreview: true,
             stripFrameUris: [],
             openUrl: nil,
-            newCount: 2
+            newCount: 2,
+            activeSkin: nil
         )
         .previewContext(WidgetPreviewContext(family: .systemSmall))
         .previewDisplayName("Beep Get Small")
