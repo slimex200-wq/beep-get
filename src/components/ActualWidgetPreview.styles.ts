@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
   },
   mediumNumberBlock: {
-    width: 116,
+    width: 98,
     justifyContent: "center",
     gap: spacing[1],
     paddingHorizontal: spacing[4],
@@ -134,7 +134,7 @@ export const styles = StyleSheet.create({
   },
   slotStrip: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 66,
     flexDirection: "row",
     gap: spacing[2],
   },

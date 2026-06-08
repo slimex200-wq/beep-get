@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.ImageProvider
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -20,6 +21,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -30,123 +32,105 @@ import java.util.TimeZone
 class BeepWidgetMedium : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val data = BeepWidgetData.parse(context)
-        val thumbnailImage = BlinkThumbnailResolver.resolve(context, data?.latestMessage?.teaser)
+        val stripFrames = BlinkThumbnailResolver.resolveStripFrames(
+            context,
+            data?.latestMessage?.teaser
+        )
 
         provideContent {
-            MediumWidgetContent(data, thumbnailImage)
+            MediumWidgetContent(data, stripFrames)
         }
     }
 }
 
 @Composable
-private fun MediumWidgetContent(data: WidgetData?, thumbnailImage: ImageProvider?) {
+private fun MediumWidgetContent(data: WidgetData?, stripFrames: List<ImageProvider?>) {
     val palette = BeepWidgetPalette.from(data?.activeSkin)
+    val msg = data?.latestMessage
 
-    Row(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(palette.paper)
-            .padding(4.dp),
-    ) {
-        Column(
+    if (msg != null) {
+        SignalSurfaceMedium(
+            kind = msg.kind ?: "beep",
+            code = msg.code,
+            fromName = msg.senderNickname,
+            time = formatTime(msg.receivedAt),
+            indexNo = formatIndex(msg.messageId),
+            isNew = !msg.isRead,
+            totalReceived = data.totalReceived ?: 0,
+            newCount = data.newCount ?: 0,
+            stripFrames = stripFrames,
+            palette = palette,
             modifier = GlanceModifier
-                .width(154.dp)
-                .fillMaxHeight(),
-        ) {
-            val msg = data?.latestMessage
-            if (msg != null) {
-                LcdDisplay(
-                    kind = msg.kind ?: "beep",
-                    fromName = msg.senderNickname,
-                    code = msg.code,
-                    time = formatTime(msg.receivedAt),
-                    isNew = !msg.isRead,
-                    teaser = msg.teaser,
-                    thumbnailImage = thumbnailImage,
-                    actions = msg.actions,
-                    showActions = true,
-                    palette = palette,
-                    modifier = GlanceModifier.fillMaxSize(),
-                )
-            } else {
-                EmptyWidgetContent(palette)
-            }
-        }
+                .fillMaxSize()
+                .clickable(openWidgetUrlAction(msg.actions?.openReplyRoomUrl ?: "beepget://today")),
+        )
+    } else {
+        EmptyMediumContent(palette)
+    }
+}
 
-        Spacer(modifier = GlanceModifier.width(4.dp))
-
-        Column(
+@Composable
+private fun EmptyMediumContent(palette: BeepWidgetPalette) {
+    Column(modifier = GlanceModifier.fillMaxSize().background(palette.paper)) {
+        Row(
             modifier = GlanceModifier
-                .width(100.dp)
-                .fillMaxHeight()
-                .background(palette.paperWarm)
-                .padding(8.dp),
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "RECENT",
+                text = "Incoming Beep",
+                style = TextStyle(
+                    color = palette.ink,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Serif,
+                ),
+                maxLines = 1,
+            )
+            Spacer(modifier = GlanceModifier.defaultWeight())
+            Text(
+                text = "NO.-- · --:--",
+                style = TextStyle(
+                    color = palette.ink,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                ),
+                maxLines = 1,
+            )
+        }
+        Spacer(
+            modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(palette.ink),
+        )
+        Column(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .defaultWeight()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "WAIT",
+                style = TextStyle(
+                    color = palette.ink,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                ),
+                maxLines = 1,
+            )
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            Text(
+                text = "FROM BEEP-GET",
                 style = TextStyle(
                     color = palette.muted,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 9.sp,
+                    fontFamily = FontFamily.Monospace,
                 ),
+                maxLines = 1,
             )
-            Spacer(modifier = GlanceModifier.height(4.dp))
-
-            val senders = data?.recentSenders ?: emptyList()
-            if (senders.isEmpty()) {
-                Text(
-                    text = "-",
-                    style = TextStyle(color = palette.muted),
-                )
-            } else {
-                senders.forEach { sender ->
-                    Column(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .padding(vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = sender.nickname,
-                            style = TextStyle(
-                                color = palette.ink,
-                                fontSize = 12.sp,
-                            ),
-                            maxLines = 1,
-                        )
-                        Text(
-                            text = sender.lastCode,
-                            style = TextStyle(
-                                color = palette.muted,
-                                fontSize = 10.sp,
-                            ),
-                            maxLines = 1,
-                        )
-                    }
-                    Spacer(modifier = GlanceModifier.height(2.dp))
-                }
-            }
         }
-    }
-}
-
-@Composable
-private fun EmptyWidgetContent(palette: BeepWidgetPalette) {
-    Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(palette.paperWarm)
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "BEEP-GET",
-            style = TextStyle(color = palette.muted),
-        )
-        Text(
-            text = "WAITING",
-            style = TextStyle(color = palette.muted),
-        )
     }
 }
 
@@ -160,4 +144,12 @@ private fun formatTime(isoTime: String): String {
     } catch (e: Exception) {
         isoTime
     }
+}
+
+/** Mirrors iOS formatIndex: demo → "01", otherwise the alnum 2-char id suffix. */
+internal fun formatIndex(messageId: String): String {
+    if (messageId.startsWith("demo-")) return "01"
+    val suffix = messageId.takeLast(2).uppercase()
+    val cleaned = suffix.filter { it.isLetterOrDigit() }
+    return cleaned.ifEmpty { "01" }
 }

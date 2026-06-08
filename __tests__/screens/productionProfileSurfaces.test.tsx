@@ -98,6 +98,6 @@ describe("production profile surfaces", () => {
     expect(widgetCardSource).not.toContain("pack.from}</Text>");
     expect(widgetStatesSource).toContain("widgetPreviewFrom");
     expect(widgetStatesSource).toContain("previewFrom={widgetPreviewFrom}");
-    expect(widgetStatesSource).toContain("fromLabel={widgetPreviewFrom}");
+    expect(widgetStatesSource).toContain("from={widgetPreviewFrom}");
   });
 });

@@ -11,24 +11,33 @@ const visualSource = readFileSync(
 );
 
 describe("WidgetSkinPackCard shared identity-pack preview", () => {
-  it("hosts the small/medium widget previews extracted from WidgetStates", () => {
+  it("delegates the small/medium widget preview to the single ActualWidgetPreview renderer", () => {
     [
       "export function WidgetSkinPackCard",
-      "SkinPackWidgetPreview",
-      "MediumSkinPackWidgetPreview",
-      "SignalPayloadPreview",
-      "VideoSlotPreviewStrip",
+      "ActualWidgetPreview",
+      'from "@/components/ActualWidgetPreview"',
       'from "@/design/widgetSkinVisuals"',
       "export { getPackVisual }",
-      "skinPackWidgetSmall",
-      "skinPackWidgetMedium",
-      "skinPackVideoMeta",
-      "DEMO_BLINK_FRAME_DATA_URIS",
       "Skin Pack",
     ].forEach((token) => {
       expect(source).toContain(token);
     });
     expect(visualSource).toContain("PACK_VISUALS");
+  });
+
+  it("no longer keeps a screen-local copy of the medium/small grid", () => {
+    [
+      "SkinPackWidgetPreview",
+      "MediumSkinPackWidgetPreview",
+      "SignalPayloadPreview",
+      "VideoSlotPreviewStrip",
+      "skinPackWidgetSmall",
+      "skinPackWidgetMedium",
+      "skinPackMediumStatus",
+      "skinPackVideoMeta",
+    ].forEach((token) => {
+      expect(source).not.toContain(token);
+    });
   });
 
   it("renders against the identity pack model, not the palette skin model", () => {
