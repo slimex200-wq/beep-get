@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 import { Animated } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 
@@ -9,7 +9,7 @@ type TabSlotLayout = {
 };
 
 type UseLiquidTabLobeParams = {
-  readonly state: BottomTabBarProps["state"];
+  readonly state: MaterialTopTabBarProps["state"];
 };
 
 const fallbackTabWidth = 82;

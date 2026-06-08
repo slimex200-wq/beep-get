@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Animated, View } from "react-native";
+import { TabActions } from "@react-navigation/native";
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+import { Animated, PanResponder, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AppPalette } from "@/design/appTheme";
 import { getTabVisual } from "@/components/liquidTabBar/model";
@@ -27,7 +28,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
 import { useMessageStore } from "@/stores/messageStore";
 
-type Props = BottomTabBarProps & {
+type Props = MaterialTopTabBarProps & {
   readonly palette: AppPalette;
 };
 
@@ -66,6 +67,23 @@ export function LiquidExpandableTabBar({
 
   const toggleMore = () => setExpanded((current) => !current);
 
+  // Swipe-up on the bar reveals the secondary rail (Apple liquid-glass feel);
+  // swipe-down collapses it. Only claims vertical drags so tab taps/horizontal
+  // motion still pass through to the buttons below.
+  const swipeResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gesture) =>
+        Math.abs(gesture.dy) > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+      onPanResponderRelease: (_evt, gesture) => {
+        if (gesture.dy < -24) {
+          setExpanded(true);
+        } else if (gesture.dy > 24) {
+          setExpanded(false);
+        }
+      },
+    }),
+  ).current;
+
   const openSecondaryAction = (action: SecondaryAction) => {
     navigation.getParent()?.navigate(action.screen);
     setExpanded(false);
@@ -103,6 +121,7 @@ export function LiquidExpandableTabBar({
     >
       <Animated.View
         testID="liquid-tab-surface"
+        {...swipeResponder.panHandlers}
         style={[
           styles.pill,
           {
@@ -154,7 +173,10 @@ export function LiquidExpandableTabBar({
               });
 
               if (!focused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
+                navigation.dispatch({
+                  ...TabActions.jumpTo(route.name),
+                  target: state.key,
+                });
               }
             };
 

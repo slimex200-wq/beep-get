@@ -1,7 +1,7 @@
 import React from "react";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { useAppPalette } from "@/design/appTheme";
@@ -41,7 +41,7 @@ export type MainTabParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createMaterialTopTabNavigator<MainTabParamList>();
 
 export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
 
@@ -50,9 +50,11 @@ function MainTabs() {
 
   return (
     <Tab.Navigator
+      tabBarPosition="bottom"
       tabBar={(props) => <LiquidExpandableTabBar {...props} palette={themedPalette} />}
       screenOptions={{
-        headerShown: false,
+        swipeEnabled: true,
+        lazy: true,
       }}
     >
       <Tab.Screen name="Today" component={TodayScreen} />

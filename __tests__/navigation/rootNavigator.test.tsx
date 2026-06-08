@@ -31,7 +31,7 @@ describe("RootNavigator primary tabs", () => {
     const modelSource = readFileSync(path.join(process.cwd(), "src/components/liquidTabBar/model.ts"), "utf8");
     const combinedSource = `${tabBarSource}\n${tabBarItemSource}\n${moreToggleSource}\n${secondaryRailSource}\n${modelSource}`;
 
-    expect(tabBarSource).toContain("BottomTabBarProps");
+    expect(tabBarSource).toContain("MaterialTopTabBarProps");
     expect(tabBarSource).toContain("useSafeAreaInsets");
     expect(combinedSource).toContain("liquid-tab-primary-rail");
     expect(tabBarSource).toContain("MoreToggleButton");
@@ -230,7 +230,10 @@ describe("RootNavigator primary tabs", () => {
     expect(tabBarItemSource).toContain("readonly onLayout");
     expect(combinedSource).toContain("styles.liquidLobe");
     expect(combinedSource).not.toContain("styles.convexLens");
-    expect(combinedSource).not.toContain("PanResponder.create");
+    // The swipe-up PanResponder only claims vertical drags so horizontal
+    // material-top pager swipes (left/right tab slide) pass through untouched.
+    expect(tabBarSource).toContain("PanResponder.create");
+    expect(tabBarSource).toContain("Math.abs(gesture.dy) > Math.abs(gesture.dx)");
     expect(combinedSource).not.toContain("matteLensFill");
     expect(combinedSource).not.toContain("darkGlassBackground");
   });
