@@ -45,7 +45,8 @@
 
 - Personality: private, immediate, close-friend pager; quiet but slightly playful.
 - Trust signals: small-circle language, private status pills, no public feed affordances, clear send summaries before action, account/data settings separated from personalization.
-- Avoid: chat bubbles, likes/comments, public discovery, marketing hero sections, purple gradients, generic dashboard cards, reward-first surfaces, unrelated settings inside Send.
+- Avoid: chat bubbles, likes/comments, public discovery, marketing hero sections, decorative gradients, generic dashboard cards, reward-first surfaces, unrelated settings inside Send.
+- Accent direction (2026-06-09): the app's primary accent is purple (`#8F5EC7` light), and the floating bottom nav is an Apple-style liquid-glass expandable bar. Purple as a solid accent/primary is intentional; only decorative multi-stop gradients remain off-limits.
 
 ## Product goals
 
@@ -90,10 +91,10 @@
 
 ## Visual language
 
-- Color: the app chrome is a system light/dark theme. Light is warm ivory background, white cards, soft gray controls, black primary actions, red/green status dots; dark is a calm neutral near-black with warm off-white text and a light high-contrast primary. The theme follows the OS (`useColorScheme`) plus an in-app System/Light/Dark toggle, never per-identity-pack palettes; surfaces must stay legible in both modes, so always pull background/card/text/rule/primary from `useAppPalette` rather than literal hex.
+- Color: the app chrome is a system light/dark theme. Light is warm ivory background, white cards, soft gray controls, purple primary actions (`#8F5EC7`), red/green status dots; dark is a calm neutral near-black with warm off-white text and a light high-contrast primary. The theme follows the OS (`useColorScheme`) plus an in-app System/Light/Dark toggle, never per-identity-pack palettes; surfaces must stay legible in both modes, so always pull background/card/text/rule/primary from `useAppPalette` rather than literal hex.
 - Typography: compact sans for labels/body, monospaced numerals for signal codes and time, no oversized marketing type inside tool surfaces.
 - Spacing/layout rhythm: compact mobile stacks, consistent section labels, bottom nav pill fixed above the home indicator, no nested decorative cards.
-- Shape/radius/elevation: restrained rounded cards, pill controls for status/nav/chips, thin rule borders, minimal shadow.
+- Shape/radius/elevation: restrained rounded cards, pill controls for status/nav/chips, thin rule borders, minimal shadow on content cards — liquid-glass elevation (blur + soft shadow) is reserved for the floating bottom nav only.
 - Motion: short mechanical press states and send-plane flight only; avoid large animated transitions unless tied to Blink capture/playback.
 - Imagery/iconography: use actual Blink frames/video for media surfaces. All header and bottom-nav controls use one icon family — lucide line icons via `src/components/MockupLineIcons.tsx` — so headers and the tab bar read as the same set; never mix unicode glyphs (`◐ ◎ ⚙ ×`) or text labels (`Back`, `Close`) into icon slots. Emoji are allowed only as user-authored signal-token content (e.g. `집중중 🔕`), never as chrome/control affordances.
 
@@ -106,7 +107,7 @@ Two separate concepts:
 
 | App theme mode | Direction |
 | --- | --- |
-| Light | Warm ivory background, white cards, 1px rules, black ink primary, red/green status dots — the Classic Paper baseline |
+| Light | Warm ivory background, white cards, 1px rules, purple primary (`#8F5EC7`), red/green status dots — the Classic Paper baseline |
 | Dark | Calm neutral near-black background (`#0E0F0E`), soft raised cards, warm off-white text, light high-contrast primary; `statusBar: "light"` |
 
 - Naming is single-source-of-truth. Use the user-facing identity-pack name everywhere a user can see it (store cards, widget previews, settings) and the slug everywhere in code/data. Do not introduce a third alias.
@@ -179,6 +180,7 @@ Two separate concepts:
 
 ## Design review notes
 
+- 2026-06-09 direction: the app primary accent is now purple (`#8F5EC7` light), and the bottom nav is an Apple-style liquid-glass expandable bar (swipe-up / More toggle reveals the secondary action rail). These supersede the earlier "black ink primary" and "minimal shadow" wording for chrome — content cards stay flat, only the floating nav carries glass elevation. Open follow-up: bottom-nav expansion should respond to a swipe-up gesture, not only the More button.
 - 2026-05-31 direction: the skin store is now first-class (see Skin system). Five skins are kept and supported (Classic Paper base + Soft Pager / Glass Mode free, Cyber Neon / Retro Future premium). Primary surfaces and shared components were migrated to `useAppPalette` so applied skins (incl. the two dark skins) recolor the whole app, not just Today/My. Open follow-ups: (a) unify skin names to the Skin system table (`skinPacks.ts`/`uiPreview.ts` still say `Swiss Paper`; DB seed + `theme/skins/*.json` carry the old label — needs a new migration, do not edit applied migrations); (b) header/nav icons unified to lucide line icons (no `◐ ◎ ⚙ × Back Close` in icon slots).
 - Fixed: Today uses the left-aligned title layout without a forced avatar, matching the Today mockup.
 - Fixed: the primary Send tab suppresses the back action; modal Send flows can still show back.
