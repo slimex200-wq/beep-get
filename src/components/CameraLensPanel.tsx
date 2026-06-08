@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   rulePanel: {
     width: 112,
-    backgroundColor: colors.lcd,
+    backgroundColor: colors.paperWarm,
     borderLeftWidth: 1,
     borderLeftColor: colors.ruleStrong,
     padding: spacing[5],

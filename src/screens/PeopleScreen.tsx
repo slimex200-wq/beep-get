@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F0EC",
   },
   copyButtonDone: {
-    backgroundColor: colors.lcd,
+    backgroundColor: colors.paperDeep,
   },
   addFriendCard: {
     minHeight: 70,

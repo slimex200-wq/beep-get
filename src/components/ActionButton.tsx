@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
     borderColor: colors.redDeep,
   },
   success: {
-    backgroundColor: colors.lcd,
-    borderColor: colors.green,
+    backgroundColor: colors.paper,
+    borderColor: colors.paperLine,
   },
   kakao: {
     backgroundColor: '#FEE500',

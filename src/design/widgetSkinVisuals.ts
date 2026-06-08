@@ -1,4 +1,5 @@
 import type { IdentityPack, IdentityPackTone } from "@/design/identityPacks";
+import { colors } from "@/design/tokens";
 
 export type IdentityPackVisual = {
   readonly surface: string;
@@ -11,7 +12,7 @@ export type IdentityPackVisual = {
 
 const PACK_VISUALS = {
   paper: {
-    surface: "#F0EEE9",
+    surface: colors.paper,
     chip: "#FFFFFF",
     text: "#0A0A0A",
     muted: "#6B655C",

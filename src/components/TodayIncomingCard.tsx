@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.button,
   },
   quickReplyDone: {
-    backgroundColor: colors.lcd,
-    borderColor: colors.green,
+    backgroundColor: colors.paper,
+    borderColor: colors.paperLine,
   },
   quickReplyText: {
     ...type.buttonMono,

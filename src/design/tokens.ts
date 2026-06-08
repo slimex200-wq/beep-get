@@ -23,6 +23,7 @@ export const colors = {
   red: '#D8361E',
   redDeep: '#9E2115',
   redSoft: '#F3D4CB',
+  /** @deprecated LCD green — no longer used as a surface/background color. Status dots use colors.green / colors.greenDot instead. */
   lcd: '#DCEBCB',
   green: '#6F8762',
   greenDot: '#7EA05E',
