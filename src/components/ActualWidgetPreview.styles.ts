@@ -46,6 +46,7 @@ export const styles = StyleSheet.create({
     gap: spacing[2],
   },
   medium: {
+    width: "100%",
     minHeight: 194,
     overflow: "hidden",
     borderWidth: 1,
@@ -85,7 +86,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
   },
   mediumNumberBlock: {
-    width: 116,
+    width: 98,
     justifyContent: "center",
     gap: spacing[1],
     paddingHorizontal: spacing[4],
@@ -97,6 +98,7 @@ export const styles = StyleSheet.create({
   },
   mediumSignalPane: {
     flex: 1,
+    minWidth: 0,
     gap: spacing[2],
     padding: spacing[3],
   },
@@ -134,7 +136,7 @@ export const styles = StyleSheet.create({
   },
   slotStrip: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 66,
     flexDirection: "row",
     gap: spacing[2],
   },

@@ -4,14 +4,12 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import type { PickableFriend } from "@/components/FriendPickerStrip";
-import type { RecentSignalCombo } from "@/components/RecentSignalCombos";
 import { normalizeAvatarUri } from "@/lib/avatarSource";
 import { BLINK_DURATION_SECONDS, BLINK_MAX_BYTES } from "@/lib/beepBlinkLimits";
 import { createBlinkDraft, type BlinkDraft } from "@/lib/blinkDraft";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import {
-  buildRecentCombos,
   buildSignalSlotDeck,
   createPreviewBlinkDraft,
   friendNo,
@@ -97,7 +95,11 @@ export function useSendSignalController() {
 
   const recipient = friendOptions.find((friend) => friend.id === selectedRecipientId) ?? friendOptions[0] ?? null;
   const slotDeck = useMemo(() => buildSignalSlotDeck(entries), [entries]);
-  const recentCombos = useMemo(() => buildRecentCombos(friendOptions), [friendOptions]);
+  const codeMeaning = useMemo(() => {
+    const trimmed = code.trim();
+    if (!trimmed) return null;
+    return entries.find((entry) => entry.code?.trim() === trimmed)?.meaning ?? null;
+  }, [code, entries]);
   const visibleFrameUris = useMemo(
     () => blinkDraft?.previewFrameUris?.slice(0, 3) ?? [],
     [blinkDraft?.previewFrameUris],
@@ -110,10 +112,6 @@ export function useSendSignalController() {
 
   const selectRecipient = (friend: PickableFriend) => setSelectedRecipientId(friend.id);
   const selectSlot = (slot: string) => setCode(slot);
-  const selectRecentCombo = (combo: RecentSignalCombo) => {
-    setSelectedRecipientId(combo.friendId);
-    setCode(combo.slot);
-  };
   const openPeople = () => navigation.navigate("Main", { screen: "People" });
   const openDictionary = () => navigation.navigate("Dictionary");
   const openSendSettings = () => setSendSettingsVisible(true);
@@ -222,7 +220,7 @@ export function useSendSignalController() {
     memo,
     setMemo,
     slotDeck,
-    recentCombos,
+    codeMeaning,
     sending,
     recording,
     blinkDraft,
@@ -236,7 +234,6 @@ export function useSendSignalController() {
     sendSettingsVisible,
     selectRecipient,
     selectSlot,
-    selectRecentCombo,
     openPeople,
     openDictionary,
     openSendSettings,

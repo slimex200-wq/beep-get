@@ -13,10 +13,30 @@ object BlinkThumbnailResolver {
             ?: teaser?.stripFrameUris?.firstOrNull { it.isNotBlank() }
             ?: return null
 
+        return resolveCandidate(context, candidate)
+    }
+
+    /**
+     * Resolves up to [count] signal-slot frames from the teaser strip. Mirrors the
+     * iOS SignalSlotStrip which renders 3 cells; missing or unresolvable frames
+     * come back as null so the caller can draw an empty slot in their place.
+     */
+    fun resolveStripFrames(
+        context: Context,
+        teaser: WidgetSignalTeaser?,
+        count: Int = 3
+    ): List<ImageProvider?> {
+        val frames = teaser?.stripFrameUris.orEmpty()
+        return (0 until count).map { index ->
+            val candidate = frames.getOrNull(index)?.takeIf { it.isNotBlank() } ?: return@map null
+            resolveCandidate(context, candidate)
+        }
+    }
+
+    private fun resolveCandidate(context: Context, candidate: String): ImageProvider? {
         if (candidate.startsWith("preview-")) {
             return ImageProvider(R.drawable.beep_widget_blink_preview_thumb)
         }
-
         return decodeBitmap(context, candidate)?.let { ImageProvider(it) }
     }
 

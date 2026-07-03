@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation, useRoute, type NavigatorScreenParams, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppSurface } from "@/components/AppSurface";
@@ -11,7 +11,7 @@ import {
   StatusPill,
 } from "@/components/KotlinMockupUI";
 import { XLineIcon } from "@/components/MockupLineIcons";
-import { colors, radius, spacing } from "@/design/tokens";
+import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
 import {
@@ -19,12 +19,9 @@ import {
   getIdentityPack,
   type IdentityPack,
 } from "@/design/identityPacks";
-import {
-  WidgetSkinPackCard,
-  getPackVisual,
-} from "@/components/WidgetSkinPackCard";
+import { WidgetSkinPackCard } from "@/components/WidgetSkinPackCard";
+import { ActualWidgetPreview } from "@/components/ActualWidgetPreview";
 import { freePackSlugs, loadOwnedIdentityPacks } from "@/lib/identityPackOwnership";
-import { DEMO_BLINK_FRAME_DATA_URIS } from "@/lib/demoBlinkFrameData";
 import type { MainTabParamList } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/stores/authStore";
 import { useDictionaryStore } from "@/stores/dictionaryStore";
@@ -177,13 +174,19 @@ export function WidgetStatesScreen() {
             <Text style={[type.tinyMono, { color: palette.muted }]}>LIVE PREVIEW</Text>
             <StatusPill label={size === "medium" ? "3 queued slots" : "active preview"} tone="green" />
           </View>
-          <WidgetMockup
-            size={size}
-            state={previewState}
-            slots={replySlots}
-            pack={previewPack}
-            fromLabel={widgetPreviewFrom}
-          />
+          <View style={styles.previewStage}>
+            <ActualWidgetPreview
+              size={size}
+              kind={size === "small" ? "beep" : "blink"}
+              variant={previewState === "empty" ? "empty" : "filled"}
+              code={previewPack.code}
+              from={widgetPreviewFrom}
+              skin={previewPack}
+              time={previewPack.time}
+              indexNo={previewPack.index}
+              compact={size === "small"}
+            />
+          </View>
         </MockupCard>
 
         <MockupSection label="Widget State" />
@@ -248,179 +251,6 @@ function reportError(err: unknown) {
   Alert.alert("BEEP-GET", message);
 }
 
-function WidgetMockup({
-  size,
-  state,
-  slots,
-  pack,
-  fromLabel,
-}: {
-  size: WidgetSize;
-  state: PreviewState;
-  slots: string[];
-  pack: IdentityPack;
-  fromLabel: string;
-}) {
-  const visual = getPackVisual(pack);
-  if (size === "medium") {
-    return <MediumWidgetMockup state={state} slots={slots} pack={pack} fromLabel={fromLabel} />;
-  }
-
-  const isEmpty = state === "empty";
-  const code = isEmpty ? "----" : pack.code;
-  const codeStyle = code.length > 4 ? styles.widgetCodeCompact : null;
-
-  return (
-    <View style={styles.smallWidgetStage}>
-      <View
-        style={[
-          styles.widgetShell,
-          styles.smallWidgetShell,
-          { backgroundColor: visual.surface, borderColor: visual.border },
-        ]}
-      >
-        <View style={styles.widgetHeader}>
-          <Text style={[styles.widgetLabel, { color: visual.muted }]}>BEEP-GET</Text>
-          <View style={[styles.widgetDot, { backgroundColor: visual.accent }]} />
-        </View>
-        {isEmpty ? (
-          <View style={styles.emptyWidget}>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-              style={[styles.widgetCode, codeStyle, { color: visual.muted }]}
-            >
-              {code}
-            </Text>
-            <Text style={[type.tinyMono, { color: visual.muted }]}>WAITING</Text>
-          </View>
-        ) : (
-          <>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-              style={[styles.widgetCode, codeStyle, { color: visual.text }]}
-            >
-              {code}
-            </Text>
-            <Text numberOfLines={1} style={[styles.widgetMeaning, { color: visual.text }]}>
-              {pack.layout === "photo-booth" ? "Private Blink" : "Private Beep"}
-            </Text>
-          </>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function MediumWidgetMockup({
-  state,
-  slots,
-  pack,
-  fromLabel,
-}: {
-  state: PreviewState;
-  slots: string[];
-  pack: IdentityPack;
-  fromLabel: string;
-}) {
-  const visual = getPackVisual(pack);
-  const isEmpty = state === "empty";
-  const kind = isEmpty ? "Waiting" : "Blink";
-  const status = isEmpty ? "IDLE" : "NEW";
-  const code = isEmpty ? "----" : pack.code;
-
-  return (
-    <View style={[styles.mediumWidgetShell, { backgroundColor: visual.surface, borderColor: visual.border }]}>
-      <View style={styles.mediumWidgetHead}>
-        <View style={styles.mediumWidgetTitleRow}>
-          <Text style={[styles.mediumWidgetIncoming, { color: visual.text }]}>Incoming</Text>
-          <Text style={[styles.mediumWidgetKind, { color: visual.text }]}>{kind}</Text>
-        </View>
-        <Text style={[styles.mediumWidgetMeta, { color: visual.text }]}>
-          NO.{pack.index} - 18:05
-        </Text>
-      </View>
-      <View style={[styles.mediumWidgetRule, { backgroundColor: visual.text }]} />
-      <View style={styles.mediumWidgetBody}>
-        <View style={styles.mediumWidgetNumberBlock}>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.68}
-            style={[
-              styles.mediumWidgetCode,
-              { color: isEmpty ? visual.muted : visual.text },
-            ]}
-          >
-            {code}
-          </Text>
-          <View style={styles.mediumWidgetFromRow}>
-            <Text style={[styles.mediumWidgetLabel, { color: visual.muted }]}>FROM</Text>
-            <Text numberOfLines={1} style={[styles.mediumWidgetFrom, { color: visual.text }]}>
-              {isEmpty ? "None" : fromLabel}
-            </Text>
-          </View>
-          <Text style={[styles.mediumWidgetLabel, { color: visual.muted }]}>
-            {isEmpty ? "WAITING" : "2.0s - MUTE"}
-          </Text>
-        </View>
-        <View style={[styles.mediumWidgetVerticalRule, { backgroundColor: visual.text }]} />
-        <View style={styles.mediumWidgetSignalPane}>
-          <View style={styles.mediumWidgetSignalHead}>
-            <Text style={[styles.mediumWidgetLabel, { color: visual.muted }]}>SIGNAL SLOTS</Text>
-            <Text
-              style={[
-                styles.mediumWidgetStatus,
-                { color: isEmpty ? visual.muted : visual.accent },
-              ]}
-            >
-              {status}
-            </Text>
-          </View>
-          {!isEmpty ? (
-            <MediumFrameStrip />
-          ) : (
-            <MediumQuickSlots slots={isEmpty ? ["--", "--", "--"] : slots} muted={isEmpty} />
-          )}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function MediumFrameStrip({ frameUris = DEMO_BLINK_FRAME_DATA_URIS }: { frameUris?: readonly string[] }) {
-  return (
-    <View style={[styles.mediumFrameStrip, styles.mediumFrameStripExpanded]}>
-      {frameUris.slice(0, 3).map((uri, index) => (
-        <View key={`${uri}-${index}`} style={styles.mediumFrameThumb}>
-          <Image source={{ uri }} style={styles.mediumFrameImage} resizeMode="cover" />
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function MediumQuickSlots({
-  slots,
-  muted = false,
-}: {
-  slots: string[];
-  muted?: boolean;
-}) {
-  return (
-    <View style={styles.mediumQuickSlots}>
-      {slots.slice(0, 3).map((slot, index) => (
-        <View key={`${slot}-${index}`} style={[styles.mediumQuickSlot, muted && styles.mediumQuickSlotMuted]}>
-          <Text style={[styles.mediumQuickSlotText, muted && styles.mediumQuickSlotTextMuted]}>{slot}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: {
     paddingBottom: 96,
@@ -477,193 +307,9 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     paddingHorizontal: spacing[5],
   },
-  smallWidgetStage: {
+  previewStage: {
     alignItems: "center",
     paddingVertical: spacing[1],
-  },
-  widgetShell: {
-    minHeight: 156,
-    gap: spacing[3],
-    padding: spacing[4],
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.ruleStrong,
-  },
-  smallWidgetShell: {
-    width: 178,
-    minHeight: 0,
-    aspectRatio: 1,
-    alignSelf: "center",
-    padding: spacing[4],
-  },
-  widgetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  widgetLabel: {
-    ...type.tinyMono,
-  },
-  widgetDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.red,
-  },
-  widgetCode: {
-    ...type.codeMedium,
-    fontSize: 44,
-    lineHeight: 52,
-    textAlign: "center",
-  },
-  widgetCodeCompact: {
-    fontSize: 30,
-    lineHeight: 36,
-  },
-  widgetMeaning: {
-    ...type.metaValue,
-    textAlign: "center",
-  },
-  mediumWidgetShell: {
-    minHeight: 224,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderRadius: 16,
-  },
-  mediumWidgetHead: {
-    minHeight: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-  },
-  mediumWidgetTitleRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing[2],
-  },
-  mediumWidgetIncoming: {
-    ...type.slipTitleSmall,
-    fontSize: 15,
-    lineHeight: 18,
-  },
-  mediumWidgetKind: {
-    ...type.slipTitleSmall,
-    fontSize: 15,
-    fontStyle: "italic",
-    lineHeight: 18,
-  },
-  mediumWidgetMeta: {
-    ...type.tinyMono,
-    fontSize: 9,
-  },
-  mediumWidgetRule: {
-    height: 1,
-  },
-  mediumWidgetBody: {
-    flex: 1,
-    minHeight: 172,
-    flexDirection: "row",
-  },
-  mediumWidgetNumberBlock: {
-    width: 116,
-    justifyContent: "center",
-    gap: spacing[2],
-    paddingHorizontal: spacing[4],
-  },
-  mediumWidgetCode: {
-    ...type.codeMedium,
-    fontSize: 34,
-    lineHeight: 40,
-  },
-  mediumWidgetFromRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing[2],
-  },
-  mediumWidgetLabel: {
-    ...type.tinyMono,
-    fontSize: 8,
-  },
-  mediumWidgetFrom: {
-    ...type.tinyMono,
-    flex: 1,
-    fontSize: 10,
-  },
-  mediumWidgetVerticalRule: {
-    width: 1,
-  },
-  mediumWidgetSignalPane: {
-    flex: 1,
-    gap: spacing[3],
-    padding: spacing[4],
-  },
-  mediumWidgetSignalHead: {
-    minHeight: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing[2],
-  },
-  mediumWidgetStatus: {
-    ...type.tinyMono,
-    fontSize: 9,
-  },
-  mediumFrameStrip: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: spacing[2],
-  },
-  mediumFrameStripExpanded: {
-    flex: 1,
-    minHeight: 110,
-  },
-  mediumFrameThumb: {
-    flex: 1,
-    minHeight: 110,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: 6,
-    backgroundColor: "#E7D9C8",
-  },
-  mediumFrameImage: {
-    width: "100%",
-    height: "100%",
-    transform: [{ scale: 1.08 }],
-  },
-  mediumQuickSlots: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: spacing[2],
-  },
-  mediumQuickSlot: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: 6,
-    backgroundColor: colors.paper,
-  },
-  mediumQuickSlotMuted: {
-    borderColor: colors.ruleStrong,
-    backgroundColor: colors.paperDeep,
-  },
-  mediumQuickSlotText: {
-    ...type.tinyMono,
-    color: colors.ink,
-    fontSize: 9,
-  },
-  mediumQuickSlotTextMuted: {
-    color: colors.muted,
-  },
-  emptyWidget: {
-    flex: 1,
-    justifyContent: "center",
-    gap: spacing[2],
   },
   pressed: {
     opacity: 0.82,

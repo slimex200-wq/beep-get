@@ -1,28 +1,18 @@
-import React from "react";
-import { render } from "@testing-library/react-native";
-import { CloseCircuitMap } from "@/components/CloseCircuitMap";
-import { FriendPulseCard } from "@/components/FriendPulseCard";
+import { existsSync, readFileSync } from "fs";
+import path from "path";
 
 describe("close friend empty states", () => {
-  it("does not render fake circuit friends when the close circuit is empty", () => {
-    const { getByLabelText, toJSON } = render(
-      <CloseCircuitMap friends={[]} capacity={4} onInvite={jest.fn()} />,
-    );
-    const output = JSON.stringify(toJSON());
+  it("drops the CloseCircuitMap so the friend list is the single close-friend surface", () => {
+    expect(existsSync(path.join(process.cwd(), "src/components/CloseCircuitMap.tsx"))).toBe(false);
 
-    expect(output).toContain("No close friends yet");
-    expect(output).not.toContain("BEEP");
-    expect(output).not.toContain("BLINK");
-    expect(getByLabelText("Invite Friend")).toBeTruthy();
-  });
+    const peopleSource = readFileSync(path.join(process.cwd(), "src/screens/PeopleScreen.tsx"), "utf8");
+    expect(peopleSource).not.toContain("CloseCircuitMap");
+    expect(peopleSource).not.toContain("CircuitFriend");
+    expect(peopleSource).not.toContain("No close friends yet");
 
-  it("does not render fake friend pulses when no pulse items exist", () => {
-    const { toJSON } = render(<FriendPulseCard title="Friend Pulse" items={[]} />);
-    const output = JSON.stringify(toJSON());
-
-    expect(output).toContain("Friend Pulse");
-    expect(output).toContain("No close-friend pulses yet");
-    expect(output).not.toContain("now - 8282");
-    expect(output).not.toContain("2m - BLINK");
+    // The friend-list empty state stays: mono label + Korean helper copy.
+    expect(peopleSource).toContain("NO FRIENDS YET");
+    expect(peopleSource).toContain("NO MATCHES");
+    expect(peopleSource).toContain("Beep ID로 친구를 추가해 보세요.");
   });
 });

@@ -106,7 +106,7 @@ export function ActionButton({
         styles.base,
         flex && styles.flex,
         variant === 'light' && { backgroundColor: palette.chip, borderColor: palette.rule },
-        variant === 'dark' && [styles.liquidPrimary, { backgroundColor: palette.primary, borderColor: '#C9B4E4' }],
+        variant === 'dark' && [styles.liquidPrimary, { backgroundColor: palette.primary, borderColor: palette.primary }],
         variant === 'ghost' && { backgroundColor: colors.transparent, borderColor: palette.rule },
         variant === 'danger' && styles.danger,
         variant === 'success' && styles.success,
@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
     borderColor: colors.redDeep,
   },
   success: {
-    backgroundColor: colors.lcd,
-    borderColor: colors.green,
+    backgroundColor: colors.paper,
+    borderColor: colors.paperLine,
   },
   kakao: {
     backgroundColor: '#FEE500',

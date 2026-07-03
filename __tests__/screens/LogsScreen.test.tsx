@@ -37,11 +37,22 @@ describe("LogsScreen saved slips surface", () => {
     expect(blinkMemoriesSource).not.toContain("blink-person-model-strip");
     expect(source).toContain("Refresh");
     expect(source).toContain("Saved slips remain in this private list.");
-    expect(source).toContain("KotlinHeader");
-    expect(source).toContain("MockupSection");
-    expect(source).toContain("MockupCard");
-    expect(source).toContain("XLineIcon");
-    expect(source).toContain("AppSurface backgroundColor={palette.background}");
+    expect(source).toContain('from "@/ui/primitives"');
+    expect(source).toContain('title="Saved Slips"');
+    expect(source).toContain("<SectionLabel>");
+    expect(source).toContain("<Card");
+    expect(source).toContain("<ListRow");
+    // Drill-in from a My chevron row: pushed with a back affordance; refresh stays headerRight.
+    expect(source).toContain('backAccessibilityLabel="Back to My"');
+    expect(source).toContain("onBack={closeToMy}");
+    expect(source).not.toContain("XLineIcon");
+    expect(source).toContain('accessibilityLabel="Refresh saved slips"');
+    expect(source).not.toContain("KotlinMockupUI");
+    expect(source).not.toContain("KotlinHeader");
+    expect(source).not.toContain("MockupCard");
+    expect(source).not.toContain("MockupSection");
+    expect(source).not.toContain("TodayMockupChrome");
+    expect(source).not.toContain("ActionButton");
     expect(source).not.toContain("BEEP-GET LOG");
     expect(source).not.toContain("SLIP LEDGER");
     expect(source).not.toContain("REFRESH LOG");
@@ -51,7 +62,7 @@ describe("LogsScreen saved slips surface", () => {
   it("keeps one refresh path instead of duplicating refresh in the body", () => {
     const source = readFileSync(path.join(process.cwd(), "src/screens/LogsScreen.tsx"), "utf8");
 
-    expect((source.match(/label: "Refresh"/g) ?? []).length).toBe(1);
+    expect((source.match(/accessibilityLabel="Refresh saved slips"/g) ?? []).length).toBe(1);
     expect(source).not.toContain('label="Refresh"');
     expect(source).not.toContain("Saved Controls");
   });

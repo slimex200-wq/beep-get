@@ -1,16 +1,23 @@
 import React, { useState } from "react";
-import { Alert, Linking, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppSurface } from "@/components/AppSurface";
-import { Avatar, KotlinHeader, MockupCard, MockupSection, StatusPill } from "@/components/KotlinMockupUI";
-import { XLineIcon } from "@/components/MockupLineIcons";
-import { AppearancePreferenceCard } from "@/components/settings/AppearancePreferenceCard";
-import { SettingsActionRow } from "@/components/settings/SettingsActionRow";
-import { spacing } from "@/design/tokens";
+import { Card, ListRow, RowChevron, Screen, SectionLabel, Segmented } from "@/ui/primitives";
+
+import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { useThemeStore } from "@/stores/themeStore";
+import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import { generateShareText } from "@/services/contactService";
 import { deleteAccount } from "@/services/accountService";
@@ -23,6 +30,12 @@ import { useCollectionStore } from "@/stores/collectionStore";
 import { useSkinStore } from "@/stores/skinStore";
 import { getAvatarImageSource, getAvatarLabel } from "@/lib/avatarSource";
 import { accountDeletionUrl, privacyPolicyUrl, supportUrl } from "@/lib/releaseFlags";
+
+const APPEARANCE_OPTIONS: readonly { readonly key: ThemePreference; readonly label: string }[] = [
+  { key: "system", label: "System" },
+  { key: "light", label: "Light" },
+  { key: "dark", label: "Dark" },
+] as const;
 
 function resetUserStores() {
   useMessageStore.getState().reset();
@@ -78,7 +91,11 @@ export function SettingsScreen() {
       resetUserStores();
       setSession(null);
     } catch (err: unknown) {
-      Alert.alert("Logout failed", getErrorMessage(err));
+      if (err instanceof Error) {
+        Alert.alert("Logout failed", getErrorMessage(err));
+        return;
+      }
+      throw err;
     } finally {
       setBusy(false);
     }
@@ -107,90 +124,144 @@ export function SettingsScreen() {
       setSession(null);
       Alert.alert("Account deleted", "Your BEEP-GET account deletion has been completed.");
     } catch (err: unknown) {
-      Alert.alert("Delete failed", getErrorMessage(err, "Try again or use the web request link."));
+      if (err instanceof Error) {
+        Alert.alert("Delete failed", getErrorMessage(err, "Try again or use the web request link."));
+        return;
+      }
+      throw err;
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <AppSurface backgroundColor={palette.background}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader
-          title="Settings"
-          centered
-          avatarLabel={avatarLabel}
-          avatarSource={avatarSource}
-          actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close account settings", onPress: closeToMy }]}
+    <Screen
+      title="Account"
+      onBack={closeToMy}
+      backAccessibilityLabel="Back to My"
+    >
+      <SectionLabel>My Beep ID</SectionLabel>
+      <Card style={styles.identityCard}>
+        <IdentityAvatar label={avatarLabel} source={avatarSource} />
+        <View style={styles.identityCopy}>
+          <Text style={[styles.name, { color: palette.text }]}>{displayName}</Text>
+          <Text selectable style={[styles.handle, { color: palette.muted }]}>
+            {beepHandle}
+          </Text>
+        </View>
+        <StatusChip label={profile?.status_icon ?? "online"} />
+      </Card>
+
+      <SectionLabel>Account Actions</SectionLabel>
+      <Card>
+        <ListRow
+          title="Share Beep ID"
+          meta={beepHandle}
+          metaMono
+          right={<RowChevron />}
+          onPress={() => {
+            if (!profile || busy) return;
+            void shareBeepId();
+          }}
         />
+        <ListRow
+          title="Log Out"
+          meta="Leave this device"
+          right={<RowChevron />}
+          isLast
+          onPress={() => {
+            if (busy) return;
+            void logout();
+          }}
+        />
+      </Card>
 
-        <MockupSection label="My Beep ID" style={styles.sectionInset} />
-        <MockupCard style={styles.identityCard}>
-          <Avatar label={avatarLabel} source={avatarSource} size={46} />
-          <View style={styles.identityCopy}>
-            <Text style={[styles.name, { color: palette.text }]}>{displayName}</Text>
-            <Text selectable style={[styles.handle, { color: palette.muted }]}>
-              {beepHandle}
-            </Text>
-          </View>
-          <StatusPill label={profile?.status_icon ?? "online"} tone="green" />
-        </MockupCard>
-
-        <MockupSection label="Account Actions" style={styles.sectionInset} />
-        <MockupCard style={styles.listCard}>
-          <SettingsActionRow
-            label="Share Beep ID"
-            detail={beepHandle}
-            onPress={shareBeepId}
-            disabled={!profile || busy}
-          />
-          <SettingsActionRow
-            label="Log Out"
-            detail="Leave this device"
-            onPress={logout}
-            disabled={busy}
-            isLast
-          />
-        </MockupCard>
-
-        <MockupSection label="Appearance" hint="System / Light / Dark" style={styles.sectionInset} />
-        <AppearancePreferenceCard
+      <SectionLabel>Appearance</SectionLabel>
+      <Card style={styles.appearanceCard}>
+        <Segmented
+          options={APPEARANCE_OPTIONS}
           value={themePreference}
           onChange={(preference) => void setThemePreference(preference)}
-          style={styles.cardInset}
         />
+      </Card>
 
-        <MockupSection label="Privacy & Data" style={styles.sectionInset} />
-        <MockupCard style={styles.listCard}>
-          <SettingsActionRow
-            label="Privacy Policy"
-            detail="Data handling"
-            onPress={() => openUrl(privacyPolicyUrl, "Privacy policy")}
-            disabled={busy}
-          />
-          <SettingsActionRow
-            label="Support"
-            detail="Help and contact"
-            onPress={() => openUrl(supportUrl, "Support")}
-            disabled={busy}
-          />
-          <SettingsActionRow
-            label="Web Delete Request"
-            detail="Fallback form"
-            onPress={() => openUrl(accountDeletionUrl, "Account deletion")}
-            disabled={busy}
-          />
-          <SettingsActionRow
-            label={busy ? "Deleting" : "Delete Account"}
-            detail="Remove profile and private data"
-            tone="danger"
-            onPress={confirmDeleteAccount}
-            disabled={busy}
-            isLast
-          />
-        </MockupCard>
-      </ScrollView>
-    </AppSurface>
+      <SectionLabel>Privacy & Data</SectionLabel>
+      <Card>
+        <ListRow
+          title="Privacy Policy"
+          meta="Data handling"
+          right={<RowChevron />}
+          onPress={() => {
+            if (busy) return;
+            void openUrl(privacyPolicyUrl, "Privacy policy");
+          }}
+        />
+        <ListRow
+          title="Support"
+          meta="Help and contact"
+          right={<RowChevron />}
+          onPress={() => {
+            if (busy) return;
+            void openUrl(supportUrl, "Support");
+          }}
+        />
+        <ListRow
+          title="Web Delete Request"
+          meta="Fallback form"
+          right={<RowChevron />}
+          onPress={() => {
+            if (busy) return;
+            void openUrl(accountDeletionUrl, "Account deletion");
+          }}
+        />
+        <ListRow
+          title={busy ? "Deleting" : "Delete Account"}
+          meta="Remove profile and private data"
+          right={<RowChevron />}
+          isLast
+          onPress={() => {
+            if (busy) return;
+            confirmDeleteAccount();
+          }}
+        />
+      </Card>
+    </Screen>
+  );
+}
+
+function IdentityAvatar({
+  label,
+  source,
+}: {
+  readonly label: string;
+  readonly source?: ImageSourcePropType;
+}) {
+  const palette = useAppPalette();
+  return (
+    <View
+      style={[
+        styles.avatar,
+        { backgroundColor: palette.input, borderColor: palette.ruleStrong },
+      ]}
+    >
+      {source ? (
+        <Image source={source} style={styles.avatarImage} resizeMode="cover" />
+      ) : (
+        <Text style={[styles.avatarLabel, { color: palette.text }]}>{label.slice(0, 2)}</Text>
+      )}
+    </View>
+  );
+}
+
+function StatusChip({ label }: { readonly label: string }) {
+  const palette = useAppPalette();
+  return (
+    <View style={[styles.statusChip, { backgroundColor: palette.chip }]}>
+      <View style={[styles.statusChipDot, { backgroundColor: palette.good }]} />
+      <Text numberOfLines={1} style={[styles.statusChipText, { color: palette.muted }]}>
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -199,24 +270,17 @@ function getErrorMessage(err: unknown, fallback = "Try again.") {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 96,
-    gap: spacing[4],
-  },
-  sectionInset: {
-    marginHorizontal: spacing[5],
-  },
   identityCard: {
     minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[4],
-    marginHorizontal: spacing[5],
-    padding: spacing[4],
+    padding: spacing[8],
   },
   identityCopy: {
     flex: 1,
     gap: spacing[1],
+    minWidth: 0,
   },
   name: {
     ...type.metaValue,
@@ -225,11 +289,44 @@ const styles = StyleSheet.create({
   handle: {
     ...type.bodyMuted,
   },
-  listCard: {
-    marginHorizontal: spacing[5],
-    paddingVertical: spacing[2],
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
-  cardInset: {
-    marginHorizontal: spacing[5],
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  avatarLabel: {
+    ...type.metaValue,
+    fontSize: 12,
+  },
+  statusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+    minHeight: 26,
+    paddingHorizontal: spacing[4],
+    borderRadius: radius.pill,
+  },
+  statusChipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusChipText: {
+    ...type.tinyMono,
+  },
+  appearanceCard: {
+    padding: spacing[4],
+  },
+  pressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
   },
 });

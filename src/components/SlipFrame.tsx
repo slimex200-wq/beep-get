@@ -60,15 +60,15 @@ const styles = StyleSheet.create({
   },
   default: {},
   success: {
-    backgroundColor: colors.lcd,
-    borderColor: 'rgba(111,135,98,0.55)',
+    backgroundColor: colors.paper,
+    borderColor: colors.paperLine,
   },
   danger: {
     backgroundColor: '#F7E6E1',
     borderColor: 'rgba(158,33,21,0.55)',
   },
   lcd: {
-    backgroundColor: colors.lcd,
+    backgroundColor: colors.paperWarm,
   },
   titleRow: {
     minHeight: 24,

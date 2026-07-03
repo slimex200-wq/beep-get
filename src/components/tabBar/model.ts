@@ -1,19 +1,17 @@
+import type React from "react";
 import {
-  BookmarkLineIcon,
   FriendsGroupIcon,
-  GearLineIcon,
-  HashLineIcon,
   MyUserIcon,
   SendPlaneIcon,
   TodayCalendarIcon,
 } from "@/components/MockupLineIcons";
-import type { SecondaryAction, TabVisual } from "@/components/liquidTabBar/types";
 
-export const secondaryActions: readonly SecondaryAction[] = [
-  { key: "saved", label: "SAVED", screen: "Logs", Icon: BookmarkLineIcon },
-  { key: "settings", label: "SETTINGS", screen: "Account", Icon: GearLineIcon },
-  { key: "codes", label: "CODES", screen: "Dictionary", Icon: HashLineIcon },
-] as const;
+export type IconComponent = (props: { readonly color?: string }) => React.ReactNode;
+
+export type TabVisual = {
+  readonly label: string;
+  readonly Icon: IconComponent;
+};
 
 export const tabLabels = {
   Today: "TODAY",

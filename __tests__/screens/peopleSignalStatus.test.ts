@@ -38,17 +38,17 @@ describe("peopleSignalStatus", () => {
     expect(getFriendSignalSummary(summaries, "friend-blink")).toEqual({
       badgeText: "BLINK",
       circuitStatus: "BLINK",
-      rowStatus: "Received Blink 486 - 11:00",
+      rowStatus: "Blink 받음 · 486 · 11:00",
     });
     expect(getFriendSignalSummary(summaries, "friend-beep")).toEqual({
       badgeText: "BEEP",
       circuitStatus: "BEEP",
-      rowStatus: "Last Beep 8282 - 11:00",
+      rowStatus: "마지막 Beep · 8282 · 11:00",
     });
     expect(getFriendSignalSummary(summaries, "quiet-friend")).toEqual({
       badgeText: "quiet",
       circuitStatus: "quiet",
-      rowStatus: "No signals yet",
+      rowStatus: "조용해요",
     });
   });
 });

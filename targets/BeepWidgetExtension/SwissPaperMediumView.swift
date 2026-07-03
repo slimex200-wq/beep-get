@@ -29,29 +29,18 @@ struct SwissPaperMediumView: View {
                     numberBlock
                         .padding(.leading, 16)
                         .padding(.trailing, 12)
-                        .frame(width: max(CGFloat(96), min(CGFloat(116), proxy.size.width * 0.30)), alignment: .leading)
+                        .frame(width: max(CGFloat(86), min(CGFloat(98), proxy.size.width * 0.27)), alignment: .leading)
                         .frame(maxHeight: .infinity, alignment: .leading)
                         .layoutPriority(1)
                         .overlay(alignment: .trailing) { vDivider }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("SIGNAL SLOTS")
-                                .font(.custom(skin.monoFont, size: 9))
-                                .tracking(1.2)
-                                .foregroundColor(skin.mute)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.75)
-
-                            Spacer(minLength: 8)
-
-                            Text(statusText)
-                                .font(.custom(skin.monoBoldFont, size: 10))
-                                .tracking(1.1)
-                                .foregroundColor(newCount > 0 || isNew ? skin.accent : skin.mute)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
+                        Text("SIGNAL SLOTS")
+                            .font(.custom(skin.monoFont, size: 9))
+                            .tracking(1.2)
+                            .foregroundColor(skin.mute)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
 
                         Spacer(minLength: 0)
 
@@ -175,7 +164,7 @@ struct SwissPaperMediumView: View {
     }
 
     private func teaserStripHeight(for widgetHeight: CGFloat) -> CGFloat {
-        min(CGFloat(56), max(CGFloat(38), widgetHeight * 0.34))
+        min(CGFloat(72), max(CGFloat(50), widgetHeight * 0.42))
     }
 
     private var headMetaText: String {
@@ -183,13 +172,6 @@ struct SwissPaperMediumView: View {
             return "NO.\(indexNo) OF \(totalReceived) · \(time)"
         }
         return "NO.\(indexNo) · \(time)"
-    }
-
-    private var statusText: String {
-        if newCount > 0 {
-            return "+\(newCount) NEW"
-        }
-        return isNew ? "NEW" : "READ"
     }
 
     private func actionURL(_ raw: String?) -> URL {

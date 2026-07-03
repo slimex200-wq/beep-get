@@ -1,12 +1,12 @@
 import React from "react";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useAuthStore } from "@/stores/authStore";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { useAppPalette } from "@/design/appTheme";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { LiquidExpandableTabBar } from "@/components/LiquidExpandableTabBar";
+import { FixedTabBar } from "@/components/FixedTabBar";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -41,7 +41,7 @@ export type MainTabParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createMaterialTopTabNavigator<MainTabParamList>();
 
 export const primaryTabLabels = ["TODAY", "SEND", "PEOPLE", "MY"] as const;
 
@@ -50,9 +50,11 @@ function MainTabs() {
 
   return (
     <Tab.Navigator
-      tabBar={(props) => <LiquidExpandableTabBar {...props} palette={themedPalette} />}
+      tabBarPosition="bottom"
+      tabBar={(props) => <FixedTabBar {...props} palette={themedPalette} />}
       screenOptions={{
-        headerShown: false,
+        swipeEnabled: true,
+        lazy: true,
       }}
     >
       <Tab.Screen name="Today" component={TodayScreen} />
@@ -86,21 +88,12 @@ export function RootNavigator() {
             name="ReplyRoom"
             component={SlipReplyRoomScreen}
           />
-          <Stack.Screen
-            name="Logs"
-            component={LogsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Account"
-            component={SettingsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Dictionary"
-            component={DictionaryScreen}
-            options={{ presentation: "modal" }}
-          />
+          {/* Drill-in surfaces reached from chevron rows under My: pushed, not
+              modal, so the affordance (›) and the transition agree. Send stays
+              modal above because it is a compose task, not a drill-in. */}
+          <Stack.Screen name="Logs" component={LogsScreen} />
+          <Stack.Screen name="Account" component={SettingsScreen} />
+          <Stack.Screen name="Dictionary" component={DictionaryScreen} />
         </>
       )}
     </Stack.Navigator>
