@@ -37,6 +37,11 @@ describe("quickReplySlots", () => {
     expect(buildQuickReplySlots(entries)).toEqual(["Done", "8282", "집중중 🔕"]);
   });
 
+  it("falls back to sendable Signal Edition defaults, not the retired widget actions", () => {
+    expect(buildQuickReplySlots([])).toEqual(["OK", "지금가", "콜"]);
+    expect(buildQuickReplySlots([])).not.toContain("View");
+  });
+
   it("keeps legacy slot labels working before rows have widget metadata", () => {
     const entries = [
       {

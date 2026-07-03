@@ -5,7 +5,10 @@ export type QuickReplySlotEntry = {
   is_widget_slot?: boolean | null;
 };
 
-export const DEFAULT_QUICK_REPLY_SLOTS = ["Done", "8282", "View"];
+// Signal Edition defaults (2026-07-02): quick reply slots are sendable signal
+// codes. The old widget-action defaults ("Done"/"View") are retired — "Done"
+// survives only as a ReplyRoom/Today special-case for users who configured it.
+export const DEFAULT_QUICK_REPLY_SLOTS = ["OK", "지금가", "콜"];
 export const WIDGET_QUICK_REPLY_SLOT_LABEL_PREFIX = "Widget quick reply slot ";
 export const LEGACY_QUICK_REPLY_SLOT_LABEL_PREFIX = "Quick reply slot ";
 export const QUICK_REPLY_SLOT_LABEL_PREFIX = WIDGET_QUICK_REPLY_SLOT_LABEL_PREFIX;

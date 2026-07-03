@@ -46,6 +46,7 @@ export const styles = StyleSheet.create({
     gap: spacing[2],
   },
   medium: {
+    width: "100%",
     minHeight: 194,
     overflow: "hidden",
     borderWidth: 1,
@@ -97,6 +98,7 @@ export const styles = StyleSheet.create({
   },
   mediumSignalPane: {
     flex: 1,
+    minWidth: 0,
     gap: spacing[2],
     padding: spacing[3],
   },

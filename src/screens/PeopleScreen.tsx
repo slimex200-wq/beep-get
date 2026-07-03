@@ -7,7 +7,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -17,39 +16,33 @@ import {
 import * as Haptics from "expo-haptics";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors, radius, spacing } from "@/design/tokens";
+import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
-import { ActionButton } from "@/components/ActionButton";
-import { AppSurface } from "@/components/AppSurface";
-import { CloseCircuitMap, type CircuitFriend } from "@/components/CloseCircuitMap";
 import {
-  Avatar,
-  KotlinHeader,
-  MockupCard,
-  MockupSection,
-  NameDot,
-} from "@/components/KotlinMockupUI";
-import {
-  AddPersonLineIcon,
-  ChevronRightLineIcon,
-  CheckCircleLineIcon,
-  CopyLineIcon,
-  SearchLineIcon,
-} from "@/components/MockupLineIcons";
+  Card,
+  ListRow,
+  MonoValue,
+  PillButton,
+  PrimaryButton,
+  RowChevron,
+  Screen,
+  SectionLabel,
+  StatusDot,
+} from "@/ui/primitives";
+import { AddPersonLineIcon, SearchLineIcon } from "@/components/MockupLineIcons";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
 import {
   formatSlipTime,
   relationshipToSlipFriend,
   type SlipFriend,
 } from "@/lib/slipUiModels";
-import { getAvatarImageSource, getAvatarLabel } from "@/lib/avatarSource";
+import { getAvatarImageSource } from "@/lib/avatarSource";
 import { generateShareText } from "@/services/contactService";
 import { isValidBeepId } from "@/services/authService";
 import {
   buildFriendSignalSummaries,
   getFriendSignalSummary,
-  type FriendCircuitStatus,
 } from "@/screens/people/peopleSignalStatus";
 import { useAuthStore } from "@/stores/authStore";
 import { useFriendStore } from "@/stores/friendStore";
@@ -57,13 +50,7 @@ import { useMessageStore } from "@/stores/messageStore";
 
 const relationshipPresets = ["CLOSE FRIEND", "BEST", "ROOMMATE", "FAMILY"] as const;
 const blinkHeroImage = require("../../assets/brand/blink/blink-person-model-strip.png");
-const signalAccentByStatus: Record<FriendCircuitStatus, string> = {
-  BEEP: "#A56AD8",
-  BLINK: "#FF7FA3",
-  quiet: colors.greenDot,
-};
-const LIQUID_TAB_SAFE_BOTTOM = 176;
-const LIQUID_TAB_VIEWPORT_BOTTOM_INSET = 96;
+
 type RelationshipPreset = (typeof relationshipPresets)[number];
 
 export function PeopleScreen() {
@@ -79,10 +66,9 @@ export function PeopleScreen() {
   const [addDialogVisible, setAddDialogVisible] = useState(false);
   const [selectedPreset] = useState<RelationshipPreset>("CLOSE FRIEND");
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const profileAvatarSource = getAvatarImageSource(profile?.avatar_url);
-  const profileAvatarLabel = getAvatarLabel(profile, "ME");
-  const profileName = profile?.nickname?.trim() || "My Beep ID";
-  const profileHandle = profile?.beep_id?.trim() ? `@${profile.beep_id}` : "@--------";
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [focusedDialogInput, setFocusedDialogInput] = useState<"nickname" | "beepId" | null>(null);
+  const myBeepId = profile?.beep_id?.trim() || "--------";
 
   useEffect(() => {
     if (!profile) return;
@@ -140,14 +126,6 @@ export function PeopleScreen() {
     };
   }, [received, visibleFriends]);
   const signalSummaries = useMemo(() => buildFriendSignalSummaries(received), [received]);
-  const circuitFriends = useMemo<CircuitFriend[]>(() => {
-    return visibleFriends.slice(0, 4).map((friend) => ({
-      id: friend.id,
-      name: friend.name,
-      ...(friend.avatarUri ? { avatarUri: friend.avatarUri } : {}),
-      status: getFriendSignalSummary(signalSummaries, friend.id).circuitStatus,
-    }));
-  }, [signalSummaries, visibleFriends]);
 
   const pulse = () => {
     Haptics.selectionAsync().catch(() => undefined);
@@ -160,10 +138,10 @@ export function PeopleScreen() {
       setBeepId("");
       setDisplayName("");
       setAddDialogVisible(false);
-      Alert.alert("Friend added", "Close friend is ready.");
+      Alert.alert("친구 추가 완료", "가까운 친구가 준비됐어요.");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        Alert.alert("Add failed", err.message);
+        Alert.alert("추가 실패", err.message);
         return;
       }
       throw err;
@@ -195,155 +173,164 @@ export function PeopleScreen() {
     });
   };
 
-  return (
-    <AppSurface backgroundColor="#F8F6F1">
-      <View style={styles.scrollerFrame}>
-        <ScrollView
-          style={styles.scroller}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <KotlinHeader
-            title="People"
-            centered
-            avatarLabel={profileAvatarLabel}
-            avatarSource={profileAvatarSource}
-          />
-          <View style={[styles.searchPanel, { backgroundColor: palette.input }]}>
-            <SearchLineIcon color={palette.muted2} style={styles.searchIcon} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search ID or name"
-              placeholderTextColor={palette.muted2}
-              style={[styles.searchInput, { color: palette.text }]}
-            />
+  const addFriendSheet = (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.sheetOverlay}
+    >
+      <Pressable accessibilityLabel="Close add friend" onPress={() => setAddDialogVisible(false)} style={styles.sheetBackdrop} />
+      <View style={[styles.sheetPanel, Platform.OS === "web" && styles.webSheetPanel, { backgroundColor: palette.card, borderColor: palette.rule }]}>
+        <View style={[styles.grabBar, { backgroundColor: palette.rule }]} />
+        <Text style={[styles.dialogTitle, { color: palette.text }]}>친구 정보 입력</Text>
+        <Text style={[type.bodyMuted, { color: palette.muted }]}>8자리 Beep ID를 입력하세요. 닉네임은 선택이에요.</Text>
+        <TextInput
+          value={displayName}
+          onChangeText={setDisplayName}
+          onFocus={() => setFocusedDialogInput("nickname")}
+          onBlur={() => setFocusedDialogInput((current) => (current === "nickname" ? null : current))}
+          placeholder="닉네임 (선택)"
+          placeholderTextColor={palette.muted2}
+          style={[styles.dialogInput, { backgroundColor: palette.card, borderColor: focusedDialogInput === "nickname" ? palette.text : palette.rule, color: palette.text }]}
+        />
+        <TextInput
+          value={beepId}
+          onChangeText={(value) => setBeepId(value.replace(/[^0-9]/g, ""))}
+          onFocus={() => setFocusedDialogInput("beepId")}
+          onBlur={() => setFocusedDialogInput((current) => (current === "beepId" ? null : current))}
+          keyboardType="number-pad"
+          maxLength={8}
+          placeholder="8자리 Beep ID"
+          placeholderTextColor={palette.muted2}
+          style={[styles.dialogInput, { backgroundColor: palette.card, borderColor: focusedDialogInput === "beepId" ? palette.text : palette.rule, color: palette.text }]}
+        />
+        <View style={styles.dialogActions}>
+          <PillButton label="취소" onPress={() => setAddDialogVisible(false)} />
+          <View style={styles.dialogPrimary}>
+            <PrimaryButton label="추가" onPress={addByBeepId} disabled={!canAddFriend} />
           </View>
-
-        <MockupSection label="My Beep ID" hint="SHARE" />
-        <MockupCard style={styles.myIdCard}>
-          <Avatar label={profileAvatarLabel} source={profileAvatarSource} size={52} />
-          <View style={styles.myIdCopy}>
-            <Text style={[styles.friendName, { color: palette.text }]}>{profileName} - BEEP-{formatOwnNo(profile?.beep_id)}</Text>
-            <Text style={[styles.handle, { color: palette.muted }]}>{profileHandle}</Text>
-          </View>
-          <Pressable
-            accessibilityLabel={copyFeedback ? "Beep ID shared" : "Copy Beep ID"}
-            accessibilityRole="button"
-            disabled={!profile}
-            onPress={profile ? shareMyBeepId : undefined}
-            style={({ pressed }) => [styles.copyButton, { backgroundColor: palette.chip }, copyFeedback && styles.copyButtonDone, pressed && styles.pressed]}
-          >
-            {copyFeedback ? <CheckCircleLineIcon /> : <CopyLineIcon />}
-          </Pressable>
-        </MockupCard>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={openAddDialog}
-          style={({ pressed }) => [styles.addFriendCard, { backgroundColor: palette.card, borderColor: palette.rule }, pressed && styles.pressed]}
-        >
-          <View style={[styles.addIcon, { backgroundColor: palette.chip }]}>
-            <AddPersonLineIcon />
-          </View>
-          <View style={styles.addCopy}>
-                <Text style={[styles.friendName, { color: palette.text }]}>Invite Friend</Text>
-                <Text style={[type.bodyMuted, { color: palette.muted }]}>Close Circuit starts with a private Beep ID</Text>
-          </View>
-          <ChevronRightLineIcon />
-        </Pressable>
-
-        <MockupSection label="Close Circuit" hint={`${visibleFriends.length} PEOPLE`} />
-        <CloseCircuitMap friends={circuitFriends} capacity={4} onInvite={openAddDialog} />
-        <View style={styles.friendList}>
-          {visibleFriends.length > 0 ? (
-            visibleFriends.map((friend) => {
-              const summary = getFriendSignalSummary(signalSummaries, friend.id);
-              const sendMode = summary.circuitStatus === "BLINK" ? "blink" : "beep";
-              return (
-                <FriendRow
-                  key={friend.id}
-                  friend={friend}
-                  status={summary.rowStatus}
-                  accent={signalAccentByStatus[summary.circuitStatus]}
-                  avatarUri={friend.avatarUri}
-                  rightText={summary.badgeText}
-                  onPress={() => navigateSend(friend, sendMode)}
-                />
-              );
-            })
-          ) : (
-            <MockupCard soft style={styles.empty}>
-              <Text style={[type.metaValue, { color: palette.text }]}>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</Text>
-              <Text style={[type.bodyMuted, { color: palette.muted }]}>Add a friend by Beep ID to start sending slips.</Text>
-            </MockupCard>
-          )}
         </View>
+      </View>
+    </KeyboardAvoidingView>
+  );
 
-        {inboundFriends.length > 0 ? (
-          <>
-            <MockupSection label="Added You" hint={`${inboundFriends.length}`} />
-            <View style={styles.friendList}>
-              {inboundFriends.map((inbound) => (
-                <InboundRow
-                  key={inbound.id}
-                  name={inbound.owner.nickname?.trim() || inbound.owner.beep_id}
-                  beepId={inbound.owner.beep_id}
-                  avatarUri={inbound.owner.avatar_url}
-                  time={formatSlipTime(inbound.created_at)}
-                />
-              ))}
-            </View>
-          </>
-        ) : null}
+  return (
+    <Screen title="Friends" side={`${friends.length}명`}>
+      <View style={[styles.searchPanel, { backgroundColor: palette.card, borderColor: searchFocused ? palette.text : palette.rule }]}>
+        <SearchLineIcon color={palette.muted2} style={styles.searchIcon} />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          placeholder="ID나 이름 검색"
+          placeholderTextColor={palette.muted2}
+          style={[styles.searchInput, { color: palette.text }]}
+        />
+      </View>
 
-        {featuredBlink ? (
+      <SectionLabel>친구 추가</SectionLabel>
+      <View style={styles.stack}>
+        <Card style={styles.myIdCard}>
+          <View style={styles.myIdCopy}>
+            <Text style={[styles.myIdLabel, { color: palette.muted }]}>MY BEEP ID</Text>
+            <MonoValue style={styles.myIdCode}>{myBeepId}</MonoValue>
+          </View>
+          <PillButton
+            label={copyFeedback ? "복사됨" : "복사"}
+            accessibilityLabel={copyFeedback ? "Beep ID shared" : "Copy Beep ID"}
+            disabled={!profile}
+            onPress={shareMyBeepId}
+          />
+        </Card>
+
+        <Card>
+          <ListRow
+            left={
+              <View style={[styles.addIcon, { backgroundColor: palette.chip }]}>
+                <AddPersonLineIcon />
+              </View>
+            }
+            title="친구 추가"
+            meta="친구 Beep ID로 바로 추가"
+            right={<RowChevron />}
+            onPress={openAddDialog}
+            isLast
+          />
+        </Card>
+      </View>
+
+      <SectionLabel>가까운 친구</SectionLabel>
+      {visibleFriends.length > 0 ? (
+        <Card>
+          {visibleFriends.map((friend, index) => {
+            const summary = getFriendSignalSummary(signalSummaries, friend.id);
+            const sendMode = summary.circuitStatus === "BLINK" ? "blink" : "beep";
+            const hasNewSignal = summary.circuitStatus !== "quiet";
+            return (
+              <FriendRow
+                key={friend.id}
+                friend={friend}
+                status={summary.rowStatus}
+                hasNewSignal={hasNewSignal}
+                avatarUri={friend.avatarUri}
+                rightText={summary.badgeText}
+                isLast={index === visibleFriends.length - 1}
+                onPress={() => navigateSend(friend, sendMode)}
+              />
+            );
+          })}
+        </Card>
+      ) : (
+        <Card style={styles.empty}>
+          <MonoValue>{searchQuery ? "NO MATCHES" : "NO FRIENDS YET"}</MonoValue>
+          <Text style={[type.bodyMuted, { color: palette.muted }]}>Beep ID로 친구를 추가해 보세요.</Text>
+        </Card>
+      )}
+
+      {inboundFriends.length > 0 ? (
+        <>
+          <SectionLabel>나를 추가한 친구</SectionLabel>
+          <Card>
+            {inboundFriends.map((inbound, index) => (
+              <InboundRow
+                key={inbound.id}
+                name={inbound.owner.nickname?.trim() || inbound.owner.beep_id}
+                beepId={inbound.owner.beep_id}
+                avatarUri={inbound.owner.avatar_url}
+                time={formatSlipTime(inbound.created_at)}
+                isLast={index === inboundFriends.length - 1}
+              />
+            ))}
+          </Card>
+        </>
+      ) : null}
+
+      {featuredBlink ? (
+        <>
+          <SectionLabel>최근 Blink</SectionLabel>
           <FavoriteSignalCard
             friend={featuredBlink.friend}
             code={featuredBlink.code}
             imageUri={featuredBlink.imageUri}
-            subtitle={`${featuredBlink.time} received Blink - code ${featuredBlink.code}`}
+            subtitle={`Blink 받음 · ${featuredBlink.code} · ${featuredBlink.time}`}
             onSend={() => navigateSend(featuredBlink.friend, "blink", featuredBlink.code)}
           />
-        ) : null}
-        </ScrollView>
-      </View>
+        </>
+      ) : null}
 
-      <Modal transparent visible={addDialogVisible} animationType="fade" onRequestClose={() => setAddDialogVisible(false)}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.dialogOverlay}
-        >
-          <View style={[styles.dialog, { backgroundColor: palette.card }]}>
-            <Text style={[styles.dialogTitle, { color: palette.text }]}>Configure Friend Info</Text>
-            <Text style={[type.bodyMuted, { color: palette.muted }]}>Enter an 8-digit Beep ID. Nickname is optional.</Text>
-            <TextInput
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Optional nickname"
-              placeholderTextColor={palette.muted2}
-              style={[styles.dialogInput, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
-            />
-            <TextInput
-              value={beepId}
-              onChangeText={(value) => setBeepId(value.replace(/[^0-9]/g, ""))}
-              keyboardType="number-pad"
-              maxLength={8}
-              placeholder="8-digit Beep ID"
-              placeholderTextColor={palette.muted2}
-              style={[styles.dialogInput, { backgroundColor: palette.input, borderColor: palette.rule, color: palette.text }]}
-            />
-            <View style={styles.dialogActions}>
-              <ActionButton label="Cancel" variant="ghost" onPress={() => setAddDialogVisible(false)} />
-              <ActionButton label="Add" variant="dark" onPress={addByBeepId} disabled={!canAddFriend} />
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </AppSurface>
+      {Platform.OS === "web" ? (
+        addDialogVisible ? <View style={styles.webSheetHost}>{addFriendSheet}</View> : null
+      ) : (
+        <Modal transparent visible={addDialogVisible} animationType="slide" onRequestClose={() => setAddDialogVisible(false)}>
+          {addFriendSheet}
+        </Modal>
+      )}
+    </Screen>
   );
 }
 
+// On-media surface: FavoriteSignalCard renders text and scrims over a user photo,
+// so literal overlay/white colors are allowed here (not themable chrome).
 function FavoriteSignalCard({
   friend,
   code,
@@ -375,11 +362,11 @@ function FavoriteSignalCard({
           </View>
         </View>
         <View style={styles.favoriteCopy}>
-          <Text style={styles.favoriteTitle}>Latest Blink from {friend.name}</Text>
+          <Text style={styles.favoriteTitle}>{friend.name}의 최근 Blink</Text>
           <Text style={styles.favoriteSubtitle}>{subtitle}</Text>
         </View>
         <View style={styles.sendBlinkButton}>
-          <Text style={styles.sendBlinkText}>Send Blink</Text>
+          <Text style={styles.sendBlinkText}>SEND BLINK</Text>
         </View>
       </ImageBackground>
     </Pressable>
@@ -387,9 +374,10 @@ function FavoriteSignalCard({
 }
 
 function NewBadge() {
+  const palette = useAppPalette();
   return (
-    <View style={styles.newBadge}>
-      <Text style={styles.newBadgeText}>NEW</Text>
+    <View style={[styles.newBadge, { backgroundColor: palette.sigSoft }]}>
+      <Text style={[styles.newBadgeText, { color: palette.sig }]}>NEW</Text>
     </View>
   );
 }
@@ -397,39 +385,47 @@ function NewBadge() {
 function FriendRow({
   friend,
   status,
-  accent,
-  online,
+  hasNewSignal,
   rightText,
   onPress,
   avatarUri,
+  isLast,
 }: {
   friend: SlipFriend;
   status: string;
-  accent: string;
-  online?: boolean;
+  hasNewSignal: boolean;
   rightText?: string;
   avatarUri?: string;
+  isLast: boolean;
   onPress: () => void;
 }) {
   const palette = useAppPalette();
   const avatarSource = getAvatarImageSource(avatarUri);
 
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }, pressed && styles.pressed]}>
-      <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
-        {avatarSource ? (
-          <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
-        ) : (
-          <Text style={[styles.friendInitial, { color: palette.text }]}>{friend.name.slice(0, 1)}</Text>
-        )}
-        <NameDot color={accent} />
-      </View>
-      <View style={styles.friendCopy}>
-        <Text style={[styles.friendName, { color: palette.text }]}>{friend.name}</Text>
-        <Text style={[styles.friendStatus, { color: palette.muted }]}>{status}</Text>
-      </View>
-      {online ? <View style={styles.onlineDot} /> : <Text style={[styles.timeText, { color: palette.text }]}>{rightText ?? friend.no}</Text>}
-    </Pressable>
+    <ListRow
+      left={
+        <View style={styles.avatarWrap}>
+          <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
+            {avatarSource ? (
+              <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
+            ) : (
+              <Text style={[styles.friendInitial, { color: palette.text }]}>{friend.name.slice(0, 1)}</Text>
+            )}
+          </View>
+          <StatusDot kind={hasNewSignal ? "new" : "on"} />
+        </View>
+      }
+      title={friend.name}
+      meta={status}
+      right={
+        <MonoValue sig={hasNewSignal} dim={!hasNewSignal}>
+          {rightText ?? friend.no}
+        </MonoValue>
+      }
+      onPress={onPress}
+      isLast={isLast}
+    />
   );
 }
 
@@ -438,65 +434,50 @@ function InboundRow({
   beepId,
   time,
   avatarUri,
+  isLast,
 }: {
   name: string;
   beepId: string;
   time: string;
   avatarUri?: string | null;
+  isLast: boolean;
 }) {
   const palette = useAppPalette();
   const avatarSource = getAvatarImageSource(avatarUri);
 
   return (
-    <View style={[styles.friendRow, { backgroundColor: palette.card, borderColor: palette.rule }]}>
-      <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
-        {avatarSource ? (
-          <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
-        ) : (
-          <Text style={[styles.friendInitial, { color: palette.text }]}>{name.slice(0, 1)}</Text>
-        )}
-      </View>
-      <View style={styles.friendCopy}>
-        <Text style={[styles.friendName, { color: palette.text }]}>{name}</Text>
-        <Text style={[styles.friendStatus, { color: palette.muted }]}>added you - {time}</Text>
-      </View>
-      <Text style={[styles.timeText, { color: palette.text }]}>{beepId.slice(-2)}</Text>
-    </View>
+    <ListRow
+      left={
+        <View style={[styles.friendAvatar, { backgroundColor: palette.input }]}>
+          {avatarSource ? (
+            <Image source={avatarSource} style={styles.friendAvatarImage} resizeMode="cover" />
+          ) : (
+            <Text style={[styles.friendInitial, { color: palette.text }]}>{name.slice(0, 1)}</Text>
+          )}
+        </View>
+      }
+      title={name}
+      meta={`나를 추가했어요 · ${time}`}
+      right={<MonoValue>{beepId.slice(-2)}</MonoValue>}
+      isLast={isLast}
+    />
   );
 }
 
-function formatOwnNo(beepId?: string | null) {
-  const digits = beepId?.replace(/\D/g, "");
-  return digits && digits.length >= 2 ? digits.slice(-2) : "--";
-}
-
 function reportError(err: unknown) {
-  const message = err instanceof Error ? err.message : "Unexpected error";
+  const message = err instanceof Error ? err.message : "알 수 없는 오류";
   Alert.alert("BEEP-GET", message);
 }
 
 const styles = StyleSheet.create({
-  scrollerFrame: {
-    flex: 1,
-    marginBottom: LIQUID_TAB_VIEWPORT_BOTTOM_INSET,
-    overflow: "hidden",
-  },
-  scroller: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingBottom: LIQUID_TAB_SAFE_BOTTOM,
-    gap: spacing[4],
-  },
   searchPanel: {
     minHeight: 50,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[2],
     paddingHorizontal: spacing[4],
-    borderRadius: 12,
-    backgroundColor: "#F0EFEB",
+    borderWidth: 1,
+    borderRadius: radius.pill,
   },
   searchIcon: {
     width: 22,
@@ -507,85 +488,51 @@ const styles = StyleSheet.create({
     minHeight: 38,
     ...type.body,
     fontSize: 12,
-    color: colors.ink,
+  },
+  stack: {
+    gap: spacing[4],
   },
   myIdCard: {
     minHeight: 74,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing[4],
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    borderRadius: 12,
-  },
-  myIdAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    paddingHorizontal: spacing[6],
+    paddingVertical: spacing[5],
   },
   myIdCopy: {
     flex: 1,
     gap: spacing[1],
   },
-  handle: {
-    ...type.bodyMuted,
-    color: colors.muted,
+  myIdLabel: {
+    ...type.tinyMono,
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: 1.2,
   },
-  copyButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#F2F0EC",
-  },
-  copyButtonDone: {
-    backgroundColor: colors.paperDeep,
-  },
-  addFriendCard: {
-    minHeight: 70,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.10)",
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+  myIdCode: {
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -1,
+    fontVariant: ["tabular-nums"],
   },
   addIcon: {
     width: 46,
     height: 46,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 23,
-    backgroundColor: "#F2F0EC",
+    borderRadius: radius.pill,
   },
-  addCopy: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  friendList: {
-    gap: spacing[3],
-  },
-  friendRow: {
-    minHeight: 68,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[4],
-    padding: spacing[4],
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+  avatarWrap: {
+    width: 42,
+    height: 42,
   },
   friendAvatar: {
     width: 42,
     height: 42,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 21,
-    backgroundColor: colors.paperDeep,
+    borderRadius: radius.pill,
     overflow: "hidden",
   },
   friendAvatarImage: {
@@ -596,30 +543,16 @@ const styles = StyleSheet.create({
     ...type.metaValue,
     fontSize: 13,
   },
-  friendCopy: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  friendName: {
-    ...type.metaValue,
-    fontSize: 12,
-  },
-  friendStatus: {
-    ...type.bodyMuted,
-  },
-  timeText: {
-    ...type.tinyMono,
-    color: colors.ink,
-  },
-  onlineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#16C784",
+  empty: {
+    minHeight: 112,
+    justifyContent: "center",
+    gap: spacing[2],
+    padding: spacing[8],
   },
   favoritePressable: {
-    borderRadius: 12,
+    borderRadius: 22,
   },
+  /* --- on-media hero card: literal colors below are on-image only --- */
   favoriteCard: {
     minHeight: 168,
     justifyContent: "space-between",
@@ -627,11 +560,11 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderWidth: 1,
     borderColor: "rgba(10,10,10,0.10)",
-    borderRadius: 12,
-    backgroundColor: colors.ink,
+    borderRadius: 22,
+    backgroundColor: "#0A0A0A",
   },
   favoriteImage: {
-    borderRadius: 12,
+    borderRadius: 22,
   },
   favoriteOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -676,11 +609,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing[4],
     borderRadius: radius.pill,
-    backgroundColor: "#FFF1EE",
   },
   newBadgeText: {
     ...type.tinyMono,
-    color: colors.red,
   },
   sendBlinkButton: {
     position: "relative",
@@ -694,31 +625,44 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(10,10,10,0.88)",
   },
   sendBlinkText: {
-    ...type.button,
+    ...type.buttonMono,
     color: "#FFFFFF",
     fontSize: 13,
-  },
-  empty: {
-    minHeight: 112,
-    justifyContent: "center",
-    gap: spacing[2],
-    padding: spacing[5],
   },
   pressed: {
     opacity: 0.82,
     transform: [{ translateY: 1 }],
   },
-  dialogOverlay: {
+  sheetOverlay: {
     flex: 1,
-    justifyContent: "center",
-    padding: spacing[8],
-    backgroundColor: "rgba(0,0,0,0.58)",
+    justifyContent: "flex-end",
+    // functional scrim, not a palette color
+    backgroundColor: "rgba(0,0,0,0.52)",
   },
-  dialog: {
+  webSheetHost: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    elevation: 20,
+  },
+  webSheetPanel: {
+    marginBottom: 86,
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheetPanel: {
     gap: spacing[5],
     padding: spacing[6],
-    borderRadius: 14,
-    backgroundColor: "#F8F6F1",
+    paddingBottom: spacing[8],
+    borderWidth: 1,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  grabBar: {
+    alignSelf: "center",
+    width: 44,
+    height: 4,
+    borderRadius: radius.pill,
   },
   dialogTitle: {
     ...type.screenTitle,
@@ -728,16 +672,16 @@ const styles = StyleSheet.create({
   dialogInput: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: "rgba(10,10,10,0.12)",
-    borderRadius: radius.control,
-    paddingHorizontal: spacing[4],
-    backgroundColor: "#FFFFFF",
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing[5],
     ...type.body,
-    color: colors.ink,
   },
   dialogActions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    alignItems: "center",
     gap: spacing[3],
+  },
+  dialogPrimary: {
+    flex: 1,
   },
 });

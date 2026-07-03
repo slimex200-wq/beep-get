@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppSurface } from "@/components/AppSurface";
-import { ActionButton } from "@/components/ActionButton";
-import { KotlinHeader, MockupCard, MockupSection } from "@/components/KotlinMockupUI";
-import { XLineIcon } from "@/components/MockupLineIcons";
+import { Card, ListRow, MonoValue, PillButton, PrimaryButton, Screen, SectionLabel } from "@/ui/primitives";
+
 import { radius, spacing } from "@/design/tokens";
 import { type } from "@/design/typography";
 import { useAppPalette } from "@/design/appTheme";
@@ -74,86 +72,82 @@ export function DictionaryScreen() {
     : "Enter both a signal code and private meaning to register.";
 
   return (
-    <AppSurface backgroundColor="#F8F6F1">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <KotlinHeader
-          title="Signal Codes"
-          centered
-          showAvatar={false}
-          actions={[{ label: "Close", icon: <XLineIcon />, accessibilityLabel: "Close dictionary", onPress: close }]}
-        />
-
-        <MockupSection label="Signal Code Dictionary" hint="Private meanings" style={styles.sectionInset} />
-        <MockupCard style={styles.formCard}>
-          <Text style={[styles.formHeading, { color: palette.muted }]}>Add Signal Code</Text>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: palette.muted }]}>SIGNAL CODE</Text>
-            <TextInput
-              style={[styles.codeInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-              value={code}
-              onChangeText={setCode}
-              placeholder="8282 / OK"
-              placeholderTextColor={palette.muted2}
-              autoCapitalize="none"
-              maxLength={MAX_CODE_LENGTH}
-            />
-          </View>
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.fieldLabel, { color: palette.muted }]}>PRIVATE MEANING</Text>
-            <TextInput
-              style={[styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
-              value={meaning}
-              onChangeText={setMeaning}
-              placeholder="Meaning, e.g. Focus mode"
-              placeholderTextColor={palette.muted2}
-              maxLength={50}
-            />
-          </View>
-          <Text style={[styles.requirementText, { color: canRegister ? palette.muted : palette.muted2 }]}>
-            {registerRequirementCopy}
-          </Text>
-          <ActionButton
-            label={loading ? "Saving" : "Register Signal Code"}
-            variant="dark"
-            onPress={handleAdd}
-            accessibilityHint={registerRequirementCopy}
-            disabled={!canRegister || loading}
+    <Screen
+      title="Signal Codes"
+      onBack={close}
+      backAccessibilityLabel="Back to My"
+    >
+      <SectionLabel>Signal Code Dictionary</SectionLabel>
+      <Card style={styles.formCard}>
+        <Text style={[styles.formHeading, { color: palette.muted }]}>Add Signal Code</Text>
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.fieldLabel, { color: palette.muted }]}>SIGNAL CODE</Text>
+          <TextInput
+            style={[styles.codeInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
+            value={code}
+            onChangeText={setCode}
+            placeholder="8282 / OK"
+            placeholderTextColor={palette.muted2}
+            autoCapitalize="none"
+            maxLength={MAX_CODE_LENGTH}
           />
-        </MockupCard>
+        </View>
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.fieldLabel, { color: palette.muted }]}>PRIVATE MEANING</Text>
+          <TextInput
+            style={[styles.meaningInput, { color: palette.text, borderColor: palette.rule, backgroundColor: palette.input }]}
+            value={meaning}
+            onChangeText={setMeaning}
+            placeholder="Meaning, e.g. Focus mode"
+            placeholderTextColor={palette.muted2}
+            maxLength={50}
+          />
+        </View>
+        <Text style={[styles.requirementText, { color: canRegister ? palette.muted : palette.muted2 }]}>
+          {registerRequirementCopy}
+        </Text>
+        <PrimaryButton
+          label={loading ? "Saving" : "Register Signal Code"}
+          onPress={() => void handleAdd()}
+          busy={loading}
+          disabled={!canRegister || loading}
+        />
+      </Card>
 
-        <MockupSection label="My Signal Codes" hint={`${visibleEntries.length} saved`} style={styles.sectionInset} />
-        <MockupCard style={styles.codeList}>
-          {visibleEntries.length ? (
-            visibleEntries.map((item) => (
-              <View key={item.id} style={[styles.codeRow, { borderBottomColor: palette.rule }]}>
-                <View style={[styles.codeBadge, { backgroundColor: palette.input }]}>
-                  <Text numberOfLines={1} style={[styles.codeBadgeText, { color: palette.text }]}>{item.code}</Text>
-                </View>
-                <Text numberOfLines={1} style={[styles.codeMeaning, { color: palette.text }]}>{item.meaning}</Text>
-                <Pressable
-                  accessibilityLabel={`Delete ${item.code}`}
-                  accessibilityRole="button"
-                  onPress={() => handleRemove(item.id)}
-                  style={({ pressed }) => [
-                    styles.deletePill,
-                    { backgroundColor: palette.chip, borderColor: palette.rule },
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={[styles.deletePillText, { color: palette.muted }]}>Delete</Text>
-                </Pressable>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={[type.bodyMuted, { color: palette.muted }]}>
-                Save a few codes so Beep can stay fast.
+      <SectionLabel>My Signal Codes</SectionLabel>
+      <Card>
+        {visibleEntries.length ? (
+          <>
+            <View style={styles.listHead}>
+              <Text style={[styles.listHeadText, { color: palette.muted }]}>
+                {`${visibleEntries.length} saved`}
               </Text>
             </View>
-          )}
-        </MockupCard>
-      </ScrollView>
-    </AppSurface>
+            {visibleEntries.map((item, index) => (
+              <ListRow
+                key={item.id}
+                left={<MonoValue style={styles.codeValue}>{item.code}</MonoValue>}
+                title={item.meaning}
+                right={
+                  <PillButton
+                    label="Delete"
+                    accessibilityLabel={`Delete ${item.code}`}
+                    onPress={() => void handleRemove(item.id)}
+                  />
+                }
+                isLast={index === visibleEntries.length - 1}
+              />
+            ))}
+          </>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={[type.bodyMuted, { color: palette.muted }]}>
+              Save a few codes so Beep can stay fast.
+            </Text>
+          </View>
+        )}
+      </Card>
+    </Screen>
   );
 }
 
@@ -163,17 +157,9 @@ function reportError(err: unknown) {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 96,
-    gap: spacing[4],
-  },
-  sectionInset: {
-    marginHorizontal: spacing[5],
-  },
   formCard: {
     gap: spacing[3],
-    marginHorizontal: spacing[5],
-    padding: spacing[4],
+    padding: spacing[8],
   },
   formHeading: {
     ...type.tinyMono,
@@ -205,44 +191,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     ...type.body,
   },
-  codeList: {
-    marginHorizontal: spacing[5],
-    paddingVertical: spacing[2],
+  listHead: {
+    paddingHorizontal: spacing[8],
+    paddingTop: spacing[5],
   },
-  codeRow: {
-    minHeight: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing[3],
-    paddingHorizontal: spacing[4],
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  codeBadge: {
-    minWidth: 44,
-    maxWidth: 116,
-    minHeight: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.control,
-    paddingHorizontal: spacing[3],
-  },
-  codeBadgeText: {
-    ...type.buttonMono,
-    fontSize: 10,
-  },
-  codeMeaning: {
-    flex: 1,
-    ...type.body,
-  },
-  deletePill: {
-    minHeight: 30,
-    justifyContent: "center",
-    paddingHorizontal: spacing[3],
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-  deletePillText: {
+  listHeadText: {
     ...type.tinyMono,
+  },
+  codeValue: {
+    maxWidth: 116,
   },
   emptyState: {
     minHeight: 92,

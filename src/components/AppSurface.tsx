@@ -18,7 +18,10 @@ export function shouldUseThemeBackground(backgroundColor?: string): boolean {
     backgroundColor === colors.paper ||
     backgroundColor === colors.ivory ||
     backgroundColor === "#F8F6F1" ||
-    backgroundColor === "#FBF7EF"
+    backgroundColor === "#FBF7EF" ||
+    // Signal Edition warm paper (light) — screens that pass palette.background
+    // through should keep resolving to the live theme background.
+    backgroundColor === "#F2EDE2"
   );
 }
 

@@ -24,13 +24,14 @@ describe("legacy shell removal", () => {
     expect(source).not.toContain("SignalSlip");
   });
 
-  it("keeps account settings on the Kotlin mockup shell", () => {
+  it("keeps account settings on the primitives shell", () => {
     const source = screen("src/screens/SettingsScreen.tsx");
 
-    expect(source).toContain("KotlinHeader");
+    expect(source).toContain('from "@/ui/primitives"');
     expect(source).toContain("My Beep ID");
     expect(source).toContain("Account Actions");
     expect(source).toContain("Privacy & Data");
+    expect(source).not.toContain("KotlinHeader");
     expect(source).not.toContain("HeaderBar");
     expect(source).not.toContain("My Beep Slip");
   });
@@ -41,7 +42,8 @@ describe("legacy shell removal", () => {
     expect(source).toContain("setLocalActiveIdentityPack");
     expect(source).toContain("applyIdentityPack");
     expect(source).toContain("Skin Pack");
-    expect(source).toContain("widget mood first");
+    expect(source).toContain("스킨 팩은 위젯과 Send 카드 표면만 바꿉니다.");
+    expect(source).not.toContain("widget mood first");
     expect(source).toContain("SkinPackSheet");
     expect(source).not.toContain('navigation.navigate("Collection")');
   });

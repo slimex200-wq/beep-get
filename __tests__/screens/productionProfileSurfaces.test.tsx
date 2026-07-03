@@ -42,42 +42,16 @@ describe("production profile surfaces", () => {
 
   it("resolves avatar preset IDs on signal detail surfaces instead of passing raw uri strings", () => {
     const todaySource = readSource("src/screens/TodayScreen.tsx");
-    const todayIncomingCardSource = readSource(
-      "src/components/TodayIncomingCard.tsx",
-    );
     const replySource = readSource("src/screens/SlipReplyRoomScreen.tsx");
-    const sendBeepSource = readSource("src/screens/SendBeepScreen.tsx");
-    const sendBlinkSource = readSource("src/screens/SendBlinkScreen.tsx");
 
-    expect(todaySource).toContain("TodayIncomingCard");
-    expect(todayIncomingCardSource).toContain("getAvatarImageSource");
+    // The Today hero slip is a local component of TodayScreen (TodayIncomingCard was absorbed).
+    expect(todaySource).toContain("TodayHeroSlip");
+    expect(todaySource).toContain("getAvatarImageSource");
     expect(replySource).toContain("getAvatarImageSource");
-    expect(sendBeepSource).toContain("getAvatarImageSource");
-    expect(sendBlinkSource).toContain("getAvatarImageSource");
-    expect(todayIncomingCardSource).not.toContain(
+    expect(todaySource).not.toContain(
       "source={{ uri: latestSignal.avatarUri }}",
     );
     expect(replySource).not.toContain("source={{ uri: senderAvatarUri }}");
-    expect(sendBeepSource).not.toContain(
-      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
-    );
-    expect(sendBlinkSource).not.toContain(
-      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
-    );
-  });
-
-  it("resolves avatar preset IDs in modal Send headers instead of passing raw uri strings", () => {
-    const sendBeepSource = readSource("src/screens/SendBeepScreen.tsx");
-    const sendBlinkSource = readSource("src/screens/SendBlinkScreen.tsx");
-
-    expect(sendBeepSource).toContain("getAvatarImageSource");
-    expect(sendBlinkSource).toContain("getAvatarImageSource");
-    expect(sendBeepSource).not.toContain(
-      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
-    );
-    expect(sendBlinkSource).not.toContain(
-      "avatarSource={headerAvatarUri ? { uri: headerAvatarUri } : undefined}",
-    );
   });
 
   it("keeps UI Preview friend avatars on app preset IDs instead of hardcoded human mock photos", () => {

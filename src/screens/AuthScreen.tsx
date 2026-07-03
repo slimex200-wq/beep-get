@@ -550,6 +550,14 @@ function AuthSignalDemo() {
   );
 }
 
+// Signal Edition (2026-07-02): the auth demo's signal accents use the default
+// Signal Orange. Pre-auth there is no user signal-color setting yet, so the
+// fixed light-mode default is correct; the in-app surfaces read palette.sig.
+const SIGNAL_ACCENT = "#FF4E1F";
+const SIGNAL_ACCENT_WASH = "rgba(255,78,31,0.08)";
+// Signal Edition warm paper — keeps the login slip on the same paper as the app.
+const SLIP_PAPER = "#F2EDE2";
+
 const styles = StyleSheet.create({
   stage: {
     flex: 1,
@@ -591,7 +599,7 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
     justifyContent: "flex-start",
-    backgroundColor: colors.paper,
+    backgroundColor: SLIP_PAPER,
     borderRadius: radius.slip,
     borderWidth: 1,
     borderColor: colors.ruleStrong,
@@ -634,7 +642,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.red,
+    backgroundColor: SIGNAL_ACCENT,
   },
   demoHeaderText: {
     ...type.tinyMono,
@@ -704,8 +712,8 @@ const styles = StyleSheet.create({
     height: 25,
     borderRadius: 13,
     borderWidth: 1,
-    borderColor: colors.red,
-    backgroundColor: "rgba(216,54,30,0.08)",
+    borderColor: SIGNAL_ACCENT,
+    backgroundColor: SIGNAL_ACCENT_WASH,
   },
   demoSignalPath: {
     position: "absolute",
@@ -737,7 +745,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.red,
+    backgroundColor: SIGNAL_ACCENT,
   },
   demoTrailDash: {
     flex: 1,
@@ -759,7 +767,7 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.red,
+    shadowColor: SIGNAL_ACCENT,
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
@@ -779,7 +787,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.ruleStrong,
     borderRadius: radius.control,
-    backgroundColor: colors.paper,
+    backgroundColor: SLIP_PAPER,
     padding: spacing[3],
     shadowColor: colors.ink,
     shadowOpacity: 0.08,
@@ -800,8 +808,8 @@ const styles = StyleSheet.create({
     bottom: -7,
     borderRadius: radius.control + 7,
     borderWidth: 2,
-    borderColor: colors.red,
-    backgroundColor: "rgba(216,54,30,0.08)",
+    borderColor: SIGNAL_ACCENT,
+    backgroundColor: SIGNAL_ACCENT_WASH,
   },
   demoFriendPhoto: {
     width: 28,
@@ -856,14 +864,14 @@ const styles = StyleSheet.create({
   },
   demoReceiptText: {
     ...type.tinyMono,
-    color: colors.red,
+    color: SIGNAL_ACCENT,
     letterSpacing: 0.4,
   },
   demoReceiveDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.red,
+    backgroundColor: SIGNAL_ACCENT,
   },
   logo: {
     fontFamily: type.codeHero.fontFamily,

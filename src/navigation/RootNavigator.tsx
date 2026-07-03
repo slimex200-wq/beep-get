@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { isUiPreviewUser } from "@/lib/uiPreview";
 import { useAppPalette } from "@/design/appTheme";
 import { AuthScreen } from "@/screens/AuthScreen";
-import { LiquidExpandableTabBar } from "@/components/LiquidExpandableTabBar";
+import { FixedTabBar } from "@/components/FixedTabBar";
 import { DictionaryScreen } from "@/screens/DictionaryScreen";
 import { LogsScreen } from "@/screens/LogsScreen";
 import { MyScreen } from "@/screens/MyScreen";
@@ -51,7 +51,7 @@ function MainTabs() {
   return (
     <Tab.Navigator
       tabBarPosition="bottom"
-      tabBar={(props) => <LiquidExpandableTabBar {...props} palette={themedPalette} />}
+      tabBar={(props) => <FixedTabBar {...props} palette={themedPalette} />}
       screenOptions={{
         swipeEnabled: true,
         lazy: true,
@@ -88,21 +88,12 @@ export function RootNavigator() {
             name="ReplyRoom"
             component={SlipReplyRoomScreen}
           />
-          <Stack.Screen
-            name="Logs"
-            component={LogsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Account"
-            component={SettingsScreen}
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="Dictionary"
-            component={DictionaryScreen}
-            options={{ presentation: "modal" }}
-          />
+          {/* Drill-in surfaces reached from chevron rows under My: pushed, not
+              modal, so the affordance (›) and the transition agree. Send stays
+              modal above because it is a compose task, not a drill-in. */}
+          <Stack.Screen name="Logs" component={LogsScreen} />
+          <Stack.Screen name="Account" component={SettingsScreen} />
+          <Stack.Screen name="Dictionary" component={DictionaryScreen} />
         </>
       )}
     </Stack.Navigator>

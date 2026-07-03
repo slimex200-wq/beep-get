@@ -12,7 +12,7 @@ export type FriendSignalSummary = {
 const quietSummary: FriendSignalSummary = {
   badgeText: "quiet",
   circuitStatus: "quiet",
-  rowStatus: "No signals yet",
+  rowStatus: "조용해요",
 };
 
 export function buildFriendSignalSummaries(
@@ -23,11 +23,11 @@ export function buildFriendSignalSummaries(
     if (summaries.has(message.from_user)) return;
     const isBlink = message.kind === "blink" || Boolean(message.media);
     const badgeText = isBlink ? "BLINK" : "BEEP";
-    const kind = isBlink ? "Received Blink" : "Last Beep";
+    const kind = isBlink ? "Blink 받음" : "마지막 Beep";
     summaries.set(message.from_user, {
       badgeText,
       circuitStatus: badgeText,
-      rowStatus: `${kind} ${message.number_code} - ${formatSlipTime(message.created_at)}`,
+      rowStatus: `${kind} · ${message.number_code} · ${formatSlipTime(message.created_at)}`,
     });
   });
   return summaries;
